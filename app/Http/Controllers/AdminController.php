@@ -231,4 +231,34 @@ class AdminController extends Controller
 
         return back()->with('success', 'Permohonan reset password berhasil ditolak.');
     }
+
+    public function konfigurasi()
+    {
+        $setting = \App\Helpers\SettingHelper::getSettings();
+        return view('admin.konfigurasi', compact('setting'));
+    }
+
+    public function updateKonfigurasi(Request $request)
+    {
+        $request->validate([
+            'saldo_mengendap_min' => 'required|numeric|min:0',
+            'tahun_ajaran_aktif' => 'required|string|max:20',
+            'nama_bank' => 'required|string|max:100',
+        ]);
+
+        DB::table('pengaturan_sistem')->updateOrInsert(
+            ['id' => 1],
+            [
+                'saldo_mengendap_min' => $request->saldo_mengendap_min,
+                'scanner_kamera_aktif' => $request->boolean('scanner_kamera_aktif'),
+                'tahun_ajaran_aktif' => $request->tahun_ajaran_aktif,
+                'format_no_rekening' => $request->format_no_rekening ?? 'TA-JURUSAN-URUT',
+                'nama_bank' => $request->nama_bank,
+                'biaya_administrasi_buku' => $request->biaya_administrasi_buku ?? 5000,
+                'updated_at' => now(),
+            ]
+        );
+
+        return back()->with('success', 'Konfigurasi Sistem Global Perbankan Mini berhasil disimpan!');
+    }
 }

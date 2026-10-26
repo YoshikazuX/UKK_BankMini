@@ -167,29 +167,52 @@ class NasabahController extends Controller
     /**
      * Rumus ID Rekening Armadillo:
      * (Kode Jurusan - No Urut Zero Padding 3 Digit)
-     * Contoh: RPL-001, AK-005, TKJ-012
+    /**
+     * Algoritma Pembuatan Nomor Rekening Baru Otomatis
+     * Berbasis Urutan Tahun Ajaran dan Nomor Urut Siswa (Contoh: 26-RPL-001 atau 2026/RPL/001)
      */
     public static function generateNoRekening($jurusan, $kategori = 'siswa'): string
     {
         $kode = ($kategori === 'guru_karyawan') ? 'GK' : TerbilangHelper::getKodeJurusan($jurusan);
+        $setting = \App\Helpers\SettingHelper::getSettings();
+        $format = $setting->format_no_rekening ?? 'TA-JURUSAN-URUT';
+        $ta = $setting->tahun_ajaran_aktif ?? '2026/2027';
 
-        // Ambil nasabah terakhir dengan kode jurusan ini
+        // Ekstrak 2 digit atau 4 digit tahun ajaran
+        preg_match('/(\d{4})/', $ta, $m);
+        $fullYear = isset($m[1]) ? $m[1] : date('Y');
+        $ta2Digit = substr($fullYear, -2);
+
+        // Pola awalan nomor rekening
+        $prefixPola = match($format) {
+            'TAHUN/JURUSAN/URUT' => "{$fullYear}/{$kode}/",
+            'JURUSAN-URUT' => "{$kode}-",
+            default => "{$ta2Digit}-{$kode}-",
+        };
+
+        // Ambil nasabah terakhir dengan format ini
         $lastRecord = DB::table('nasabah')
-            ->where('no_rekening', 'LIKE', $kode . '-%')
+            ->where('no_rekening', 'LIKE', $prefixPola . '%')
             ->orderBy('id', 'desc')
             ->first();
 
         $nextNum = 1;
-        if ($lastRecord && preg_match('/' . preg_quote($kode, '/') . '-(\d+)/', $lastRecord->no_rekening, $matches)) {
+        if ($lastRecord && preg_match('/(\d+)$/', $lastRecord->no_rekening, $matches)) {
             $nextNum = (int)$matches[1] + 1;
         } else {
-            $count = DB::table('nasabah')->where('jurusan', 'LIKE', "%{$jurusan}%")->count();
-            $nextNum = max(1, $count + 1);
+            // Kompatibilitas mundur dengan format lama (contoh: RPL-001)
+            $lastOld = DB::table('nasabah')->where('no_rekening', 'LIKE', $kode . '-%')->orderBy('id', 'desc')->first();
+            if ($lastOld && preg_match('/-(\d+)$/', $lastOld->no_rekening, $mOld)) {
+                $nextNum = (int)$mOld[1] + 1;
+            } else {
+                $count = DB::table('nasabah')->where('jurusan', 'LIKE', "%{$jurusan}%")->count();
+                $nextNum = max(1, $count + 1);
+            }
         }
 
         // Pastikan tidak duplikat
         do {
-            $candidate = sprintf('%s-%03d', $kode, $nextNum);
+            $candidate = $prefixPola . sprintf('%03d', $nextNum);
             $exists = DB::table('nasabah')->where('no_rekening', $candidate)->exists();
             if ($exists) {
                 $nextNum++;

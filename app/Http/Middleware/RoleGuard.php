@@ -22,13 +22,21 @@ class RoleGuard
         $userRoleString = strtolower($user->role ?? '');
         $userRoles = array_map('trim', explode(',', $userRoleString));
 
-        // 1. Super Admin memiliki akses penuh ke seluruh modul
+        // 1. Batasan Keamanan Mutlak (Segregation of Duties / SoD Perbankan):
+        // Administrator dan Supervisor TIDAK DIZINKAN melakukan input transaksi setoran / penarikan kas loket!
+        if ($request->is('teller/transaksi*')) {
+            if (!in_array('teller', $userRoles)) {
+                $redirectUrl = in_array('admin', $userRoles) ? '/admin/dashboard' : '/supervisor/dashboard';
+                return redirect($redirectUrl)->with('error', 'Batasan Keamanan SoD: Administrator & Supervisor tidak diizinkan melakukan transaksi setoran/penarikan kas loket!');
+            }
+        }
+
+        // 2. Administrator memiliki akses ke seluruh modul back-office, manajemen akun, audit & konfigurasi
         if (in_array('admin', $userRoles)) {
             return $next($request);
         }
 
-        // 2. Prinsip Segregation of Duties (SoD) Perbankan:
-        // Petugas Teller yang memegang uang fisik DILARANG merangkap Accounting / Supervisor
+        // 3. Petugas Teller yang memegang uang fisik DILARANG merangkap Accounting / Supervisor
         if (in_array('teller', $userRoles) && (in_array('accounting', $userRoles) || in_array('supervisor', $userRoles))) {
             return redirect('/teller/dashboard')->with('error', 'Pelanggaran Aturan SoD Perbankan: Akun Teller dilarang merangkap wewenang Accounting / Otorisasi Kas!');
         }

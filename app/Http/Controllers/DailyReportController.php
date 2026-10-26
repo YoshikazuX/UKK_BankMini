@@ -190,20 +190,57 @@ class DailyReportController extends Controller
             return back()->with('error', 'Data Daily Report tidak ditemukan!');
         }
 
-        DB::table('daily_reports')->where('id', $id)->update([
-            'status' => $request->status,
-            'approved_by' => Auth::id(),
-            'notes' => $request->notes ?? $report->notes,
-            'updated_at' => now(),
-        ]);
+        DB::beginTransaction();
+        try {
+            DB::table('daily_reports')->where('id', $id)->update([
+                'status' => $request->status,
+                'approved_by' => Auth::id(),
+                'notes' => $request->notes ?? $report->notes,
+                'updated_at' => now(),
+            ]);
 
-        $statusText = match($request->status) {
-            'approved' => 'DISETUJUI (Approved)',
-            'hold' => 'DITAHAN / PENDING (Hold - Laporan ditangguhkan tanpa mengunci akun teller)',
-            'rejected' => 'DITOLAK (Perlu revisi perhitungan kas teller)',
-        };
+            // Jika Disetujui (Approved), memicu perintah pembukuan pemindahan tanggung jawab kas ke Brankas Utama
+            if ($request->status === 'approved') {
+                $teller = DB::table('users')->where('id', $report->user_id)->first();
+                $tellerName = $teller ? $teller->nama_petugas : 'Teller';
+                $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
 
-        return back()->with('success', "Daily Report #{$id} berhasil diupdate ke status: {$statusText}.");
+                // 1. Otorisasi seluruh transaksi loket terkait menjadi status 'sukses'
+                DB::table('transaksi')
+                    ->where('daily_report_id', $id)
+                    ->where('status', 'pending')
+                    ->update([
+                        'status' => 'sukses',
+                        'updated_at' => now(),
+                    ]);
+
+                // 2. Perintah Pembukuan Pemindahan Kas Laci Teller ke Brankas Utama Bank Mini
+                $nominalTransfer = $report->physical_balance > 0 ? $report->physical_balance : $report->system_balance;
+                DB::table('jurnal')->insert([
+                    'transaksi_id' => null,
+                    'keterangan' => "OTORISASI PEMINDAHAN KAS [Daily Report #{$report->id}]: Pemindahan Fisik Kas Loket Teller ({$tellerName}) ke Brankas Utama Bank Mini (Divalidasi oleh {$spvName})",
+                    'debit' => $nominalTransfer,
+                    'kredit' => $nominalTransfer,
+                    'tanggal' => now()->toDateString(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            $statusText = match($request->status) {
+                'approved' => 'DISETUJUI (Approved) & Pembukuan Pemindahan Kas ke Brankas Utama Berhasil Dicatat',
+                'hold' => 'DITAHAN / PENDING (Hold - Laporan ditangguhkan untuk investigasi selisih kas)',
+                'rejected' => 'DITOLAK (Perlu revisi perhitungan kas fisik teller)',
+            };
+
+            return back()->with('success', "Daily Report #{$id} berhasil diproses: {$statusText}.");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Gagal memproses otorisasi Daily Report: ' . $e->getMessage());
+        }
     }
 
     /**

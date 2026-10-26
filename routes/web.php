@@ -67,6 +67,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // FITUR: PERSETUJUAN RESET PASSWORD PEGAWAI
     Route::post('/admin/reset-password-request/{id}/approve', [AdminController::class, 'approveResetRequest']);
     Route::post('/admin/reset-password-request/{id}/reject', [AdminController::class, 'rejectResetRequest']);
+
+    // FITUR: KONFIGURASI SISTEM GLOBAL (SALDO MENGENDAP, SCANNER & FORMAT REKENING)
+    Route::get('/admin/konfigurasi', [AdminController::class, 'konfigurasi']);
+    Route::post('/admin/konfigurasi', [AdminController::class, 'updateKonfigurasi']);
+});
+
+// =========================================================================
+// RUTE AUDIT JURNAL AKUNTANSI & LAPORAN (ADMIN, SUPERVISOR, ACCOUNTING)
+// =========================================================================
+Route::middleware(['auth', 'role:admin,supervisor,accounting'])->group(function () {
+    Route::get('/laporan/jurnal', [LaporanKeuanganController::class, 'jurnalAkuntansi']);
+    Route::get('/laporan/saldo-produk', [LaporanKeuanganController::class, 'saldoPerProduk']);
+    Route::get('/laporan/tahunan', [LaporanKeuanganController::class, 'laporanTahunan']);
 });
 
 // =========================================================================
@@ -111,11 +124,6 @@ Route::middleware(['auth', 'role:supervisor,accounting'])->group(function () {
     Route::get('/supervisor/pengajuan-kas', [PengajuanKasController::class, 'indexSupervisor']);
     Route::post('/supervisor/pengajuan-kas/setujui/{id}', [PengajuanKasController::class, 'setujui']);
     Route::post('/supervisor/pengajuan-kas/tolak/{id}', [PengajuanKasController::class, 'tolak']);
-
-    // LAPORAN KEUANGAN BANK MINI
-    Route::get('/laporan/jurnal', [LaporanKeuanganController::class, 'jurnalAkuntansi']);
-    Route::get('/laporan/saldo-produk', [LaporanKeuanganController::class, 'saldoPerProduk']);
-    Route::get('/laporan/tahunan', [LaporanKeuanganController::class, 'laporanTahunan']);
 });
 
 // PENGATURAN KAS AWAL HARI INI (DISET OLEH PETUGAS)

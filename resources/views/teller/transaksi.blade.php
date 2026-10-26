@@ -119,6 +119,24 @@
                     <p class="text-[11px] text-amber-800 mt-1">Alasan ini akan dicetak langsung pada slip bukti koreksi dan jurnal akuntansi pembukuan.</p>
                 </div>
 
+                <!-- FORM VERIFIKASI PIN KEAMANAN NASABAH (WAJIB OTORISASI PENARIKAN TUNAI) -->
+                <div id="kotak-pin-nasabah" class="hidden mb-5 p-4 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-sm">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <svg class="w-5 h-5 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <label class="block text-amber-950 text-xs font-bold uppercase tracking-wider">
+                            Otorisasi PIN Keamanan Nasabah (Wajib Penarikan Dana) *
+                        </label>
+                    </div>
+                    <p class="text-xs text-amber-800 mb-2">
+                        Demi keamanan rekening, minta nasabah untuk memasukkan 6 digit PIN kartu tabungan:
+                    </p>
+                    <div class="relative max-w-xs">
+                        <input type="password" name="pin_nasabah" id="pin_nasabah" maxlength="6" placeholder="•••••• (Default: 123456)"
+                               class="w-full text-center tracking-[0.4em] text-xl font-mono font-bold border-2 border-amber-300 rounded-xl p-2.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1.5">*Verifikasi PIN menjamin otorisasi resmi pemilik rekening pada loket harian.</p>
+                </div>
+
                 <div class="mb-8">
                     <!-- Label dan Tombol Kalkulator -->
                     <div class="flex justify-between items-end mb-2">
@@ -283,11 +301,13 @@
             simpanDraft();
         }
 
-        // Toggle Tampilan Input Alasan Koreksi
+        // Toggle Tampilan Input Alasan Koreksi & Otorisasi PIN Nasabah
         function toggleKoreksi() {
             const jenis = document.getElementById('jenis_transaksi').value;
             const box = document.getElementById('kotak-alasan-koreksi');
             const alasanInput = document.getElementById('alasan_koreksi');
+            const boxPin = document.getElementById('kotak-pin-nasabah');
+            const pinInput = document.getElementById('pin_nasabah');
 
             if (jenis === 'koreksi_setor' || jenis === 'koreksi_tarik') {
                 box.classList.remove('hidden');
@@ -297,6 +317,16 @@
                 box.classList.add('hidden');
                 alasanInput.removeAttribute('required');
                 alasanInput.value = '';
+            }
+
+            // Otorisasi Form Verifikasi PIN Keamanan Nasabah (Wajib Khusus Penarikan Tunai)
+            if (jenis === 'tarik') {
+                boxPin.classList.remove('hidden');
+                pinInput.setAttribute('required', 'true');
+            } else {
+                boxPin.classList.add('hidden');
+                pinInput.removeAttribute('required');
+                pinInput.value = '';
             }
         }
 
@@ -320,11 +350,12 @@
             const btnProses = document.getElementById('btn-proses');
             const pesanError = document.getElementById('pesan-error');
             const teksError = document.getElementById('teks-error');
+            const batasSaldoMengendap = {{ \App\Helpers\SettingHelper::getSaldoMengendapMin() }};
 
             let sisaSaldoSetelahTarik = saldoAwal - nominal;
 
-            if (jenis === 'tarik' && sisaSaldoSetelahTarik < 10000) {
-                teksError.innerText = "Gagal! Sisa saldo minimal nasabah harus Rp 10.000.";
+            if (jenis === 'tarik' && sisaSaldoSetelahTarik < batasSaldoMengendap) {
+                teksError.innerText = "Gagal! Sisa saldo minimal nasabah harus Rp " + formatRupiah(batasSaldoMengendap) + ".";
                 pesanError.classList.remove('hidden');
                 btnProses.disabled = true;
                 btnProses.classList.add('opacity-50', 'cursor-not-allowed');
