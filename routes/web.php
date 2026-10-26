@@ -18,7 +18,9 @@ use App\Http\Controllers\AvalisPetugasController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\PengajuanKasController;
 
-Route::get('/', function () { return redirect('/login'); });
+Route::get('/', function () {
+    return redirect('/login');
+});
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -167,7 +169,13 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // HELPER DATABASE & STORAGE
-Route::get('/fix-database-pegawai', function () { return 'OK'; });
-Route::get('/fix-database-void', function () { return 'OK'; });
-Route::get('/fix-foto', function () { Artisan::call('storage:link'); return 'OK'; });
-
+Route::get('/fix-database-pegawai', function () {
+    return 'OK';
+});
+Route::get('/fix-database-void', function () {
+    return 'OK';
+});
+Route::get('/fix-foto', function () {
+    Artisan::call('storage:link');
+    return 'OK';
+});

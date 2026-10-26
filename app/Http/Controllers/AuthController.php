@@ -19,6 +19,10 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
+        if (request('reset') === 'success' && !session()->has('success')) {
+            session()->flash('success', 'Kata sandi berhasil diperbarui! Silakan masuk menggunakan kata sandi baru Anda.');
+        }
+
         $adminUser = DB::table('users')->where('role', 'admin')->first();
         $adminPhone = $adminUser->no_hp ?? '081234567890';
 
