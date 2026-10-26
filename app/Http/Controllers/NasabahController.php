@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Helpers\TerbilangHelper;
@@ -123,13 +124,13 @@ class NasabahController extends Controller
         return redirect('/admin/data-nasabah')->with('success', "Nasabah baru berhasil didaftarkan dengan No. Rekening Armadillo: {$no_rekening}!");
     }
 
-    public function edit($id)
+    public function edit(int|string $id)
     {
         $nasabah = DB::table('nasabah')->where('id', $id)->first();
         return view('admin.edit-nasabah', compact('nasabah'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int|string $id)
     {
         $request->validate([
             'nama_siswa' => 'required',
@@ -158,7 +159,7 @@ class NasabahController extends Controller
         return redirect('/admin/data-nasabah')->with('success', 'Data nasabah berhasil diperbarui!');
     }
 
-    public function destroy($id)
+    public function destroy(int|string $id)
     {
         DB::table('nasabah')->where('id', $id)->delete();
         return redirect('/admin/data-nasabah')->with('success', 'Nasabah berhasil dihapus!');
@@ -167,11 +168,12 @@ class NasabahController extends Controller
     /**
      * Rumus ID Rekening Armadillo:
      * (Kode Jurusan - No Urut Zero Padding 3 Digit)
+     */
     /**
      * Algoritma Pembuatan Nomor Rekening Baru Otomatis
      * Berbasis Urutan Tahun Ajaran dan Nomor Urut Siswa (Contoh: 26-RPL-001 atau 2026/RPL/001)
      */
-    public static function generateNoRekening($jurusan, $kategori = 'siswa'): string
+    public static function generateNoRekening(string $jurusan, string $kategori = 'siswa'): string
     {
         $kode = ($kategori === 'guru_karyawan') ? 'GK' : TerbilangHelper::getKodeJurusan($jurusan);
         $setting = \App\Helpers\SettingHelper::getSettings();
@@ -315,7 +317,7 @@ class NasabahController extends Controller
      */
     public function dashboardNasabah(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $username = $user->username ?? '';
         
         $nasabah = DB::table('nasabah')

@@ -94,6 +94,12 @@
             <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
                 <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Total Pemasukan (Debit)</p>
                 <p class="text-2xl font-black text-slate-800">Rp {{ number_format($totalDebit, 0, ',', '.') }}</p>
+                @if(isset($totalDropingKas) && $totalDropingKas > 0)
+                    <p class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Droping Kas: Rp {{ number_format($totalDropingKas, 0, ',', '.') }}
+                    </p>
+                @endif
             </div>
             <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
                 <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Total Penarikan (Kredit)</p>

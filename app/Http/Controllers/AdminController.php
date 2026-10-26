@@ -21,10 +21,25 @@ class AdminController extends Controller
         $totalDebit = DB::table('jurnal')->whereDate('tanggal', $hariIni)->sum('debit');
         $totalKredit = DB::table('jurnal')->whereDate('tanggal', $hariIni)->sum('kredit');
 
+        // Mutasi Transaksi Tabungan Nasabah
         $mutasiNabung = DB::table('transaksi')->whereDate('created_at', $hariIni)->where('jenis_transaksi', 'setor')->where('status', '!=', 'dibatalkan')->sum('nominal');
         $mutasiTarik = DB::table('transaksi')->whereDate('created_at', $hariIni)->whereIn('jenis_transaksi', ['tarik', 'admin'])->where('status', '!=', 'dibatalkan')->sum('nominal');
 
-        $isBalanced = ($totalDebit == $mutasiNabung) && ($totalKredit == $mutasiTarik);
+        // Jurnal yang bersumber dari Transaksi Nasabah
+        $jurnalDebitNasabah = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('debit');
+        $jurnalKreditNasabah = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('kredit');
+
+        // Mutasi Kas Operasional Internal (Droping Kas / Pengajuan Kas yang Disetujui)
+        $totalDropingKas = DB::table('pengajuan_kas')->whereDate('tanggal', $hariIni)->where('status', 'disetujui')->sum('nominal');
+        $jurnalDropingKas = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNull('transaksi_id')->where('keterangan', 'LIKE', '%DROPING KAS%')->sum('debit');
+
+        // Keseimbangan tercapai jika:
+        // 1. Catatan debit nasabah di jurnal klop dengan mutasi setoran nasabah
+        // 2. Catatan kredit nasabah di jurnal klop dengan mutasi penarikan/admin nasabah
+        // 3. Catatan droping kas di jurnal klop dengan nominal pengajuan kas yang telah disetujui supervisor
+        $isBalanced = ($jurnalDebitNasabah == $mutasiNabung)
+            && ($jurnalKreditNasabah == $mutasiTarik)
+            && ($jurnalDropingKas == $totalDropingKas);
 
         $totalVoid = DB::table('transaksi')->whereDate('updated_at', $hariIni)->where('status', 'dibatalkan')->count();
         $totalGagalSistem = 0;
@@ -34,7 +49,7 @@ class AdminController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('admin.dashboard', compact('totalNasabah', 'totalPegawai', 'pegawai', 'totalDebit', 'totalKredit', 'isBalanced', 'totalVoid', 'totalGagalSistem', 'resetRequests'));
+        return view('admin.dashboard', compact('totalNasabah', 'totalPegawai', 'pegawai', 'totalDebit', 'totalKredit', 'isBalanced', 'totalVoid', 'totalGagalSistem', 'resetRequests', 'totalDropingKas'));
     }
 
     public function create() { return view('admin.tambah'); }
