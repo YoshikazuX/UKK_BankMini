@@ -25,10 +25,10 @@
             </span>
         </div>
         <div class="flex space-x-3">
-            <button onclick="window.history.back()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg text-sm transition">
+            <button onclick="window.history.back()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-2 rounded-lg text-sm transition">
                 &larr; Kembali
             </button>
-            <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
+            <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 Cetak Lembar Laporan (Print)
             </button>
@@ -41,26 +41,26 @@
         <!-- KOP SURAT RESMI -->
         <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
             <div class="flex items-center space-x-4">
-                <div class="w-14 h-14 bg-blue-900 text-white rounded-lg flex items-center justify-center font-black text-2xl tracking-tighter shadow-sm">
+                <div class="w-14 h-14 bg-slate-900 text-white rounded-lg flex items-center justify-center font-bold text-2xl tracking-tighter shadow-sm">
                     MSA
                 </div>
                 <div>
-                    <h2 class="text-xl font-black text-slate-900 tracking-wide uppercase">LKM MITRA SISWA ABADI</h2>
-                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">Laboratorium Perbankan & Lembaga Keuangan Mikro Sekolah</p>
+                    <h2 class="text-xl font-bold text-slate-900 tracking-wide">LKM Mitra Siswa Abadi</h2>
+                    <p class="text-xs font-semibold text-slate-600">Laboratorium Perbankan & Lembaga Keuangan Mikro Sekolah</p>
                     <p class="text-[11px] text-slate-500">Jl. Pendidikan No. 01, Kompleks Kampus Sekolah Kejuruan | Telp: (021) 8899-7711</p>
                 </div>
             </div>
             <div class="text-right">
-                <div class="inline-block border-2 border-slate-800 px-3 py-1 text-center rounded">
-                    <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Nomor Dokumen</p>
-                    <p class="text-sm font-mono font-black text-slate-900">REP-{{ date('Ymd', strtotime($report->report_date)) }}-{{ str_pad($report->id, 4, '0', STR_PAD_LEFT) }}</p>
+                <div class="inline-block border border-slate-800 px-3 py-1 text-center rounded">
+                    <p class="text-[9px] font-semibold text-slate-500">Nomor Dokumen</p>
+                    <p class="text-sm font-bold text-slate-900 tabular-nums">REP-{{ date('Ymd', strtotime($report->report_date)) }}-{{ str_pad($report->id, 4, '0', STR_PAD_LEFT) }}</p>
                 </div>
             </div>
         </div>
 
         <div class="text-center mb-6">
-            <h1 class="text-lg font-black uppercase tracking-wider text-slate-900 underline underline-offset-4">
-                BERITA ACARA & LAPORAN PENUTUPAN KAS HARIAN (DAILY REPORT)
+            <h1 class="text-lg font-bold text-slate-900 underline underline-offset-4">
+                Berita Acara & Laporan Penutupan Kas Harian (Daily Report)
             </h1>
             <p class="text-xs text-slate-500 mt-1">
                 Tanggal Operasional: <span class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($report->report_date)->translatedFormat('l, d F Y') }}</span>
@@ -71,58 +71,58 @@
         <table class="w-full text-xs mb-6 border-collapse">
             <tbody>
                 <tr>
-                    <td class="w-32 py-1 font-bold text-slate-600">Petugas Teller</td>
+                    <td class="w-32 py-1 font-semibold text-slate-600">Petugas Teller</td>
                     <td class="w-4 py-1">:</td>
                     <td class="py-1 font-bold text-slate-900">{{ $report->nama_teller }} (User ID: #{{ $report->user_id }})</td>
-                    <td class="w-32 py-1 font-bold text-slate-600">Status Otorisasi</td>
+                    <td class="w-32 py-1 font-semibold text-slate-600">Status Otorisasi</td>
                     <td class="w-4 py-1">:</td>
-                    <td class="py-1 font-black uppercase {{ $report->status === 'approved' ? 'text-emerald-700' : 'text-amber-700' }}">
+                    <td class="py-1 font-semibold capitalize {{ $report->status === 'approved' ? 'text-emerald-700' : 'text-amber-700' }}">
                         {{ $report->status }}
                     </td>
                 </tr>
                 <tr>
-                    <td class="py-1 font-bold text-slate-600">Disahkan Oleh</td>
+                    <td class="py-1 font-semibold text-slate-600">Disahkan Oleh</td>
                     <td class="py-1">:</td>
                     <td class="py-1 font-bold text-slate-900">{{ $report->nama_approver ?? 'Menunggu Pengesahan' }}</td>
-                    <td class="py-1 font-bold text-slate-600">Waktu Closing</td>
+                    <td class="py-1 font-semibold text-slate-600">Waktu Closing</td>
                     <td class="py-1">:</td>
-                    <td class="py-1 text-slate-700">{{ date('d/m/Y H:i:s', strtotime($report->updated_at)) }} WIB</td>
+                    <td class="py-1 text-slate-700 tabular-nums">{{ date('d/m/Y H:i:s', strtotime($report->updated_at)) }} WIB</td>
                 </tr>
             </tbody>
         </table>
 
         <!-- REKAPITULASI KAS LOKET -->
         <div class="mb-6 border border-slate-300 rounded-lg overflow-hidden">
-            <div class="bg-slate-100 px-4 py-2 border-b border-slate-300 font-bold text-xs uppercase tracking-wider text-slate-700">
+            <div class="bg-slate-100 px-4 py-2 border-b border-slate-300 font-semibold text-xs text-slate-700">
                 Ringkasan Rekonsiliasi Kas Laci Loket
             </div>
             <table class="w-full text-xs">
                 <tbody class="divide-y divide-slate-200">
                     <tr>
                         <td class="p-2.5 pl-4 text-slate-600">1. Saldo Awal Kas Operasional (Opening Balance)</td>
-                        <td class="p-2.5 pr-4 text-right font-mono font-bold text-slate-900">Rp {{ number_format($report->opening_balance, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right font-bold text-slate-900 tabular-nums">Rp {{ number_format($report->opening_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td class="p-2.5 pl-4 text-slate-600">2. Total Setoran Masuk Hari Ini (Deposit)</td>
-                        <td class="p-2.5 pr-4 text-right font-mono font-bold text-emerald-700">(+) Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right font-bold text-emerald-700 tabular-nums">(+) Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td class="p-2.5 pl-4 text-slate-600">3. Total Penarikan Tunai & Biaya Admin (Withdrawal)</td>
-                        <td class="p-2.5 pr-4 text-right font-mono font-bold text-rose-700">(-) Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right font-bold text-rose-700 tabular-nums">(-) Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="bg-blue-50 font-bold">
                         <td class="p-2.5 pl-4 text-blue-950">4. Saldo Buku Komputer / Sistem (System Balance) [1 + 2 - 3]</td>
-                        <td class="p-2.5 pr-4 text-right font-mono text-sm text-blue-950 font-black">Rp {{ number_format($report->system_balance, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right text-sm text-blue-950 font-bold tabular-nums">Rp {{ number_format($report->system_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="bg-slate-50 font-bold">
                         <td class="p-2.5 pl-4 text-slate-900">5. Saldo Fisik Riil di Laci Kas (Physical Balance)</td>
-                        <td class="p-2.5 pr-4 text-right font-mono text-sm text-slate-900 font-black">Rp {{ number_format($report->physical_balance, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right text-sm text-slate-900 font-bold tabular-nums">Rp {{ number_format($report->physical_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="{{ $report->difference == 0 ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900' }} font-bold">
                         <td class="p-2.5 pl-4">6. Selisih Kas Fisik vs Komputer (Difference) [5 - 4]</td>
-                        <td class="p-2.5 pr-4 text-right font-mono text-sm font-black">
+                        <td class="p-2.5 pr-4 text-right text-sm font-bold tabular-nums">
                             {{ $report->difference >= 0 ? '+' : '' }}Rp {{ number_format($report->difference, 0, ',', '.') }}
-                            ({{ $report->difference == 0 ? 'SEIMBANG / NIHIL' : ($report->difference > 0 ? 'SURPLUS / LEBIH' : 'DEFISIT / KURANG') }})
+                            ({{ $report->difference == 0 ? 'Seimbang / Nihil' : ($report->difference > 0 ? 'Surplus / Lebih' : 'Defisit / Kurang') }})
                         </td>
                     </tr>
                 </tbody>
@@ -138,11 +138,11 @@
 
         <!-- DAFTAR TRANSAKSI YANG DIBUKUKAN PADA DOKUMEN INI -->
         <div class="mb-8">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+            <h3 class="text-xs font-semibold text-slate-700 mb-2">
                 Lampiran Transaksi yang Divalidasi (Total {{ count($transaksi) }} Transaksi)
             </h3>
             <table class="w-full text-left text-[11px] border border-slate-300 border-collapse">
-                <thead class="bg-slate-100 text-slate-800 font-bold uppercase border-b border-slate-300">
+                <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-300">
                     <tr>
                         <th class="p-2 border border-slate-300 text-center w-8">No</th>
                         <th class="p-2 border border-slate-300">Waktu</th>
@@ -156,13 +156,13 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($transaksi as $idx => $t)
                     <tr>
-                        <td class="p-1.5 border border-slate-300 text-center">{{ $idx + 1 }}</td>
-                        <td class="p-1.5 border border-slate-300 font-mono">{{ date('H:i:s', strtotime($t->created_at)) }}</td>
-                        <td class="p-1.5 border border-slate-300 font-mono font-bold">{{ $t->no_rekening ?? $t->nis }}</td>
+                        <td class="p-1.5 border border-slate-300 text-center tabular-nums">{{ $idx + 1 }}</td>
+                        <td class="p-1.5 border border-slate-300 tabular-nums">{{ date('H:i:s', strtotime($t->created_at)) }}</td>
+                        <td class="p-1.5 border border-slate-300 font-semibold tabular-nums">{{ $t->no_rekening ?? $t->nis }}</td>
                         <td class="p-1.5 border border-slate-300">{{ $t->nama_siswa }}</td>
-                        <td class="p-1.5 border border-slate-300 text-center font-mono font-bold">{{ $t->kode_sandi ?? '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-center tabular-nums font-semibold">{{ $t->kode_sandi ?? '-' }}</td>
                         <td class="p-1.5 border border-slate-300 uppercase font-medium">{{ $t->jenis_transaksi }}</td>
-                        <td class="p-1.5 border border-slate-300 text-right font-mono font-bold {{ in_array($t->jenis_transaksi, ['setor', 'koreksi_tarik']) ? 'text-emerald-700' : 'text-rose-700' }}">
+                        <td class="p-1.5 border border-slate-300 text-right tabular-nums font-semibold {{ in_array($t->jenis_transaksi, ['setor', 'koreksi_tarik']) ? 'text-emerald-700' : 'text-rose-700' }}">
                             Rp {{ number_format($t->nominal, 0, ',', '.') }}
                         </td>
                     </tr>

@@ -17,12 +17,12 @@
     <div class="no-print max-w-4xl mx-auto mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow border border-slate-200">
         <span class="text-sm font-bold text-slate-700">Pratinjau Cetak Laporan Tahunan Transaksi & Kas (Tahun {{ $tahun }})</span>
         <div class="flex space-x-3">
-            <button onclick="window.close()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg text-sm transition">
+            <button onclick="window.close()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-4 py-2 rounded-lg text-sm transition">
                 Tutup
             </button>
-            <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
+            <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Cetak Laporan Tahunan (Print)
+                Cetak Laporan Tahunan
             </button>
         </div>
     </div>
@@ -85,22 +85,22 @@
                         $totJml   += $cnt;
                     @endphp
                     <tr>
-                        <td class="p-1.5 border border-slate-300 text-center font-mono">{{ $m }}</td>
+                        <td class="p-1.5 border border-slate-300 text-center tabular-nums">{{ $m }}</td>
                         <td class="p-1.5 border border-slate-300 font-bold">{{ $namaBulan[$m] }}</td>
-                        <td class="p-1.5 border border-slate-300 text-right font-mono">{{ $setor > 0 ? number_format($setor, 0, ',', '.') : '-' }}</td>
-                        <td class="p-1.5 border border-slate-300 text-right font-mono">{{ $tarik > 0 ? number_format($tarik, 0, ',', '.') : '-' }}</td>
-                        <td class="p-1.5 border border-slate-300 text-right font-mono">{{ $adm > 0 ? number_format($adm, 0, ',', '.') : '-' }}</td>
-                        <td class="p-1.5 border border-slate-300 text-right font-mono font-bold">{{ ($setor > 0 || $tarik > 0) ? (($net >= 0 ? '+' : '') . number_format($net, 0, ',', '.')) : '-' }}</td>
-                        <td class="p-1.5 border border-slate-300 text-center font-mono">{{ $cnt > 0 ? number_format($cnt, 0, ',', '.') : '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-right tabular-nums">{{ $setor > 0 ? number_format($setor, 0, ',', '.') : '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-right tabular-nums">{{ $tarik > 0 ? number_format($tarik, 0, ',', '.') : '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-right tabular-nums">{{ $adm > 0 ? number_format($adm, 0, ',', '.') : '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-right tabular-nums font-bold">{{ ($setor > 0 || $tarik > 0) ? (($net >= 0 ? '+' : '') . number_format($net, 0, ',', '.')) : '-' }}</td>
+                        <td class="p-1.5 border border-slate-300 text-center tabular-nums">{{ $cnt > 0 ? number_format($cnt, 0, ',', '.') : '-' }}</td>
                     </tr>
                 @endfor
                 <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-500">
                     <td colspan="2" class="p-2 text-right uppercase border border-slate-300">Total Akumulasi:</td>
-                    <td class="p-2 text-right font-mono border border-slate-300 text-emerald-900">Rp {{ number_format($totSetor, 0, ',', '.') }}</td>
-                    <td class="p-2 text-right font-mono border border-slate-300 text-rose-900">Rp {{ number_format($totTarik, 0, ',', '.') }}</td>
-                    <td class="p-2 text-right font-mono border border-slate-300 text-amber-900">Rp {{ number_format($totAdm, 0, ',', '.') }}</td>
-                    <td class="p-2 text-right font-mono border border-slate-300">{{ $totSetor - $totTarik >= 0 ? '+' : '' }}Rp {{ number_format($totSetor - $totTarik, 0, ',', '.') }}</td>
-                    <td class="p-2 text-center font-mono border border-slate-300">{{ number_format($totJml, 0, ',', '.') }}</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300 text-emerald-900">Rp {{ number_format($totSetor, 0, ',', '.') }}</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300 text-rose-900">Rp {{ number_format($totTarik, 0, ',', '.') }}</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300 text-amber-900">Rp {{ number_format($totAdm, 0, ',', '.') }}</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300">{{ $totSetor - $totTarik >= 0 ? '+' : '' }}Rp {{ number_format($totSetor - $totTarik, 0, ',', '.') }}</td>
+                    <td class="p-2 text-center tabular-nums border border-slate-300">{{ number_format($totJml, 0, ',', '.') }}</td>
                 </tr>
             </tbody>
         </table>

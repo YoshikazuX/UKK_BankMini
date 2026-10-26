@@ -23,12 +23,12 @@
 
     <!-- Action Bar (Kembali & Print) -->
     <div class="max-w-4xl mx-auto mb-4 flex justify-between items-center no-print px-4">
-        <a href="javascript:history.back()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center shadow-sm">
+        <a href="javascript:history.back()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-xs px-4 py-2 rounded-lg transition flex items-center shadow-sm">
             &larr; Kembali
         </a>
         <div class="flex items-center space-x-2">
             <span class="text-xs text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-300">Format 2 Rangkap (Arsip Bank & Nasabah)</span>
-            <button onclick="window.print()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition flex items-center shadow-md">
+            <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-5 py-2 rounded-lg transition flex items-center shadow-sm">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 Cetak Slip Setoran
             </button>
@@ -65,7 +65,7 @@
                         <tr>
                             <td class="py-1 text-slate-600">Nomor Rekening</td>
                             <td>:</td>
-                            <td class="font-bold font-mono text-sm text-slate-900">{{ $trx->no_rekening ?? $trx->nis }}</td>
+                            <td class="font-bold tabular-nums text-sm text-slate-900">{{ $trx->no_rekening ?? $trx->nis }}</td>
                         </tr>
                         <tr>
                             <td class="py-1 text-slate-600">Nama Pemilik / Siswa</td>
@@ -85,7 +85,7 @@
                         <tr>
                             <td class="w-28 py-1 text-slate-600">No. Bukti / Trx</td>
                             <td class="w-3">:</td>
-                            <td class="font-mono font-bold text-slate-900">#TRX-{{ sprintf('%06d', $trx->id) }}</td>
+                            <td class="tabular-nums font-bold text-slate-900">#TRX-{{ sprintf('%06d', $trx->id) }}</td>
                         </tr>
                         <tr>
                             <td class="py-1 text-slate-600">Jenis Setoran</td>
@@ -113,7 +113,7 @@
             <div class="bg-slate-50 border border-slate-300 rounded p-3 mb-4">
                 <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2">
                     <span class="text-xs font-bold text-slate-600 uppercase">Jumlah Nominal Setoran (Rp)</span>
-                    <span class="font-black text-xl text-slate-900 font-mono">Rp {{ number_format($trx->nominal, 0, ',', '.') }}</span>
+                    <span class="font-bold text-xl text-slate-900 tabular-nums">Rp {{ number_format($trx->nominal, 0, ',', '.') }}</span>
                 </div>
                 <div class="text-xs">
                     <span class="text-slate-500 font-bold uppercase">Terbilang: </span>
@@ -137,7 +137,7 @@
                 <div>
                     <p class="text-slate-600">Teller / Petugas Bank,</p>
                     <div class="h-16 flex items-center justify-center">
-                        <span class="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">[VALIDASI SISTEM]</span>
+                        <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">[VALIDASI SISTEM]</span>
                     </div>
                     <p class="font-bold text-slate-900 underline uppercase">({{ $trx->nama_teller ?? Auth::user()->nama_petugas ?? 'Teller' }})</p>
                     <p class="text-[10px] text-slate-500">Tanda Tangan & Nama Terang</p>
@@ -180,7 +180,7 @@
                         <tr>
                             <td class="py-1 text-slate-600">Nomor Rekening</td>
                             <td>:</td>
-                            <td class="font-bold font-mono text-sm text-slate-900">{{ $trx->no_rekening ?? $trx->nis }}</td>
+                            <td class="font-bold tabular-nums text-sm text-slate-900">{{ $trx->no_rekening ?? $trx->nis }}</td>
                         </tr>
                         <tr>
                             <td class="py-1 text-slate-600">Nama Pemilik / Siswa</td>
@@ -200,7 +200,7 @@
                         <tr>
                             <td class="w-28 py-1 text-slate-600">No. Bukti / Trx</td>
                             <td class="w-3">:</td>
-                            <td class="font-mono font-bold text-slate-900">#TRX-{{ sprintf('%06d', $trx->id) }}</td>
+                            <td class="tabular-nums font-bold text-slate-900">#TRX-{{ sprintf('%06d', $trx->id) }}</td>
                         </tr>
                         <tr>
                             <td class="py-1 text-slate-600">Jenis Setoran</td>
@@ -228,7 +228,7 @@
             <div class="bg-amber-100/60 border border-amber-300 rounded p-3 mb-4">
                 <div class="flex justify-between items-center border-b border-amber-200 pb-2 mb-2">
                     <span class="text-xs font-bold text-amber-900 uppercase">Jumlah Nominal Setoran (Rp)</span>
-                    <span class="font-black text-xl text-slate-900 font-mono">Rp {{ number_format($trx->nominal, 0, ',', '.') }}</span>
+                    <span class="font-bold text-xl text-slate-900 tabular-nums">Rp {{ number_format($trx->nominal, 0, ',', '.') }}</span>
                 </div>
                 <div class="text-xs">
                     <span class="text-amber-900 font-bold uppercase">Terbilang: </span>
@@ -252,7 +252,7 @@
                 <div>
                     <p class="text-slate-600">Teller / Petugas Bank,</p>
                     <div class="h-16 flex items-center justify-center">
-                        <span class="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">[VALIDASI SISTEM]</span>
+                        <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">[VALIDASI SISTEM]</span>
                     </div>
                     <p class="font-bold text-slate-900 underline uppercase">({{ $trx->nama_teller ?? Auth::user()->nama_petugas ?? 'Teller' }})</p>
                     <p class="text-[10px] text-slate-500">Tanda Tangan & Nama Terang</p>

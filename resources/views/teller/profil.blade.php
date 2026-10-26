@@ -14,15 +14,7 @@
 </head>
 <body class="bg-slate-50 font-sans" style="scrollbar-gutter: stable; overflow-y: scroll;">
 
-    <!-- NAVBAR TELLER KONSISTEN DENGAN ADMIN -->
-    <nav class="bg-slate-800 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-xl font-bold tracking-wider whitespace-nowrap shrink-0">LKM Mitra Siswa Abadi</div>
-                <a href="{{ url('/teller/dashboard') }}" class="text-slate-300 hover:text-white font-medium text-sm transition whitespace-nowrap focus:outline-none">&larr; Kembali ke Dashboard</a>
-            </div>
-        </div>
-    </nav>
+    <x-navbar />
 
     <main class="max-w-2xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
 
@@ -46,7 +38,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800">{{ $user->nama_petugas }}</h1>
-                    <p class="text-slate-500 text-sm mt-0.5">Username: <span class="font-mono text-slate-700">{{ $user->username }}</span></p>
+                    <p class="text-slate-500 text-sm mt-0.5">Username: <span class="font-medium text-slate-700">{{ $user->username }}</span></p>
                     <span class="inline-block bg-slate-100 text-slate-800 text-xs px-3 py-1 rounded-full font-bold mt-2 uppercase border border-slate-200">
                         Role: {{ $user->role }}
                     </span>
@@ -88,9 +80,9 @@
                     <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG. Maksimal ukuran 2MB.</p>
                 </div>
 
-                <div class="flex items-center justify-end space-x-4 border-t border-slate-200 pt-6">
-                    <a href="{{ url('/teller/dashboard') }}" class="text-slate-500 hover:text-slate-700 font-medium text-sm">Batal</a>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg shadow transition">
+                <div class="flex items-center justify-end space-x-3 border-t border-slate-200 pt-6">
+                    <a href="{{ url('/teller/dashboard') }}" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium py-2 px-4 rounded-lg shadow-sm transition text-sm">Batal</a>
+                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition text-sm">
                         Simpan Perubahan Profil
                     </button>
                 </div>

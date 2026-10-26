@@ -14,65 +14,8 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-800">
 
-    <!-- NAVBAR KONSISTEN DENGAN ADMIN (bg-slate-800) -->
-    <nav class="bg-slate-800 text-white shadow-md relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-lg xl:text-xl font-bold tracking-wider whitespace-nowrap shrink-0 mr-4">LKM Mitra Siswa Abadi</div>
-
-                <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/teller/dashboard') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/teller/riwayat') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Riwayat Saya</a>
-                    <a href="{{ url('/teller/daily-report') }}" class="text-white font-medium underline decoration-2 underline-offset-4 whitespace-nowrap focus:outline-none">Tutup Kas</a>
-                    <a href="{{ url('/teller/pengajuan-kas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Pengajuan Kas</a>
-                    <a href="{{ url('/teller/absensi-avalis') }}" class="text-slate-300 hover:text-white transition font-medium flex items-center whitespace-nowrap focus:outline-none">
-                        <svg class="w-4 h-4 mr-1 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z"/></svg>
-                        Absensi Avalis
-                    </a>
-
-                    <!-- PROFIL DROPDOWN -->
-                    <div class="relative ml-2 shrink-0">
-                        <button onclick="toggleDropdown()" id="profile-btn" class="flex items-center space-x-2 focus:outline-none bg-slate-700 hover:bg-slate-600 py-1.5 px-3 rounded-full transition border border-slate-600 whitespace-nowrap">
-                            @if(Auth::user()->foto)
-                                <img src="{{ asset('storage/'.Auth::user()->foto) }}" alt="Foto" class="w-7 h-7 rounded-full object-cover">
-                            @else
-                                <div class="w-7 h-7 rounded-full bg-slate-500 text-white flex items-center justify-center font-bold text-xs">
-                                    {{ strtoupper(substr(Auth::user()->nama_petugas ?? 'P', 0, 1)) }}
-                                </div>
-                            @endif
-                            <span class="text-sm font-medium hidden sm:inline whitespace-nowrap">{{ Auth::user()->nama_petugas }}</span>
-                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-
-                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 text-slate-700 border border-slate-200 z-50">
-                            <div class="px-4 py-3 border-b border-slate-100">
-                                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Masuk Sebagai</p>
-                                <p class="text-sm font-bold text-slate-800 truncate">{{ Auth::user()->nama_petugas }}</p>
-                                <span class="inline-block bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded-full font-bold mt-1 uppercase">
-                                    {{ Auth::user()->role }}
-                                </span>
-                            </div>
-
-                            <a href="{{ url('/teller/profil') }}" class="px-4 py-2.5 text-sm hover:bg-slate-50 text-slate-700 flex items-center font-medium">
-                                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                Lihat & Edit Profil Saya
-                            </a>
-
-                            <div class="border-t border-slate-100 my-1"></div>
-
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 flex items-center font-bold">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                    Keluar Sistem
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- NAVBAR -->
+    <x-navbar />
 
     <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- NOTIFIKASI -->
@@ -99,19 +42,18 @@
         <!-- HEADER HALAMAN -->
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight flex items-center">
-                    <svg class="w-7 h-7 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                     Daily Report Closing (Tutup Kas Harian)
                 </h1>
                 <p class="text-slate-500 text-sm mt-1">
                     Rekonsiliasi antara catatan kas komputer dan kas fisik di laci loket teller tanggal 
-                    <span class="font-bold text-slate-700">{{ \Carbon\Carbon::today()->translatedFormat('l, d F Y') }}</span>.
+                    <span class="font-semibold text-slate-700">{{ \Carbon\Carbon::today()->translatedFormat('l, d F Y') }}</span>.
                 </p>
             </div>
             <div class="mt-4 md:mt-0 flex items-center space-x-3">
                 <div class="bg-white border border-slate-200 rounded-lg px-4 py-2 text-right shadow-sm">
-                    <p class="text-xs text-slate-400 font-bold uppercase">Petugas Teller</p>
-                    <p class="text-sm font-black text-slate-800">{{ Auth::user()->nama_petugas }}</p>
+                    <p class="text-xs text-slate-500 font-medium">Petugas Teller</p>
+                    <p class="text-sm font-semibold text-slate-800">{{ Auth::user()->nama_petugas }}</p>
                 </div>
             </div>
         </div>
@@ -120,46 +62,46 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Awal Laci</p>
+                    <p class="text-xs font-semibold text-slate-500">Saldo Awal Laci</p>
                     <span class="p-2 bg-slate-100 text-slate-600 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
                     </span>
                 </div>
-                <p class="text-2xl font-black text-slate-800 mt-2">Rp {{ number_format($openingBalance, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-slate-900 mt-2 tabular-nums">Rp {{ number_format($openingBalance, 0, ',', '.') }}</p>
                 <p class="text-xs text-slate-400 mt-1">Kas operasional awal hari</p>
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Setoran (+)</p>
+                    <p class="text-xs font-semibold text-slate-500">Total Setoran (+)</p>
                     <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
                     </span>
                 </div>
-                <p class="text-2xl font-black text-emerald-600 mt-2">Rp {{ number_format($totalDeposit, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-emerald-600 mt-2 tabular-nums">Rp {{ number_format($totalDeposit, 0, ',', '.') }}</p>
                 <p class="text-xs text-slate-400 mt-1">Uang tunai masuk ke loket</p>
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Penarikan (-)</p>
+                    <p class="text-xs font-semibold text-slate-500">Total Penarikan (-)</p>
                     <span class="p-2 bg-rose-50 text-rose-600 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
                     </span>
                 </div>
-                <p class="text-2xl font-black text-rose-600 mt-2">Rp {{ number_format($totalWithdrawal, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-rose-600 mt-2 tabular-nums">Rp {{ number_format($totalWithdrawal, 0, ',', '.') }}</p>
                 <p class="text-xs text-slate-400 mt-1">Uang tunai keluar ke nasabah</p>
             </div>
 
-            <div class="bg-blue-900 text-white p-5 rounded-xl shadow-md border border-blue-800">
+            <div class="bg-slate-900 text-white p-5 rounded-xl shadow-sm border border-slate-800">
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-bold text-blue-200 uppercase tracking-wider">Saldo Komputer (Sistem)</p>
-                    <span class="p-2 bg-blue-800 text-blue-200 rounded-lg">
+                    <p class="text-xs font-semibold text-slate-300">Saldo Komputer (Sistem)</p>
+                    <span class="p-2 bg-slate-800 text-slate-300 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                     </span>
                 </div>
-                <p class="text-2xl font-black text-white mt-2" id="val-system-balance" data-val="{{ $systemBalance }}">Rp {{ number_format($systemBalance, 0, ',', '.') }}</p>
-                <p class="text-xs text-blue-300 mt-1">Wajib sama dengan kas fisik di laci</p>
+                <p class="text-2xl font-bold text-white mt-2 tabular-nums" id="val-system-balance" data-val="{{ $systemBalance }}">Rp {{ number_format($systemBalance, 0, ',', '.') }}</p>
+                <p class="text-xs text-slate-400 mt-1">Wajib sama dengan kas fisik di laci</p>
             </div>
         </div>
 
@@ -169,8 +111,7 @@
             <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <h2 class="text-base font-bold text-slate-900">
                             Perhitungan Lembaran Uang Fisik di Laci
                         </h2>
                         <p class="text-xs text-slate-500">Hitung jumlah lembar tiap pecahan untuk memastikan uang fisik akurat.</p>
@@ -195,12 +136,12 @@
                     @foreach($pecahanList as $p)
                     <div class="p-3 rounded-lg border {{ $p['bg'] }} flex items-center justify-between">
                         <div class="w-32">
-                            <p class="font-bold text-sm">{{ $p['label'] }}</p>
-                            <span class="text-[10px] text-slate-500 subtotal-text" id="subtotal-{{ $p['val'] }}">Rp 0</span>
+                            <p class="font-bold text-sm tabular-nums">{{ $p['label'] }}</p>
+                            <span class="text-[10px] text-slate-500 subtotal-text tabular-nums" id="subtotal-{{ $p['val'] }}">Rp 0</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <input type="number" min="0" placeholder="0"
-                                   class="input-lembar w-24 text-right font-bold text-sm bg-white border border-slate-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                   class="input-lembar w-24 text-right font-semibold text-sm bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 tabular-nums"
                                    data-nominal="{{ $p['val'] }}"
                                    data-coin="{{ isset($p['isCoin']) ? 'true' : 'false' }}"
                                    oninput="hitungTotalKasFisik()">
@@ -210,36 +151,35 @@
                     @endforeach
                 </div>
 
-                <div class="bg-slate-100 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-200">
-                    <span class="text-sm font-bold text-slate-700">Akumulasi Total Uang Fisik:</span>
-                    <span class="text-2xl font-black text-slate-900" id="display-total-fisik">Rp 0</span>
+                <div class="bg-slate-50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-200">
+                    <span class="text-sm font-semibold text-slate-700">Akumulasi Total Uang Fisik:</span>
+                    <span class="text-2xl font-bold text-slate-900 tabular-nums" id="display-total-fisik">Rp 0</span>
                 </div>
             </div>
 
             <!-- FORM SUBMIT DAILY REPORT -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800 pb-3 mb-4 border-b border-slate-200 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <h2 class="text-base font-bold text-slate-900 pb-3 mb-4 border-b border-slate-200">
                         Otorisasi Tutup Kas
                     </h2>
 
                     @if($myReportToday)
-                    <div class="mb-4 p-4 rounded-lg {{ $myReportToday->status === 'approved' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : ($myReportToday->status === 'hold' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-blue-50 border border-blue-200 text-blue-800') }}">
+                    <div class="mb-4 p-4 rounded-xl {{ $myReportToday->status === 'approved' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : ($myReportToday->status === 'hold' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-blue-50 border border-blue-200 text-blue-800') }}">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-xs font-bold uppercase tracking-wider">Status Laporan Hari Ini:</span>
+                            <span class="text-xs font-semibold">Status Laporan Hari Ini:</span>
                             @if($myReportToday->status === 'approved')
-                                <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-bold">APPROVED</span>
+                                <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Approved</span>
                             @elseif($myReportToday->status === 'hold')
-                                <span class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded font-bold">HOLD (PENDING)</span>
+                                <span class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded font-semibold">Hold (Pending)</span>
                             @else
-                                <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-bold">MENUNGGU APPROVAL</span>
+                                <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Menunggu Approval</span>
                             @endif
                         </div>
-                        <p class="text-xs mt-1">Telah disubmit dengan kas fisik: <strong>Rp {{ number_format($myReportToday->physical_balance, 0, ',', '.') }}</strong></p>
+                        <p class="text-xs mt-1">Telah disubmit dengan kas fisik: <strong class="tabular-nums">Rp {{ number_format($myReportToday->physical_balance, 0, ',', '.') }}</strong></p>
                         @if($myReportToday->status === 'approved')
                             <p class="text-xs mt-2 text-emerald-700 font-medium">Laporan sudah disetujui Supervisor. Silakan cetak lembar bukti penutupan kas.</p>
-                            <a href="{{ url('/daily-report/cetak/'.$myReportToday->id) }}" target="_blank" class="mt-3 inline-flex items-center text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded transition">
+                            <a href="{{ url('/daily-report/cetak/'.$myReportToday->id) }}" target="_blank" class="mt-3 inline-flex items-center text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm transition">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                 Cetak Daily Report #{{ $myReportToday->id }}
                             </a>
@@ -250,47 +190,47 @@
                     <form action="{{ url('/teller/daily-report/simpan') }}" method="POST" id="form-daily-report">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">
                                 Saldo Kas Fisik (Rp) *
                             </label>
                             <input type="number" name="physical_balance" id="physical_balance" min="0" required
                                    value="{{ old('physical_balance', $myReportToday->physical_balance ?? 0) }}"
                                    oninput="updateDifferenceManual()"
-                                   class="w-full font-black text-xl text-slate-800 border border-slate-300 rounded-lg px-3 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                   class="w-full font-bold text-xl text-slate-900 border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 tabular-nums">
                             <p class="text-[11px] text-slate-400 mt-1">Dapat diisi manual atau dari kalkulator lembaran di samping.</p>
                         </div>
 
                         <!-- KOTAK INDIKATOR SELISIH KAS -->
                         <div id="diff-card" class="mb-4 p-3.5 rounded-lg border bg-slate-50 border-slate-200">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-slate-600 uppercase">Status Rekonsiliasi:</span>
-                                <span id="diff-status" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">Belum Dihitung</span>
+                                <span class="text-xs font-semibold text-slate-600">Status Rekonsiliasi:</span>
+                                <span id="diff-status" class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700">Belum Dihitung</span>
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
                                 <span class="text-xs text-slate-500">Selisih (Fisik - Sistem):</span>
-                                <span id="diff-amount" class="text-base font-black text-slate-800">Rp 0</span>
+                                <span id="diff-amount" class="text-base font-bold text-slate-900 tabular-nums">Rp 0</span>
                             </div>
                         </div>
 
                         <div class="mb-5">
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">
                                 Catatan / Keterangan Teller
                             </label>
                             <textarea name="notes" rows="2" placeholder="Tuliskan keterangan jika ada kelebihan/kekurangan kas fisik atau hal khusus lainnya..."
-                                      class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-600">{{ old('notes', $myReportToday->notes ?? '') }}</textarea>
+                                      class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700">{{ old('notes', $myReportToday->notes ?? '') }}</textarea>
                         </div>
 
                         <button type="submit" id="btn-submit-report"
                                 {{ ($myReportToday && $myReportToday->status === 'approved') ? 'disabled' : '' }}
-                                class="w-full bg-blue-800 hover:bg-blue-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black py-3 px-4 rounded-lg shadow transition flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                                class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center text-sm">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                             {{ $myReportToday ? 'Perbarui Laporan Tutup Kas' : 'Kirim Tutup Kas ke Supervisor' }}
                         </button>
                     </form>
                 </div>
 
                 <div class="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                    <p>🔒 <strong>SOP Perbankan:</strong> Setelah disetujui Supervisor, data kas harian akan dibekukan dan tercatat permanen pada Jurnal Akuntansi.</p>
+                    <p>Setelah disetujui Supervisor, data kas harian akan dibekukan dan tercatat permanen pada Jurnal Akuntansi.</p>
                 </div>
             </div>
         </div>
@@ -299,17 +239,17 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-10 overflow-hidden">
             <div class="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800">Rincian Transaksi Loket Saya Hari Ini</h2>
+                    <h2 class="text-base font-bold text-slate-900">Rincian Transaksi Loket Saya Hari Ini</h2>
                     <p class="text-xs text-slate-500">Daftar transaksi yang Anda proses pada tanggal {{ \Carbon\Carbon::today()->format('d/m/Y') }}.</p>
                 </div>
-                <span class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full">
+                <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-full tabular-nums">
                     {{ count($trxHariIni) }} Transaksi
                 </span>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
                         <tr>
                             <th class="p-3">Waktu</th>
                             <th class="p-3">ID Trx</th>
@@ -321,27 +261,27 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse($trxHariIni as $t)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 text-slate-500 font-mono">{{ date('H:i:s', strtotime($t->created_at)) }}</td>
-                            <td class="p-3 font-mono font-bold text-blue-900">#TRX-{{ str_pad($t->id, 5, '0', STR_PAD_LEFT) }}</td>
-                            <td class="p-3 font-bold uppercase">
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 text-slate-500 tabular-nums">{{ date('H:i:s', strtotime($t->created_at)) }}</td>
+                            <td class="p-3 font-semibold text-slate-900 tabular-nums">#TRX-{{ str_pad($t->id, 5, '0', STR_PAD_LEFT) }}</td>
+                            <td class="p-3 capitalize font-medium">
                                 @if(in_array($t->jenis_transaksi, ['setor', 'koreksi_tarik']))
-                                    <span class="text-emerald-600">▲ {{ $t->jenis_transaksi }}</span>
+                                    <span class="text-emerald-700 font-semibold">{{ $t->jenis_transaksi }}</span>
                                 @else
-                                    <span class="text-rose-600">▼ {{ $t->jenis_transaksi }}</span>
+                                    <span class="text-rose-700 font-semibold">{{ $t->jenis_transaksi }}</span>
                                 @endif
                             </td>
-                            <td class="p-3 font-mono font-bold">{{ $t->kode_sandi ?? '-' }}</td>
-                            <td class="p-3 text-right font-black {{ in_array($t->jenis_transaksi, ['setor', 'koreksi_tarik']) ? 'text-emerald-700' : 'text-rose-700' }}">
+                            <td class="p-3 font-semibold tabular-nums text-slate-700">{{ $t->kode_sandi ?? '-' }}</td>
+                            <td class="p-3 text-right font-semibold tabular-nums {{ in_array($t->jenis_transaksi, ['setor', 'koreksi_tarik']) ? 'text-emerald-700' : 'text-rose-700' }}">
                                 Rp {{ number_format($t->nominal, 0, ',', '.') }}
                             </td>
                             <td class="p-3">
                                 @if($t->status === 'sukses')
-                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Sukses</span>
+                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded">Sukses</span>
                                 @elseif($t->status === 'pending')
-                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Pending SPV</span>
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded">Pending SPV</span>
                                 @else
-                                    <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded">{{ $t->status }}</span>
+                                    <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2 py-0.5 rounded capitalize">{{ $t->status }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -358,13 +298,13 @@
         <!-- RIWAYAT DAILY REPORT SAYA -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-5 border-b border-slate-200">
-                <h2 class="text-lg font-bold text-slate-800">Riwayat Daily Report Saya</h2>
+                <h2 class="text-base font-bold text-slate-900">Riwayat Daily Report Saya</h2>
                 <p class="text-xs text-slate-500">Arsip laporan tutup kas harian yang pernah Anda kirimkan.</p>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
                         <tr>
                             <th class="p-3">Tanggal Laporan</th>
                             <th class="p-3 text-right">Saldo Awal</th>
@@ -379,28 +319,28 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse($myReports as $rep)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-bold text-slate-900">{{ date('d/m/Y', strtotime($rep->report_date)) }}</td>
-                            <td class="p-3 text-right">Rp {{ number_format($rep->opening_balance, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right text-emerald-600 font-bold">Rp {{ number_format($rep->total_deposit, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right text-rose-600 font-bold">Rp {{ number_format($rep->total_withdrawal, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right font-bold text-blue-900">Rp {{ number_format($rep->system_balance, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right font-bold">Rp {{ number_format($rep->physical_balance, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right font-black {{ $rep->difference == 0 ? 'text-emerald-600' : ($rep->difference > 0 ? 'text-blue-600' : 'text-rose-600') }}">
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 font-semibold text-slate-900 tabular-nums">{{ date('d/m/Y', strtotime($rep->report_date)) }}</td>
+                            <td class="p-3 text-right tabular-nums">Rp {{ number_format($rep->opening_balance, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right text-emerald-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_deposit, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right text-rose-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_withdrawal, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right font-semibold text-slate-900 tabular-nums">Rp {{ number_format($rep->system_balance, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right font-semibold tabular-nums">Rp {{ number_format($rep->physical_balance, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right font-semibold tabular-nums {{ $rep->difference == 0 ? 'text-emerald-600' : ($rep->difference > 0 ? 'text-blue-600' : 'text-rose-600') }}">
                                 Rp {{ number_format($rep->difference, 0, ',', '.') }}
                             </td>
                             <td class="p-3 text-center">
                                 @if($rep->status === 'approved')
-                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">APPROVED</span>
+                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded">Approved</span>
                                 @elseif($rep->status === 'hold')
-                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">HOLD</span>
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded">Hold</span>
                                 @else
-                                    <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">PENDING</span>
+                                    <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded">Pending</span>
                                 @endif
                             </td>
                             <td class="p-3 text-center">
                                 <a href="{{ url('/daily-report/cetak/'.$rep->id) }}" target="_blank"
-                                   class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded border border-blue-200 transition">
+                                   class="inline-flex items-center text-xs font-medium text-slate-700 hover:bg-slate-50 bg-white px-2.5 py-1 rounded-lg border border-slate-300 transition shadow-sm">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                     Cetak
                                 </a>

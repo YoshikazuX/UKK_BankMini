@@ -17,12 +17,12 @@
     <div class="no-print max-w-4xl mx-auto mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow border border-slate-200">
         <span class="text-sm font-bold text-slate-700">Pratinjau Cetak Laporan Saldo Simpanan Per Produk</span>
         <div class="flex space-x-3">
-            <button onclick="window.close()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg text-sm transition">
+            <button onclick="window.close()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-4 py-2 rounded-lg text-sm transition">
                 Tutup
             </button>
-            <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
+            <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2 rounded-lg text-sm shadow transition flex items-center">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Cetak Laporan (Print)
+                Cetak Laporan
             </button>
         </div>
     </div>
@@ -66,24 +66,24 @@
             </thead>
             <tbody>
                 <tr>
-                    <td class="p-2 border border-slate-300 text-center font-mono">1</td>
+                    <td class="p-2 border border-slate-300 text-center tabular-nums">1</td>
                     <td class="p-2 border border-slate-300 font-bold">Tabungan Siswa (Pelajar)</td>
-                    <td class="p-2 border border-slate-300 text-center font-mono">{{ count($siswaList) }} Rekening</td>
-                    <td class="p-2 border border-slate-300 text-right font-mono">{{ $grandTotal > 0 ? round(($totalSiswaSaldo / $grandTotal) * 100, 1) : 0 }}%</td>
-                    <td class="p-2 border border-slate-300 text-right font-mono font-bold text-slate-900">Rp {{ number_format($totalSiswaSaldo, 0, ',', '.') }}</td>
+                    <td class="p-2 border border-slate-300 text-center tabular-nums">{{ count($siswaList) }} Rekening</td>
+                    <td class="p-2 border border-slate-300 text-right tabular-nums">{{ $grandTotal > 0 ? round(($totalSiswaSaldo / $grandTotal) * 100, 1) : 0 }}%</td>
+                    <td class="p-2 border border-slate-300 text-right tabular-nums font-bold text-slate-900">Rp {{ number_format($totalSiswaSaldo, 0, ',', '.') }}</td>
                 </tr>
                 <tr>
-                    <td class="p-2 border border-slate-300 text-center font-mono">2</td>
+                    <td class="p-2 border border-slate-300 text-center tabular-nums">2</td>
                     <td class="p-2 border border-slate-300 font-bold">Tabungan Guru & Karyawan</td>
-                    <td class="p-2 border border-slate-300 text-center font-mono">{{ count($guruList) }} Rekening</td>
-                    <td class="p-2 border border-slate-300 text-right font-mono">{{ $grandTotal > 0 ? round(($totalGuruSaldo / $grandTotal) * 100, 1) : 0 }}%</td>
-                    <td class="p-2 border border-slate-300 text-right font-mono font-bold text-slate-900">Rp {{ number_format($totalGuruSaldo, 0, ',', '.') }}</td>
+                    <td class="p-2 border border-slate-300 text-center tabular-nums">{{ count($guruList) }} Rekening</td>
+                    <td class="p-2 border border-slate-300 text-right tabular-nums">{{ $grandTotal > 0 ? round(($totalGuruSaldo / $grandTotal) * 100, 1) : 0 }}%</td>
+                    <td class="p-2 border border-slate-300 text-right tabular-nums font-bold text-slate-900">Rp {{ number_format($totalGuruSaldo, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-500">
                     <td colspan="2" class="p-2 text-right uppercase border border-slate-300">Total Akumulasi DPK:</td>
-                    <td class="p-2 text-center font-mono border border-slate-300">{{ count($siswaList) + count($guruList) }} Rekening</td>
-                    <td class="p-2 text-right font-mono border border-slate-300">100.0%</td>
-                    <td class="p-2 text-right font-mono border border-slate-300 text-sm">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
+                    <td class="p-2 text-center tabular-nums border border-slate-300">{{ count($siswaList) + count($guruList) }} Rekening</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300">100.0%</td>
+                    <td class="p-2 text-right tabular-nums border border-slate-300 text-sm">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
                 </tr>
             </tbody>
         </table>

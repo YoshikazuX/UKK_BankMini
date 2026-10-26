@@ -54,94 +54,7 @@
     <!-- ========================================================================= -->
     <!-- NAVBAR STANDAR KONSISTEN (SAMA DENGAN ADMIN) -->
     <!-- ========================================================================= -->
-    <nav class="bg-slate-800 text-white shadow-md relative no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-lg xl:text-xl font-bold tracking-wider whitespace-nowrap shrink-0 mr-4">LKM Mitra Siswa Abadi</div>
-
-                @if(Auth::user()->role === 'teller')
-                    <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                        <a href="{{ url('/teller/dashboard') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Dashboard</a>
-                        <a href="{{ url('/teller/riwayat') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Riwayat Saya</a>
-                        <a href="{{ url('/teller/daily-report') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Tutup Kas</a>
-                        <a href="{{ url('/teller/pengajuan-kas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Pengajuan Kas</a>
-                        <a href="{{ url('/teller/absensi-avalis') }}" class="text-white font-medium underline decoration-2 underline-offset-4 flex items-center whitespace-nowrap focus:outline-none">
-                            <svg class="w-4 h-4 mr-1 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z"/></svg>
-                            Absensi Avalis
-                        </a>
-                @elseif(Auth::user()->role === 'supervisor')
-                    <div class="flex items-center space-x-2.5 lg:space-x-3.5 xl:space-x-5 text-xs xl:text-sm font-medium">
-                        <a href="{{ url('/supervisor/dashboard') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Dashboard</a>
-                        <a href="{{ url('/supervisor/laporan') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Laporan Transaksi</a>
-                        <a href="{{ url('/supervisor/daily-report') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Daily Report</a>
-                        <a href="{{ url('/supervisor/pengajuan-kas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Pengajuan Kas</a>
-                        <a href="{{ url('/laporan/jurnal') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Jurnal</a>
-                        <a href="{{ url('/laporan/saldo-produk') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Produk</a>
-                        <a href="{{ url('/laporan/tahunan') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Tahunan</a>
-                        <a href="{{ url('/avalis/petugas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Data Teller</a>
-                        <a href="{{ url('/supervisor/absensi-avalis') }}" class="text-white font-medium underline decoration-2 underline-offset-4 flex items-center whitespace-nowrap focus:outline-none">Absensi</a>
-                @else
-                    <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                        <a href="{{ url('/admin/dashboard') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Dashboard</a>
-                        <a href="{{ url('/admin/data-nasabah') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Manajemen Nasabah</a>
-                        <a href="{{ url('/avalis/petugas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Petugas Avalis</a>
-                        <a href="{{ url('/laporan/jurnal') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Jurnal</a>
-                        <a href="{{ url('/admin/audit') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Jejak Audit</a>
-                        <a href="{{ url('/admin/absensi-avalis') }}" class="text-white font-medium underline decoration-2 underline-offset-4 flex items-center whitespace-nowrap focus:outline-none">
-                            <svg class="w-4 h-4 mr-1 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z"/></svg>
-                            Absensi
-                        </a>
-                        <a href="{{ url('/admin/konfigurasi') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Konfigurasi</a>
-                @endif
-
-                    <!-- Profil Dropdown -->
-                    <div class="relative ml-2 shrink-0">
-                        <button onclick="toggleDropdown()" id="profile-btn" class="flex items-center space-x-2 focus:outline-none bg-slate-700 hover:bg-slate-600 py-1.5 px-3 rounded-full transition border border-slate-600 whitespace-nowrap">
-                            @if(Auth::user()->foto)
-                                <img src="{{ asset('storage/'.Auth::user()->foto) }}" alt="Foto" class="w-7 h-7 rounded-full object-cover">
-                            @else
-                                <div class="w-7 h-7 rounded-full bg-slate-500 text-white flex items-center justify-center font-bold text-xs">
-                                    {{ strtoupper(substr(Auth::user()->nama_petugas ?? 'U', 0, 1)) }}
-                                </div>
-                            @endif
-                            <span class="text-sm font-medium hidden sm:inline whitespace-nowrap">{{ Auth::user()->nama_petugas }}</span>
-                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-
-                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 text-slate-700 border border-slate-200 z-50">
-                            <div class="px-4 py-3 border-b border-slate-100">
-                                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Masuk Sebagai</p>
-                                <p class="text-sm font-bold text-slate-800 truncate">{{ Auth::user()->nama_petugas }}</p>
-                                <span class="inline-block bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded-full font-bold mt-1 uppercase">
-                                    {{ Auth::user()->role }}
-                                </span>
-                            </div>
-                            @if($role === 'admin')
-                                <a href="{{ url('/admin/profil') }}" class="px-4 py-2.5 text-sm hover:bg-slate-50 text-slate-700 flex items-center font-medium">
-                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Lihat Profil
-                                </a>
-                            @elseif($role === 'teller')
-                                <a href="{{ url('/teller/profil') }}" class="px-4 py-2.5 text-sm hover:bg-slate-50 text-slate-700 flex items-center font-medium">
-                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Lihat Profil
-                                </a>
-                            @else
-                                <a href="{{ url('/supervisor/profil') }}" class="px-4 py-2.5 text-sm hover:bg-slate-50 text-slate-700 flex items-center font-medium">
-                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Lihat Profil
-                                </a>
-                            @endif
-                            <div class="border-t border-slate-100 my-1"></div>
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 flex items-center font-bold">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Keluar Sistem
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <x-navbar />
 
     <!-- ========================================================================= -->
     <!-- KONTEN UTAMA: SPREADSHEET DIGITAL EXCEL ABSENSI AVALIS -->
@@ -191,18 +104,18 @@
 
                 <!-- Action Buttons: Tambah Baris & Ekspor Excel -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="openModalTambah()" class="bg-white hover:bg-emerald-50 text-emerald-900 font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center border border-emerald-300">
-                        <svg class="w-4 h-4 mr-1 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        + Input Baris Avalis
+                    <button onclick="openModalTambah()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Absensi Avalis
                     </button>
 
-                    <a href="{{ url('/absensi-avalis/export') }}?tanggal={{ request('tanggal') }}&shift={{ request('shift') }}" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center border border-emerald-600">
-                        <svg class="w-4 h-4 mr-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        Unduh File Excel (.CSV)
+                    <a href="{{ url('/absensi-avalis/export') }}?tanggal={{ request('tanggal') }}&shift={{ request('shift') }}" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center">
+                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Ekspor Excel (.csv)
                     </a>
 
-                    <button onclick="window.print()" class="bg-emerald-900 hover:bg-emerald-950 text-emerald-100 font-semibold px-3 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <button onclick="window.print()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-3 py-1.5 rounded-lg text-xs shadow-sm transition flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         Cetak
                     </button>
                 </div>
@@ -280,10 +193,10 @@
                             <td class="excel-row-header">{{ $index + 1 }}</td>
 
                             <!-- A: No Urut -->
-                            <td class="text-center font-mono text-slate-500 font-semibold">{{ $index + 1 }}</td>
+                            <td class="text-center tabular-nums text-slate-500 font-semibold">{{ $index + 1 }}</td>
 
                             <!-- B: Tanggal -->
-                            <td class="font-mono text-xs whitespace-nowrap text-slate-700">{{ date('d/m/Y', strtotime($item->tanggal)) }}</td>
+                            <td class="tabular-nums text-xs whitespace-nowrap text-slate-700">{{ date('d/m/Y', strtotime($item->tanggal)) }}</td>
 
                             <!-- C: Nama Avalis -->
                             <td>
@@ -300,7 +213,7 @@
 
                             <!-- E: No WhatsApp (Dengan Direct Link WA) -->
                             <td class="whitespace-nowrap">
-                                <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $item->no_wa)) }}" target="_blank" class="inline-flex items-center text-emerald-700 hover:text-emerald-900 font-mono text-xs font-semibold hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-200" title="Klik untuk Chat WhatsApp">
+                                <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $item->no_wa)) }}" target="_blank" class="inline-flex items-center text-emerald-700 hover:text-emerald-900 tabular-nums text-xs font-medium hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-200" title="Klik untuk Chat WhatsApp">
                                     <svg class="w-3.5 h-3.5 mr-1 text-emerald-600 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
                                     {{ $item->no_wa }}
                                 </a>
@@ -432,7 +345,7 @@
                     <!-- No WhatsApp yang bisa dihubungi -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">No. WhatsApp *</label>
-                        <input type="text" name="no_wa" placeholder="Contoh: 081234567890" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+                        <input type="text" name="no_wa" placeholder="Contoh: 081234567890" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none tabular-nums">
                     </div>
 
                     <!-- Status Kehadiran -->
@@ -514,7 +427,7 @@
                     <!-- No WhatsApp yang bisa dihubungi -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">No. WhatsApp *</label>
-                        <input type="text" id="edit_no_wa" name="no_wa" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-500 focus:outline-none font-mono">
+                        <input type="text" id="edit_no_wa" name="no_wa" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-500 focus:outline-none tabular-nums">
                     </div>
 
                     <!-- Status Kehadiran -->
@@ -549,19 +462,6 @@
     </div>
 
     <script>
-        // Dropdown Profil
-        function toggleDropdown() {
-            const dropdown = document.getElementById('profile-dropdown');
-            dropdown.classList.toggle('hidden');
-        }
-
-        window.onclick = function(event) {
-            const btn = document.getElementById('profile-btn');
-            const dropdown = document.getElementById('profile-dropdown');
-            if (btn && dropdown && !btn.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-        }
 
         // Modal Tambah
         function openModalTambah() {

@@ -21,10 +21,10 @@
 <body>
 
     <div class="max-w-4xl mx-auto mt-4 mb-2 flex justify-between items-center no-print px-4">
-        <a href="javascript:history.back()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-lg transition">
+        <a href="javascript:history.back()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-xs px-4 py-2 rounded-lg transition">
             &larr; Kembali
         </a>
-        <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold text-xs px-5 py-2 rounded-lg transition shadow">
+        <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-5 py-2 rounded-lg transition shadow">
             Cetak Lembar Pas Buku
         </button>
     </div>
@@ -76,7 +76,7 @@
                     <td class="text-right font-bold">
                         {{ number_format($trx->saldo_berjalan, 0, ',', '.') }}
                     </td>
-                    <td class="text-center font-mono text-[10px]">
+                    <td class="text-center text-[10px]">
                         {{ substr($trx->nama_teller ?? 'TLR', 0, 5) }}
                     </td>
                 </tr>

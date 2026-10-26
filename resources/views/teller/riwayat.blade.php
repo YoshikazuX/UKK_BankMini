@@ -14,123 +14,67 @@
 </head>
 <body class="bg-slate-50 font-sans">
 
-    <!-- NAVBAR TELLER KONSISTEN DENGAN ADMIN -->
-    <nav class="bg-slate-800 text-white shadow-md relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-lg xl:text-xl font-bold tracking-wider whitespace-nowrap shrink-0 mr-4">LKM Mitra Siswa Abadi</div>
-                <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/teller/dashboard') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/teller/riwayat') }}" class="text-white font-medium underline decoration-2 underline-offset-4 whitespace-nowrap focus:outline-none">Riwayat Saya</a>
-                    <a href="{{ url('/teller/daily-report') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Tutup Kas</a>
-                    <a href="{{ url('/teller/pengajuan-kas') }}" class="text-slate-300 hover:text-white transition font-medium whitespace-nowrap focus:outline-none">Pengajuan Kas</a>
-                    <a href="{{ url('/teller/absensi-avalis') }}" class="text-slate-300 hover:text-white transition font-medium flex items-center whitespace-nowrap focus:outline-none">
-                        <svg class="w-4 h-4 mr-1 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z"/></svg>
-                        Absensi Avalis
-                    </a>
+    <!-- NAVBAR -->
+    <x-navbar />
 
-                    <!-- PROFIL DROPDOWN -->
-                    <div class="relative ml-2 shrink-0">
-                        <div>
-                            <button onclick="toggleDropdown()" id="profile-btn" class="flex items-center space-x-2 focus:outline-none bg-slate-700 hover:bg-slate-600 py-1.5 px-3 rounded-full transition border border-slate-600 whitespace-nowrap">
-                                @if(Auth::user()->foto)
-                                    <img src="{{ asset('storage/'.Auth::user()->foto) }}" alt="Foto" class="w-7 h-7 rounded-full object-cover">
-                                @else
-                                    <div class="w-7 h-7 rounded-full bg-slate-500 text-white flex items-center justify-center font-bold text-xs">
-                                        {{ strtoupper(substr(Auth::user()->nama_petugas ?? 'P', 0, 1)) }}
-                                    </div>
-                                @endif
-                                <span class="text-sm font-medium hidden sm:inline whitespace-nowrap">{{ Auth::user()->nama_petugas }}</span>
-                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                        </div>
-
-                        <!-- ISI DROPDOWN -->
-                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 text-slate-700 border border-slate-200 z-50">
-                            <div class="px-4 py-3 border-b border-slate-100">
-                                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Masuk Sebagai</p>
-                                <p class="text-sm font-bold text-slate-800 truncate">{{ Auth::user()->nama_petugas }}</p>
-                                <span class="inline-block bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded-full font-bold mt-1 uppercase">
-                                    {{ Auth::user()->role }}
-                                </span>
-                            </div>
-                            <a href="{{ url('/teller/profil') }}" class="px-4 py-2.5 text-sm hover:bg-slate-50 text-slate-700 flex items-center font-medium">
-                                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                Lihat & Edit Profil Saya
-                            </a>
-                            <div class="border-t border-slate-100 my-1"></div>
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 flex items-center font-bold">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                    Keluar Sistem
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         @if(session('success'))
-        <div class="bg-emerald-100 border-l-4 border-emerald-600 text-emerald-800 p-4 mb-6 rounded shadow-sm font-bold">
+        <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-4 mb-6 rounded-r shadow-sm text-sm font-medium">
             {{ session('success') }}
         </div>
         @endif
 
         @if(session('error'))
-        <div class="bg-rose-100 border-l-4 border-rose-600 text-rose-800 p-4 mb-6 rounded shadow-sm font-bold">
+        <div class="bg-rose-50 border-l-4 border-rose-500 text-rose-800 p-4 mb-6 rounded-r shadow-sm text-sm font-medium">
             {{ session('error') }}
         </div>
         @endif
 
-        <div class="mb-8 border-b border-slate-200 pb-4">
-            <h1 class="text-2xl font-bold text-slate-800">Riwayat Transaksi Saya</h1>
-            <p class="text-slate-600 mt-1">Gunakan tombol <strong>Koreksi/Void</strong> jika terjadi kesalahan input. Wajib menggunakan PIN Supervisor.</p>
+        <div class="mb-6 border-b border-slate-200 pb-6">
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Riwayat Transaksi Saya</h1>
+            <p class="text-slate-500 text-sm mt-1">Gunakan tombol <strong>Koreksi/Void</strong> jika terjadi kesalahan input. Wajib menggunakan PIN Supervisor.</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-            <table class="min-w-full bg-white text-left">
-                <thead class="bg-slate-100 text-slate-700">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="min-w-full bg-white text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
                     <tr>
-                        <th class="py-4 px-6 font-bold">Waktu</th>
-                        <th class="py-4 px-6 font-bold">Nasabah (NIS)</th>
-                        <th class="py-4 px-6 font-bold">Jenis</th>
-                        <th class="py-4 px-6 font-bold">Nominal</th>
-                        <th class="py-4 px-6 font-bold">Status</th>
-                        <th class="py-4 px-6 font-bold text-center">Tindakan</th>
+                        <th class="py-3 px-4">Waktu</th>
+                        <th class="py-3 px-4">Nasabah (NIS)</th>
+                        <th class="py-3 px-4">Jenis Transaksi</th>
+                        <th class="py-3 px-4">Nominal</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-center">Tindakan</th>
                     </tr>
                 </thead>
-                <tbody class="text-slate-700 text-sm">
+                <tbody class="divide-y divide-slate-100 text-slate-700">
                     @forelse ($riwayat as $r)
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                        <td class="py-4 px-6 text-slate-500">{{ \Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i') }}</td>
-                        <td class="py-4 px-6 font-bold text-slate-800">{{ $r->nama_siswa }} <br><span class="text-xs text-slate-500 font-mono">{{ $r->nis }}</span></td>
-                        <td class="py-4 px-6 uppercase font-bold text-xs">{{ $r->jenis_transaksi }}</td>
-                        <td class="py-4 px-6 font-black text-emerald-600">Rp {{ number_format($r->nominal, 0, ',', '.') }}</td>
-                        <td class="py-4 px-6">
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 text-slate-600 tabular-nums">{{ \Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i') }}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">{{ $r->nama_siswa }} <br><span class="text-xs text-slate-400 font-normal tabular-nums">{{ $r->nis }}</span></td>
+                        <td class="py-3 px-4 capitalize font-medium text-slate-700">{{ $r->jenis_transaksi }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900 tabular-nums">Rp {{ number_format($r->nominal, 0, ',', '.') }}</td>
+                        <td class="py-3 px-4">
                             @if($r->status == 'dibatalkan')
-                                <span class="bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded text-xs uppercase">DIBATALKAN</span>
-                                <div class="text-xs text-rose-500 mt-1">Alasan: {{ $r->alasan_batal }}</div>
+                                <span class="bg-rose-100 text-rose-800 font-semibold px-2 py-0.5 rounded text-[10px]">Dibatalkan</span>
+                                <div class="text-[11px] text-rose-600 mt-1">Alasan: {{ $r->alasan_batal }}</div>
                             @else
-                                <span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded text-xs uppercase">{{ $r->status }}</span>
+                                <span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded text-[10px] capitalize">{{ $r->status }}</span>
                             @endif
                         </td>
-                        <td class="py-4 px-6 text-center whitespace-nowrap space-x-1">
+                        <td class="py-3 px-4 text-center whitespace-nowrap space-x-1.5">
                             @if($r->status != 'dibatalkan')
                                 @if($r->jenis_transaksi === 'setor')
-                                    <a href="{{ url('/teller/slip-setor/'.$r->id) }}" target="_blank" class="inline-block bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold py-1.5 px-3 rounded text-xs transition border border-blue-200" title="Cetak Slip Setoran">
+                                    <a href="{{ url('/teller/slip-setor/'.$r->id) }}" target="_blank" class="inline-block bg-white hover:bg-slate-50 text-slate-700 font-medium py-1.5 px-3 rounded-lg text-xs transition border border-slate-300 shadow-sm" title="Cetak Slip Setoran">
                                         Cetak Slip
                                     </a>
                                 @else
-                                    <a href="{{ url('/teller/slip-tarik/'.$r->id) }}" target="_blank" class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold py-1.5 px-3 rounded text-xs transition border border-rose-200" title="Cetak Slip Penarikan">
+                                    <a href="{{ url('/teller/slip-tarik/'.$r->id) }}" target="_blank" class="inline-block bg-white hover:bg-slate-50 text-slate-700 font-medium py-1.5 px-3 rounded-lg text-xs transition border border-slate-300 shadow-sm" title="Cetak Slip Penarikan">
                                         Cetak Slip
                                     </a>
                                 @endif
-                                <button onclick="bukaModalVoid({{ $r->id }}, '{{ $r->nama_siswa }}', '{{ $r->jenis_transaksi }}', 'Rp {{ number_format($r->nominal, 0, ',', '.') }}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-1.5 px-3 rounded text-xs transition shadow-sm border border-amber-300">
+                                <button onclick="bukaModalVoid({{ $r->id }}, '{{ $r->nama_siswa }}', '{{ $r->jenis_transaksi }}', 'Rp {{ number_format($r->nominal, 0, ',', '.') }}')" class="bg-white hover:bg-slate-50 text-rose-700 font-medium py-1.5 px-3 rounded-lg text-xs transition shadow-sm border border-slate-300">
                                     Void
                                 </button>
                             @else
@@ -139,7 +83,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="py-10 text-center text-slate-500">Belum ada riwayat transaksi.</td></tr>
+                    <tr><td colspan="6" class="py-10 text-center text-slate-400">Belum ada riwayat transaksi.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -150,35 +94,34 @@
     <div id="modal-void" class="hidden fixed inset-0 bg-slate-900 bg-opacity-75 z-50 backdrop-blur-sm p-4 overflow-y-auto">
         <div class="min-h-full flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div class="bg-rose-600 px-6 py-4 border-b border-rose-700">
-                <h3 class="text-xl font-black text-white flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    KOREKSI / VOID TRANSAKSI
+            <div class="bg-slate-900 px-6 py-4 border-b border-slate-800">
+                <h3 class="text-base font-semibold text-white">
+                    Koreksi / Void Transaksi
                 </h3>
             </div>
 
             <form id="form-void" method="POST" class="p-6">
                 @csrf
-                <div class="mb-4 bg-rose-50 p-3 rounded border border-rose-200 text-sm">
-                    <p class="text-rose-800 font-bold mb-1">Membatalkan Transaksi:</p>
-                    <p id="void-info" class="text-rose-600 font-medium"></p>
+                <div class="mb-4 bg-rose-50 p-3 rounded-lg border border-rose-200 text-xs">
+                    <p class="text-rose-800 font-semibold mb-1">Membatalkan Transaksi:</p>
+                    <p id="void-info" class="text-rose-700 font-medium"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Alasan Pembatalan</label>
-                    <input type="text" name="alasan_batal" placeholder="Contoh: Salah input nominal uang..." class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-rose-500 focus:outline-none text-sm" required autocomplete="off">
+                    <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Pembatalan</label>
+                    <input type="text" name="alasan_batal" placeholder="Contoh: Salah input nominal uang..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-xs" required autocomplete="off">
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">PIN Otorisasi Supervisor <span class="text-xs text-rose-500 font-normal">(Wajib diisi oleh Atasan)</span></label>
-                    <input type="password" name="pin_supervisor" placeholder="Masukkan 6 Digit PIN" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-rose-500 focus:outline-none text-center tracking-widest text-lg font-bold" required>
-                    <p class="text-xs text-slate-400 mt-1">*Sebagai ujicoba, masukkan PIN: 123456</p>
+                    <label class="block text-slate-700 text-xs font-semibold mb-1">PIN Otorisasi Supervisor <span class="text-xs text-rose-500 font-normal">(Wajib diisi oleh Atasan)</span></label>
+                    <input type="password" name="pin_supervisor" placeholder="Masukkan 6 Digit PIN" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-center tracking-widest text-lg font-bold tabular-nums" required>
+                    <p class="text-[11px] text-slate-400 mt-1">*Sebagai ujicoba, masukkan PIN: 123456</p>
                 </div>
 
                 <div class="flex space-x-3">
-                    <button type="button" onclick="tutupModalVoid()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded transition">Batal</button>
-                    <button type="submit" onclick="return confirm('Tindakan ini tidak bisa dikembalikan. Yakin Void?')" class="w-2/3 bg-rose-600 hover:bg-rose-700 text-white font-black py-2 rounded shadow transition">
-                        PROSES VOID
+                    <button type="button" onclick="tutupModalVoid()" class="w-1/3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 rounded-lg transition text-xs">Batal</button>
+                    <button type="submit" onclick="return confirm('Tindakan ini tidak bisa dikembalikan. Yakin Void?')" class="w-2/3 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-lg shadow-sm transition text-xs">
+                        Proses Void
                     </button>
                 </div>
             </form>
