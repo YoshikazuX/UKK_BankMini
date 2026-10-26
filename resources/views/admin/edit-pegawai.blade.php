@@ -54,8 +54,13 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Nomor HP</label>
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Nomor WhatsApp / HP</label>
                     <input type="text" name="no_hp" value="{{ $pegawai->no_hp }}" placeholder="Contoh: 081234567890" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-700 focus:ring-2 focus:ring-slate-500 focus:outline-none">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Alamat Email <span class="text-xs font-normal text-slate-500">(Untuk pemulihan kata sandi)</span></label>
+                    <input type="email" name="email" value="{{ $pegawai->email ?? '' }}" placeholder="Contoh: pegawai@banksekolah.id" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-700 focus:ring-2 focus:ring-slate-500 focus:outline-none">
                 </div>
 
                 <div class="mb-8">

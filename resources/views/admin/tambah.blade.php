@@ -66,9 +66,14 @@
                     <input type="text" name="kelas" placeholder="Contoh: XI RPL 1" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none">
                 </div>
 
-                <div class="mb-8">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Nomor HP Aktif <span class="text-xs font-normal text-slate-500">(Opsional)</span></label>
+                <div class="mb-4">
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Nomor WhatsApp / HP Aktif <span class="text-xs font-normal text-slate-500">(Untuk Reset Password)</span></label>
                     <input type="text" name="no_hp" placeholder="Contoh: 081234567890" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none">
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Alamat Email <span class="text-xs font-normal text-slate-500">(Opsional / Pemulihan Akun)</span></label>
+                    <input type="email" name="email" placeholder="Contoh: pegawai@banksekolah.id" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none">
                 </div>
 
                 <div class="flex justify-end items-center space-x-4 border-t border-slate-200 pt-6">

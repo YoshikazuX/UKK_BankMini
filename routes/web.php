@@ -19,9 +19,18 @@ use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\PengajuanKasController;
 
 Route::get('/', function () { return redirect('/login'); });
-Route::get('/login', function () { return view('auth.login'); })->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// =========================================================================
+// RUTE LUPA PASSWORD & PEMULIHAN AKUN (EMAIL / WHATSAPP / TIKET ADMIN)
+// =========================================================================
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password/request-otp', [AuthController::class, 'requestOtp'])->name('password.otp');
+Route::post('/forgot-password/verify-and-reset', [AuthController::class, 'verifyAndResetPassword'])->name('password.reset');
+Route::post('/forgot-password/ticket', [AuthController::class, 'submitResetTicket'])->name('password.ticket');
+Route::get('/forgot-password/cancel-session', [AuthController::class, 'resetForgotPasswordSession'])->name('password.cancel');
 
 // =========================================================================
 // RUTE ADMIN & CUSTOMER SERVICE (MANAJEMEN REKENING NASABAH BARU)
@@ -54,6 +63,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // FITUR: LOG AUDIT & EKSPOR CSV
     Route::get('/admin/audit', [AdminController::class, 'auditLog']);
     Route::get('/admin/audit/export', [AdminController::class, 'exportAuditCsv']);
+
+    // FITUR: PERSETUJUAN RESET PASSWORD PEGAWAI
+    Route::post('/admin/reset-password-request/{id}/approve', [AdminController::class, 'approveResetRequest']);
+    Route::post('/admin/reset-password-request/{id}/reject', [AdminController::class, 'rejectResetRequest']);
 });
 
 // =========================================================================

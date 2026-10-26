@@ -29,7 +29,12 @@ class AdminController extends Controller
         $totalVoid = DB::table('transaksi')->whereDate('updated_at', $hariIni)->where('status', 'dibatalkan')->count();
         $totalGagalSistem = 0;
 
-        return view('admin.dashboard', compact('totalNasabah', 'totalPegawai', 'pegawai', 'totalDebit', 'totalKredit', 'isBalanced', 'totalVoid', 'totalGagalSistem'));
+        $resetRequests = DB::table('password_reset_requests')
+            ->where('status', 'pending')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.dashboard', compact('totalNasabah', 'totalPegawai', 'pegawai', 'totalDebit', 'totalKredit', 'isBalanced', 'totalVoid', 'totalGagalSistem', 'resetRequests'));
     }
 
     public function create() { return view('admin.tambah'); }
@@ -43,7 +48,7 @@ class AdminController extends Controller
         DB::table('users')->insert([
             'nama_petugas' => $request->nama_petugas, 'username' => $request->username,
             'password' => Hash::make($request->password), 'role' => $request->role,
-            'kelas' => $request->kelas, 'no_hp' => $request->no_hp,
+            'kelas' => $request->kelas, 'no_hp' => $request->no_hp, 'email' => $request->email,
             'created_at' => now(), 'updated_at' => now(),
         ]);
         return redirect('/admin/dashboard')->with('success', 'Pegawai baru berhasil ditambahkan!');
@@ -60,7 +65,7 @@ class AdminController extends Controller
         $request->validate(['nama_petugas' => 'required', 'role' => 'required|in:admin,teller,supervisor']);
         $dataUpdate = [
             'nama_petugas' => $request->nama_petugas, 'role' => $request->role,
-            'kelas' => $request->kelas, 'no_hp' => $request->no_hp, 'updated_at' => now(),
+            'kelas' => $request->kelas, 'no_hp' => $request->no_hp, 'email' => $request->email, 'updated_at' => now(),
         ];
         if ($request->filled('password')) { $dataUpdate['password'] = Hash::make($request->password); }
         DB::table('users')->where('id', $id)->update($dataUpdate);
@@ -83,7 +88,7 @@ class AdminController extends Controller
     {
         $user = Auth::user();
         $request->validate(['foto' => 'nullable|image|max:2048']);
-        $dataUpdate = ['no_hp' => $request->no_hp, 'updated_at' => now()];
+        $dataUpdate = ['no_hp' => $request->no_hp, 'email' => $request->email, 'updated_at' => now()];
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $filename = time() . '_' . $file->getClientOriginalName();
@@ -181,5 +186,49 @@ class AdminController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function approveResetRequest(Request $request, $id)
+    {
+        $item = DB::table('password_reset_requests')->where('id', $id)->first();
+        if (!$item) {
+            return back()->with('error', 'Permohonan reset password tidak ditemukan.');
+        }
+
+        $user = DB::table('users')->where('username', $item->username)->first();
+        if (!$user) {
+            return back()->with('error', 'User akun "' . $item->username . '" tidak ditemukan.');
+        }
+
+        $newPassword = $request->input('new_password', 'bankmini' . date('Y'));
+
+        DB::table('users')->where('id', $user->id)->update([
+            'password' => Hash::make($newPassword),
+            'updated_at' => now(),
+        ]);
+
+        $adminName = Auth::user()->nama_petugas ?? 'Administrator';
+
+        DB::table('password_reset_requests')->where('id', $id)->update([
+            'status' => 'completed',
+            'keterangan' => 'Disetujui oleh ' . $adminName . '. Password di-reset menjadi: ' . $newPassword,
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', 'Permohonan disetujui! Kata sandi akun ' . $item->username . ' berhasil direset menjadi: ' . $newPassword);
+    }
+
+    public function rejectResetRequest(Request $request, $id)
+    {
+        $adminName = Auth::user()->nama_petugas ?? 'Administrator';
+        $alasan = $request->input('alasan', 'Data tidak sesuai atau permohonan ditolak.');
+
+        DB::table('password_reset_requests')->where('id', $id)->update([
+            'status' => 'rejected',
+            'keterangan' => 'Ditolak oleh ' . $adminName . ' (Alasan: ' . $alasan . ')',
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', 'Permohonan reset password berhasil ditolak.');
     }
 }

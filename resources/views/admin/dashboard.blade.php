@@ -108,6 +108,78 @@
             </div>
         </div>
 
+        <!-- SECTION PERMOHONAN RESET PASSWORD PEGAWAI / AKUN -->
+        @if(isset($resetRequests) && count($resetRequests) > 0)
+        <div class="mb-8 bg-amber-50 border-2 border-amber-300 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+                    <h2 class="text-lg font-bold text-slate-800">Permohonan Reset Password Masuk</h2>
+                    <span class="bg-amber-200 text-amber-900 text-xs font-black px-2 py-0.5 rounded-full">{{ count($resetRequests) }} Tiket</span>
+                </div>
+                <p class="text-xs text-slate-500">Pengguna lupa kata sandi dan meminta reset akun</p>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-lg border border-amber-200">
+                <table class="min-w-full text-left text-xs text-slate-700">
+                    <thead class="bg-amber-100/70 font-bold text-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Waktu</th>
+                            <th class="py-2.5 px-3">Username / Nama</th>
+                            <th class="py-2.5 px-3">Saluran & Kontak</th>
+                            <th class="py-2.5 px-3">Keterangan / Alasan</th>
+                            <th class="py-2.5 px-3 text-center">Tindakan Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($resetRequests as $req)
+                        <tr class="hover:bg-amber-50/40">
+                            <td class="py-2.5 px-3 whitespace-nowrap text-slate-500">{{ \Carbon\Carbon::parse($req->created_at)->diffForHumans() }}</td>
+                            <td class="py-2.5 px-3">
+                                <span class="font-bold text-slate-900 font-mono">{{ $req->username }}</span>
+                                <div class="text-[11px] text-slate-500">{{ $req->nama_pemohon ?? '-' }}</div>
+                            </td>
+                            <td class="py-2.5 px-3">
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase {{ $req->metode == 'whatsapp' ? 'bg-emerald-100 text-emerald-800' : ($req->metode == 'email' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') }}">
+                                    {{ $req->metode }}
+                                </span>
+                                <div class="text-[11px] font-mono text-slate-600 mt-0.5">{{ $req->kontak ?? '-' }}</div>
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="{{ $req->keterangan }}">
+                                {{ $req->keterangan ?? '-' }}
+                            </td>
+                            <td class="py-2.5 px-3 text-center whitespace-nowrap space-x-1.5">
+                                @php
+                                    $cleanKontak = preg_replace('/[^0-9]/', '', $req->kontak ?? '');
+                                    if (str_starts_with($cleanKontak, '0')) { $cleanKontak = '62' . substr($cleanKontak, 1); }
+                                    $waReplyMsg = urlencode("Halo {$req->nama_pemohon}, permohonan reset password akun {$req->username} Anda di LKM Mitra Siswa Abadi telah diproses oleh Admin. Password sementara Anda adalah: bankmini" . date('Y'));
+                                @endphp
+                                @if(!empty($cleanKontak))
+                                    <a href="https://wa.me/{{ $cleanKontak }}?text={{ $waReplyMsg }}" target="_blank" class="inline-flex items-center px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] transition">
+                                        WA
+                                    </a>
+                                @endif
+                                <form action="{{ url('/admin/reset-password-request/'.$req->id.'/approve') }}" method="POST" class="inline-block" onsubmit="return confirm('Reset password akun {{ $req->username }} menjadi: bankmini{{ date('Y') }}?')">
+                                    @csrf
+                                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded font-bold text-[11px] transition shadow-sm">
+                                        Reset Password
+                                    </button>
+                                </form>
+                                <form action="{{ url('/admin/reset-password-request/'.$req->id.'/reject') }}" method="POST" class="inline-block" onsubmit="return confirm('Tolak permohonan reset ini?')">
+                                    @csrf
+                                    <button type="submit" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded font-bold text-[11px] transition">
+                                        Tolak
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
         <div class="flex justify-between items-center mb-4 mt-10">
             <h1 class="text-xl font-bold text-slate-800">Manajemen Hak Akses Pegawai</h1>
             <a href="{{ url('/admin/tambah-pegawai') }}" class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-4 rounded text-sm font-bold shadow transition">+ Tambah Pegawai</a>

@@ -68,6 +68,12 @@
                     <input type="text" name="no_hp" id="no_hp" value="{{ $user->no_hp }}" placeholder="Contoh: 081234567890" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-700 focus:ring-2 focus:ring-slate-500 focus:outline-none">
                 </div>
 
+                <!-- Email (Bisa Diubah) -->
+                <div class="mb-4">
+                    <label class="block text-slate-700 text-sm font-bold mb-2" for="email">Alamat Email Resmi</label>
+                    <input type="email" name="email" id="email" value="{{ $user->email ?? '' }}" placeholder="Contoh: admin@banksekolah.id" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-700 focus:ring-2 focus:ring-slate-500 focus:outline-none">
+                </div>
+
                 <!-- Ganti Foto Profil (Bisa Diubah) -->
                 <div class="mb-8">
                     <label class="block text-slate-700 text-sm font-bold mb-2" for="foto">Unggah Foto Profil Baru</label>
