@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Buat Tabel daily_reports
-        if (!Schema::hasTable('daily_reports')) {
+        if (! Schema::hasTable('daily_reports')) {
             Schema::create('daily_reports', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('user_id'); // Petugas Teller
@@ -34,7 +34,7 @@ return new class extends Migration
         }
 
         // 2. Buat Tabel avalis (Data Petugas Teller & Asisten Jaga Siswa)
-        if (!Schema::hasTable('avalis')) {
+        if (! Schema::hasTable('avalis')) {
             Schema::create('avalis', function (Blueprint $table) {
                 $table->id();
                 $table->string('nama', 150);
@@ -50,13 +50,13 @@ return new class extends Migration
 
         // 3. Tambah kolom pada tabel transaksi untuk Idempotency & Daily Report & Kode Sandi
         Schema::table('transaksi', function (Blueprint $table) {
-            if (!Schema::hasColumn('transaksi', 'daily_report_id')) {
+            if (! Schema::hasColumn('transaksi', 'daily_report_id')) {
                 $table->unsignedBigInteger('daily_report_id')->nullable()->after('petugas_id');
             }
-            if (!Schema::hasColumn('transaksi', 'idempotency_key')) {
+            if (! Schema::hasColumn('transaksi', 'idempotency_key')) {
                 $table->string('idempotency_key', 64)->nullable()->unique()->after('status');
             }
-            if (!Schema::hasColumn('transaksi', 'kode_sandi')) {
+            if (! Schema::hasColumn('transaksi', 'kode_sandi')) {
                 $table->string('kode_sandi', 10)->nullable()->after('jenis_transaksi'); // 101, 201, 102, 202, 301
             }
         });

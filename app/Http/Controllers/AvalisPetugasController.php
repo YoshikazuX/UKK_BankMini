@@ -2,131 +2,138 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AvalisSyncHelper;
+use App\Models\AbsensiAvalis;
+use App\Models\Avalis;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class AvalisPetugasController extends Controller
 {
     /**
      * Tampilkan Manajemen Master Data Petugas Avalis / Teller
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        $query = DB::table('avalis')
-            ->leftJoin('users', 'avalis.user_id', '=', 'users.id')
-            ->select('avalis.*', 'users.username as akun_username', 'users.nama_petugas as nama_akun_petugas');
+        // Otomatis sinkronisasi data master avalis dari tabel users
+        AvalisSyncHelper::autoSync(false);
+
+        $query = Avalis::with('user:id,username,nama_petugas,foto');
 
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
-                $sub->where('avalis.nama', 'LIKE', "%{$q}%")
-                    ->orWhere('avalis.kelas', 'LIKE', "%{$q}%")
-                    ->orWhere('avalis.no_wa', 'LIKE', "%{$q}%");
+                $sub->where('nama', 'LIKE', "%{$q}%")
+                    ->orWhere('kelas', 'LIKE', "%{$q}%")
+                    ->orWhere('no_wa', 'LIKE', "%{$q}%");
             });
         }
 
-        $avalisList = $query->orderBy('avalis.nama', 'asc')->get();
+        $avalisList = $query->orderBy('nama', 'asc')->get();
 
-        // Ambil daftar users yang bisa dihubungkan (role: teller atau belum punya avalis)
-        $usersTeller = DB::table('users')->where('role', 'teller')->get();
+        // Ambil daftar users yang bertindak sebagai teller
+        $usersTeller = User::where('role', 'teller')->get();
 
-        $role = strtolower(Auth::user()->role ?? 'admin');
+        $role = strtolower(Auth::user()->role ?? 'teller');
+        $isAdmin = ($role === 'admin');
 
-        return view('avalis.petugas', compact('avalisList', 'usersTeller', 'role'));
+        return view('avalis.petugas', compact('avalisList', 'usersTeller', 'role', 'isAdmin'));
     }
 
     /**
      * Tambah 1 Petugas Avalis Baru
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        if (strtolower(Auth::user()->role ?? '') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Administrator yang berwenang menambah petugas avalis.');
+        }
+
+        $validated = $request->validate([
             'nama' => 'required|string|max:150',
             'kelas' => 'required|string|max:50',
             'no_wa' => 'required|string|max:25',
             'user_id' => 'nullable|exists:users,id',
         ]);
 
-        $avalisId = DB::table('avalis')->insertGetId([
-            'nama' => $request->nama,
-            'kelas' => $request->kelas,
-            'no_wa' => $request->no_wa,
-            'user_id' => $request->user_id,
+        $avalis = Avalis::create([
+            ...$validated,
             'status' => 'aktif',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         // Hubungkan otomatis ke lembar Absensi Avalis hari ini jika diminta
         if ($request->boolean('masuk_absensi_hari_ini')) {
-            DB::table('absensi_avalis')->insert([
+            AbsensiAvalis::create([
                 'tanggal' => now()->toDateString(),
-                'nama' => $request->nama,
-                'kelas' => $request->kelas,
-                'no_wa' => $request->no_wa,
+                'nama' => $validated['nama'],
+                'kelas' => $validated['kelas'],
+                'no_wa' => $validated['no_wa'],
                 'shift_jaga' => $request->shift_jaga ?? 'Shift Pagi (07.30 - 11.30)',
                 'status' => 'Hadir',
                 'keterangan' => 'Petugas Avalis Terdaftar (Auto-Sync)',
                 'created_by' => Auth::user()->nama_petugas ?? 'Admin',
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
 
-        return back()->with('success', "Petugas Avalis '{$request->nama}' berhasil ditambahkan!");
+        return back()->with('success', "Petugas Avalis '{$validated['nama']}' berhasil ditambahkan!");
     }
 
     /**
      * Tambah Banyak Identitas Teller Sekaligus (Bulk Add)
      * Format baris: Nama, Kelas, No WA
      */
-    public function storeBulk(Request $request)
+    public function storeBulk(Request $request): RedirectResponse
     {
+        if (strtolower(Auth::user()->role ?? '') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Administrator yang berwenang melakukan bulk import data petugas.');
+        }
+
         $request->validate([
             'data_bulk' => 'required|string',
         ]);
 
-        $lines = explode("\n", str_replace("\r", "", $request->data_bulk));
+        $lines = explode("\n", str_replace("\r", '', $request->data_bulk));
         $sukses = 0;
         $gagal = 0;
+        $today = now()->toDateString();
+        $adminName = Auth::user()->nama_petugas ?? 'Admin';
+        $syncAbsensi = $request->boolean('sync_ke_absensi');
 
-        DB::beginTransaction();
-        try {
+        DB::transaction(function () use ($lines, $syncAbsensi, $today, $adminName, &$sukses, &$gagal) {
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (empty($line)) continue;
+                if (empty($line)) {
+                    continue;
+                }
 
-                // Pisahkan berdasarkan koma (,) atau titik-koma (;)
                 $parts = preg_split('/[,;]/', $line);
                 if (count($parts) >= 2) {
                     $nama = trim($parts[0]);
                     $kelas = trim($parts[1]);
-                    $no_wa = isset($parts[2]) ? trim($parts[2]) : '-';
+                    $noWa = isset($parts[2]) ? trim($parts[2]) : '-';
 
-                    if (!empty($nama) && !empty($kelas)) {
-                        DB::table('avalis')->insert([
+                    if (! empty($nama) && ! empty($kelas)) {
+                        Avalis::create([
                             'nama' => $nama,
                             'kelas' => $kelas,
-                            'no_wa' => $no_wa,
+                            'no_wa' => $noWa,
                             'status' => 'aktif',
-                            'created_at' => now(),
-                            'updated_at' => now(),
                         ]);
 
-                        // Juga sinkronkan ke absensi hari ini jika dicentang
-                        if ($request->boolean('sync_ke_absensi')) {
-                            DB::table('absensi_avalis')->insert([
-                                'tanggal' => now()->toDateString(),
+                        if ($syncAbsensi) {
+                            AbsensiAvalis::create([
+                                'tanggal' => $today,
                                 'nama' => $nama,
                                 'kelas' => $kelas,
-                                'no_wa' => $no_wa,
+                                'no_wa' => $noWa,
                                 'shift_jaga' => 'Shift Pagi (07.30 - 11.30)',
                                 'status' => 'Hadir',
                                 'keterangan' => 'Piket Avalis Terjadwal (Bulk Import)',
-                                'created_by' => Auth::user()->nama_petugas ?? 'Admin',
-                                'created_at' => now(),
-                                'updated_at' => now(),
+                                'created_by' => $adminName,
                             ]);
                         }
 
@@ -138,59 +145,81 @@ class AvalisPetugasController extends Controller
                     $gagal++;
                 }
             }
+        });
 
-            DB::commit();
-            return back()->with('success', "Proses Bulk Berhasil! {$sukses} identitas teller berhasil ditambahkan" . ($gagal > 0 ? " ({$gagal} baris dilewati karena format tidak lengkap)." : "."));
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Gagal memproses bulk data: ' . $e->getMessage());
-        }
+        return back()->with('success', "Bulk Import selesai! {$sukses} petugas berhasil ditambahkan ({$gagal} baris diabaikan karena format tidak lengkap).");
     }
 
     /**
-     * Hubungkan Avalis Terdaftar ke Lembar Absensi Hari Ini (Auto-Presensi)
+     * Masukkan Avalis Terpilih ke Jadwal Absensi Hari Ini
      */
-    public function syncKeAbsensi(Request $request, $id)
+    public function syncKeAbsensi(Request $request, int|string $id): RedirectResponse
     {
-        $avalis = DB::table('avalis')->where('id', $id)->first();
-        if (!$avalis) {
-            return back()->with('error', 'Petugas tidak ditemukan!');
+        if (strtolower(Auth::user()->role ?? '') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Administrator yang berwenang menjadwalkan absensi.');
         }
 
-        $shift = $request->input('shift', 'Shift Pagi (07.30 - 11.30)');
+        $avalis = Avalis::findOrFail($id);
         $today = now()->toDateString();
 
-        // Cek apakah sudah absen hari ini di shift tersebut
-        $exists = DB::table('absensi_avalis')
-            ->where('nama', $avalis->nama)
+        $shift = $request->input('shift_jaga', 'Shift Pagi (07.30 - 11.30)');
+        $keterangan = $request->input('keterangan', 'Petugas Loket Terjadwal (Manual Add)');
+
+        // Periksa apakah sudah ada di absensi hari ini
+        $ada = AbsensiAvalis::where('nama', $avalis->nama)
             ->whereDate('tanggal', $today)
-            ->where('shift_jaga', $shift)
             ->first();
 
-        if ($exists) {
-            return back()->with('error', "Petugas '{$avalis->nama}' sudah terdata di absensi hari ini pada {$shift}.");
+        if ($ada) {
+            $ada->update([
+                'shift_jaga' => $shift,
+                'status' => 'Hadir',
+                'keterangan' => $keterangan,
+            ]);
+
+            return back()->with('success', "Penugasan '{$avalis->nama}' pada absensi hari ini berhasil diperbarui!");
         }
 
-        DB::table('absensi_avalis')->insert([
+        AbsensiAvalis::create([
             'tanggal' => $today,
             'nama' => $avalis->nama,
             'kelas' => $avalis->kelas,
             'no_wa' => $avalis->no_wa,
             'shift_jaga' => $shift,
             'status' => 'Hadir',
-            'keterangan' => 'Standby Petugas Loket (Tersinkronisasi)',
-            'created_by' => Auth::user()->nama_petugas ?? 'Petugas',
-            'created_at' => now(),
-            'updated_at' => now(),
+            'keterangan' => $keterangan,
+            'created_by' => Auth::user()->nama_petugas ?? 'Admin',
         ]);
 
-        return back()->with('success', "Petugas '{$avalis->nama}' berhasil dimasukkan ke lembar absensi digital hari ini!");
+        return back()->with('success', "Petugas '{$avalis->nama}' berhasil dijadwalkan masuk di absensi hari ini!");
     }
 
-    public function destroy($id)
+    /**
+     * Sinkronisasi data Avalis dengan data Pegawai asli di tabel Users
+     */
+    public function syncFromUsers(Request $request): RedirectResponse
     {
-        DB::table('avalis')->where('id', $id)->delete();
+        if (strtolower(Auth::user()->role ?? '') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Administrator yang berwenang menjalankan sinkronisasi data master.');
+        }
+
+        $res = AvalisSyncHelper::autoSync(true);
+
+        return back()->with('success', "Sinkronisasi berhasil! {$res['synced_avalis']} master data petugas diperbarui dari akun sistem.");
+    }
+
+    /**
+     * Hapus Data Petugas Avalis
+     */
+    public function destroy(int|string $id): RedirectResponse
+    {
+        if (strtolower(Auth::user()->role ?? '') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Administrator yang berwenang menghapus master petugas.');
+        }
+
+        $avalis = Avalis::findOrFail($id);
+        $avalis->delete();
+
         return back()->with('success', 'Data petugas Avalis berhasil dihapus.');
     }
 }

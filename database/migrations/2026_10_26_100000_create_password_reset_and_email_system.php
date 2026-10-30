@@ -10,13 +10,13 @@ return new class extends Migration
     {
         // 1. Tambah kolom email ke tabel users jika belum ada
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'email')) {
+            if (! Schema::hasColumn('users', 'email')) {
                 $table->string('email', 150)->nullable()->after('no_hp');
             }
         });
 
         // 2. Buat tabel permohonan reset password & kode verifikasi OTP
-        if (!Schema::hasTable('password_reset_requests')) {
+        if (! Schema::hasTable('password_reset_requests')) {
             Schema::create('password_reset_requests', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('user_id')->nullable()->index();

@@ -2,14 +2,14 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('pengaturan_sistem')) {
+        if (! Schema::hasTable('pengaturan_sistem')) {
             Schema::create('pengaturan_sistem', function (Blueprint $table) {
                 $table->id();
                 $table->integer('saldo_mengendap_min')->default(10000);

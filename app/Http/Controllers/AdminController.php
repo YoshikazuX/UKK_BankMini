@@ -2,36 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use App\Helpers\AvalisSyncHelper;
+use App\Helpers\SettingHelper;
+use App\Models\Avalis;
+use App\Models\Jurnal;
+use App\Models\Nasabah;
+use App\Models\PasswordResetRequest;
+use App\Models\PengajuanKas;
+use App\Models\PengaturanSistem;
+use App\Models\Transaksi;
+use App\Models\User;
+use App\Services\ProfileImageService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $hariIni = Carbon::today();
 
-        $totalNasabah = DB::table('nasabah')->count();
-        $totalPegawai = DB::table('users')->whereIn('role', ['teller', 'supervisor'])->count();
-        $pegawai = DB::table('users')->get();
+        $totalNasabah = Nasabah::count();
+        $totalPegawai = User::whereIn('role', ['teller', 'supervisor'])->count();
+        $pegawai = User::all();
 
-        $totalDebit = DB::table('jurnal')->whereDate('tanggal', $hariIni)->sum('debit');
-        $totalKredit = DB::table('jurnal')->whereDate('tanggal', $hariIni)->sum('kredit');
+        $totalDebit = Jurnal::whereDate('tanggal', $hariIni)->sum('debit');
+        $totalKredit = Jurnal::whereDate('tanggal', $hariIni)->sum('kredit');
 
         // Mutasi Transaksi Tabungan Nasabah
-        $mutasiNabung = DB::table('transaksi')->whereDate('created_at', $hariIni)->where('jenis_transaksi', 'setor')->where('status', '!=', 'dibatalkan')->sum('nominal');
-        $mutasiTarik = DB::table('transaksi')->whereDate('created_at', $hariIni)->whereIn('jenis_transaksi', ['tarik', 'admin'])->where('status', '!=', 'dibatalkan')->sum('nominal');
+        $mutasiNabung = Transaksi::whereDate('created_at', $hariIni)
+            ->where('jenis_transaksi', 'setor')
+            ->where('status', '!=', 'dibatalkan')
+            ->sum('nominal');
+
+        $mutasiTarik = Transaksi::whereDate('created_at', $hariIni)
+            ->whereIn('jenis_transaksi', ['tarik', 'admin'])
+            ->where('status', '!=', 'dibatalkan')
+            ->sum('nominal');
 
         // Jurnal yang bersumber dari Transaksi Nasabah
-        $jurnalDebitNasabah = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('debit');
-        $jurnalKreditNasabah = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('kredit');
+        $jurnalDebitNasabah = Jurnal::whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('debit');
+        $jurnalKreditNasabah = Jurnal::whereDate('tanggal', $hariIni)->whereNotNull('transaksi_id')->sum('kredit');
 
         // Mutasi Kas Operasional Internal (Droping Kas / Pengajuan Kas yang Disetujui)
-        $totalDropingKas = DB::table('pengajuan_kas')->whereDate('tanggal', $hariIni)->where('status', 'disetujui')->sum('nominal');
-        $jurnalDropingKas = DB::table('jurnal')->whereDate('tanggal', $hariIni)->whereNull('transaksi_id')->where('keterangan', 'LIKE', '%DROPING KAS%')->sum('debit');
+        $totalDropingKas = PengajuanKas::whereDate('tanggal', $hariIni)->where('status', 'disetujui')->sum('nominal');
+        $jurnalDropingKas = Jurnal::whereDate('tanggal', $hariIni)
+            ->whereNull('transaksi_id')
+            ->where('keterangan', 'LIKE', '%DROPING KAS%')
+            ->sum('debit');
 
         // Keseimbangan tercapai jika:
         // 1. Catatan debit nasabah di jurnal klop dengan mutasi setoran nasabah
@@ -41,160 +64,249 @@ class AdminController extends Controller
             && ($jurnalKreditNasabah == $mutasiTarik)
             && ($jurnalDropingKas == $totalDropingKas);
 
-        $totalVoid = DB::table('transaksi')->whereDate('updated_at', $hariIni)->where('status', 'dibatalkan')->count();
+        $totalVoid = Transaksi::whereDate('updated_at', $hariIni)->where('status', 'dibatalkan')->count();
         $totalGagalSistem = 0;
 
-        $resetRequests = DB::table('password_reset_requests')
-            ->where('status', 'pending')
+        $resetRequests = PasswordResetRequest::where('status', 'pending')
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('admin.dashboard', compact('totalNasabah', 'totalPegawai', 'pegawai', 'totalDebit', 'totalKredit', 'isBalanced', 'totalVoid', 'totalGagalSistem', 'resetRequests', 'totalDropingKas'));
+        // Ringkasan Kehadiran Petugas Avalis Hari Ini
+        $absensiSummary = AvalisSyncHelper::getDashboardSummary($hariIni->toDateString());
+
+        return view('admin.dashboard', compact(
+            'totalNasabah',
+            'totalPegawai',
+            'pegawai',
+            'totalDebit',
+            'totalKredit',
+            'isBalanced',
+            'totalVoid',
+            'totalGagalSistem',
+            'resetRequests',
+            'totalDropingKas',
+            'absensiSummary'
+        ));
     }
 
-    public function create() { return view('admin.tambah'); }
-
-    public function store(Request $request)
+    public function create(): View
     {
-        $request->validate([
-            'nama_petugas' => 'required', 'username' => 'required|unique:users,username',
-            'password' => 'required|min:6', 'role' => 'required|in:admin,teller,supervisor',
-        ]);
-        DB::table('users')->insert([
-            'nama_petugas' => $request->nama_petugas, 'username' => $request->username,
-            'password' => Hash::make($request->password), 'role' => $request->role,
-            'kelas' => $request->kelas, 'no_hp' => $request->no_hp, 'email' => $request->email,
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
-        return redirect('/admin/dashboard')->with('success', 'Pegawai baru berhasil ditambahkan!');
+        return view('admin.tambah');
     }
 
-    public function edit($id)
+    public function store(Request $request): RedirectResponse
     {
-        $pegawai = DB::table('users')->where('id', $id)->first();
+        $validated = $request->validate([
+            'nama_petugas' => 'required|string|max:150',
+            'username' => 'required|string|max:50|unique:users,username',
+            'password' => 'required|string|min:6',
+            'role' => 'required|in:admin,teller,supervisor',
+            'kelas' => 'nullable|string|max:50',
+            'no_hp' => 'nullable|string|max:25',
+            'email' => 'nullable|email|max:150',
+        ]);
+
+        $newUser = User::create([
+            'nama_petugas' => $validated['nama_petugas'],
+            'username' => $validated['username'],
+            'password' => $validated['password'], // Otomatis di-hash oleh model cast 'password' => 'hashed'
+            'role' => $validated['role'],
+            'kelas' => $validated['kelas'] ?? null,
+            'no_hp' => $validated['no_hp'] ?? null,
+            'email' => $validated['email'] ?? null,
+        ]);
+
+        // Sinkronisasi otomatis ke tabel avalis jika bertugas sebagai teller
+        if ($validated['role'] === 'teller') {
+            Avalis::create([
+                'nama' => $validated['nama_petugas'],
+                'kelas' => $validated['kelas'] ?: 'XII AKL 1',
+                'no_wa' => $validated['no_hp'] ?: '-',
+                'user_id' => $newUser->id,
+                'status' => 'aktif',
+            ]);
+        }
+
+        return redirect('/admin/dashboard')->with('success', 'Pegawai baru berhasil ditambahkan dan disinkronkan ke petugas avalis!');
+    }
+
+    public function edit(int|string $id): View
+    {
+        $pegawai = User::findOrFail($id);
+
         return view('admin.edit-pegawai', compact('pegawai'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int|string $id): RedirectResponse
     {
-        $request->validate(['nama_petugas' => 'required', 'role' => 'required|in:admin,teller,supervisor']);
-        $dataUpdate = [
-            'nama_petugas' => $request->nama_petugas, 'role' => $request->role,
-            'kelas' => $request->kelas, 'no_hp' => $request->no_hp, 'email' => $request->email, 'updated_at' => now(),
-        ];
-        if ($request->filled('password')) { $dataUpdate['password'] = Hash::make($request->password); }
-        DB::table('users')->where('id', $id)->update($dataUpdate);
-        return redirect('/admin/dashboard')->with('success', 'Data pegawai diperbarui!');
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_petugas' => 'required|string|max:150',
+            'role' => 'required|in:admin,teller,supervisor',
+            'kelas' => 'nullable|string|max:50',
+            'no_hp' => 'nullable|string|max:25',
+            'email' => 'nullable|email|max:150',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $user->nama_petugas = $validated['nama_petugas'];
+        $user->role = $validated['role'];
+        $user->kelas = $validated['kelas'] ?? null;
+        $user->no_hp = $validated['no_hp'] ?? null;
+        $user->email = $validated['email'] ?? null;
+
+        if ($request->filled('password')) {
+            $user->password = $request->password;
+        }
+
+        $user->save();
+
+        // Sinkronisasi pembaruan ke tabel avalis
+        if ($user->role === 'teller') {
+            $avalisExist = Avalis::where('user_id', $id)->first();
+            if ($avalisExist) {
+                $avalisExist->update([
+                    'nama' => $user->nama_petugas,
+                    'kelas' => $user->kelas ?: $avalisExist->kelas,
+                    'no_wa' => $user->no_hp ?: $avalisExist->no_wa,
+                ]);
+            } else {
+                Avalis::create([
+                    'nama' => $user->nama_petugas,
+                    'kelas' => $user->kelas ?: 'XII AKL 1',
+                    'no_wa' => $user->no_hp ?: '-',
+                    'user_id' => $id,
+                    'status' => 'aktif',
+                ]);
+            }
+        }
+
+        return redirect('/admin/dashboard')->with('success', 'Data pegawai diperbarui dan tersinkronisasi!');
     }
 
-    public function destroy($id)
+    public function destroy(int|string $id): RedirectResponse
     {
-        DB::table('users')->where('id', $id)->delete();
+        $user = User::findOrFail($id);
+        Avalis::where('user_id', $id)->update(['user_id' => null]);
+        $user->delete();
+
         return redirect('/admin/dashboard')->with('success', 'Pegawai berhasil dihapus.');
     }
 
-    public function profil()
+    public function profil(): View
     {
         $user = Auth::user();
+
         return view('admin.profil', compact('user'));
     }
 
-    public function updateProfil(Request $request)
+    public function updateProfil(Request $request, ProfileImageService $imageService): RedirectResponse
     {
+        /** @var User $user */
         $user = Auth::user();
-        $request->validate(['foto' => 'nullable|image|max:2048']);
-        $dataUpdate = ['no_hp' => $request->no_hp, 'email' => $request->email, 'updated_at' => now()];
+
+        $request->validate([
+            'no_hp' => 'nullable|string|max:25',
+            'email' => 'nullable|email|max:150',
+            'foto' => 'nullable|file|image|mimes:jpeg,png,jpg|mimetypes:image/jpeg,image/png|max:2048',
+        ], [
+            'foto.file' => 'File foto yang dipilih tidak valid.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar ditolak! Hanya format PNG dan JPG yang diizinkan.',
+            'foto.mimetypes' => 'Format file ditolak! Hanya format PNG dan JPG yang diizinkan.',
+            'foto.max' => 'Ukuran file foto maksimal adalah 2 MB.',
+        ]);
+
+        $user->no_hp = $request->no_hp;
+        $user->email = $request->email;
+
         if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public', $filename);
-            $dataUpdate['foto'] = $filename;
+            $user->foto = $imageService->validateAndStore($request->file('foto'), $user->foto);
         }
-        DB::table('users')->where('id', $user->id)->update($dataUpdate);
-        return back()->with('success', 'Profil diperbarui!');
+
+        $user->save();
+        AvalisSyncHelper::autoSync(true);
+
+        return back()->with('success', 'Profil dan foto profil Anda berhasil diperbarui!');
     }
 
     // ==================================================================
-    // FUNGSI BARU: JEJAK AUDIT & FILTER ANOMALI
+    // FUNGSI: JEJAK AUDIT & FILTER ANOMALI
     // ==================================================================
-    public function auditLog(Request $request)
+    public function auditLog(Request $request): View
     {
-        $query = DB::table('transaksi')
-                    ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-                    ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-                    ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.nis', 'users.nama_petugas', 'users.username');
+        $query = Transaksi::with(['nasabah', 'petugas']);
 
         // Filter Target: NIS atau Teller
         if ($request->filled('target')) {
             $target = $request->target;
-            $query->where(function($q) use ($target) {
-                $q->where('nasabah.nis', 'like', "%{$target}%")
-                  ->orWhere('users.nama_petugas', 'like', "%{$target}%")
-                  ->orWhere('users.username', 'like', "%{$target}%");
+            $query->where(function ($q) use ($target) {
+                $q->whereHas('nasabah', fn ($sub) => $sub->where('nis', 'like', "%{$target}%"))
+                    ->orWhereHas('petugas', fn ($sub) => $sub->where('nama_petugas', 'like', "%{$target}%")->orWhere('username', 'like', "%{$target}%"));
             });
         }
 
         // Filter Rentang Tanggal
         if ($request->filled('tgl_mulai') && $request->filled('tgl_akhir')) {
-            $query->whereBetween('transaksi.created_at', [$request->tgl_mulai . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
+            $query->whereBetween('created_at', [$request->tgl_mulai.' 00:00:00', $request->tgl_akhir.' 23:59:59']);
         }
 
-        // Filter Anomali: Di luar jam sekolah (Misal: sebelum 06:00 atau setelah 15:00)
+        // Filter Anomali: Di luar jam sekolah (sebelum 06:00 atau setelah 15:00)
         if ($request->has('luar_jam')) {
-            $query->whereRaw('(TIME(transaksi.created_at) < "06:00:00" OR TIME(transaksi.created_at) > "15:00:00")');
+            $query->whereRaw('(TIME(created_at) < "06:00:00" OR TIME(created_at) > "15:00:00")');
         }
 
-        $logs = $query->orderBy('transaksi.created_at', 'desc')->get();
+        $logs = $query->orderBy('created_at', 'desc')->get();
+
         return view('admin.audit', compact('logs'));
     }
 
     // ==================================================================
-    // FUNGSI BARU: EKSPOR DATA MENTAH KE CSV
+    // FUNGSI: EKSPOR DATA MENTAH KE CSV
     // ==================================================================
-    public function exportAuditCsv(Request $request)
+    public function exportAuditCsv(Request $request): StreamedResponse
     {
-        $query = DB::table('transaksi')
-                    ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-                    ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-                    ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.nis', 'users.nama_petugas');
+        $query = Transaksi::with(['nasabah', 'petugas']);
 
         if ($request->filled('target')) {
             $target = $request->target;
-            $query->where(function($q) use ($target) {
-                $q->where('nasabah.nis', 'like', "%{$target}%")
-                  ->orWhere('users.nama_petugas', 'like', "%{$target}%");
+            $query->where(function ($q) use ($target) {
+                $q->whereHas('nasabah', fn ($sub) => $sub->where('nis', 'like', "%{$target}%"))
+                    ->orWhereHas('petugas', fn ($sub) => $sub->where('nama_petugas', 'like', "%{$target}%"));
             });
         }
+
         if ($request->filled('tgl_mulai') && $request->filled('tgl_akhir')) {
-            $query->whereBetween('transaksi.created_at', [$request->tgl_mulai . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
-        }
-        if ($request->has('luar_jam')) {
-            $query->whereRaw('(TIME(transaksi.created_at) < "06:00:00" OR TIME(transaksi.created_at) > "15:00:00")');
+            $query->whereBetween('created_at', [$request->tgl_mulai.' 00:00:00', $request->tgl_akhir.' 23:59:59']);
         }
 
-        $logs = $query->orderBy('transaksi.created_at', 'desc')->get();
+        if ($request->has('luar_jam')) {
+            $query->whereRaw('(TIME(created_at) < "06:00:00" OR TIME(created_at) > "15:00:00")');
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')->get();
 
         $headers = [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=Audit_Trail_EBank_" . now()->format('Ymd_His') . ".csv",
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=Audit_Trail_EBank_'.now()->format('Ymd_His').'.csv',
         ];
 
-        $callback = function() use ($logs) {
+        $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
-            // Header Kolom Excel
             fputcsv($file, ['ID Transaksi', 'Tanggal & Waktu', 'Petugas (Teller)', 'NIS Nasabah', 'Nama Nasabah', 'Jenis Transaksi', 'Nominal (Rp)', 'Status', 'Alasan Batal (Jika Void)']);
 
             foreach ($logs as $log) {
                 fputcsv($file, [
                     $log->id,
                     Carbon::parse($log->created_at)->format('Y-m-d H:i:s'),
-                    $log->nama_petugas ?? 'Sistem',
-                    $log->nis,
-                    $log->nama_siswa,
+                    $log->petugas->nama_petugas ?? 'Sistem',
+                    $log->nasabah->nis ?? '-',
+                    $log->nasabah->nama_siswa ?? '-',
                     strtoupper($log->jenis_transaksi),
                     $log->nominal,
                     strtoupper($log->status),
-                    $log->alasan_batal ?? '-'
+                    $log->alasan_batal ?? '-',
                 ]);
             }
             fclose($file);
@@ -203,74 +315,70 @@ class AdminController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function approveResetRequest(Request $request, $id)
+    public function approveResetRequest(Request $request, int|string $id): RedirectResponse
     {
-        $item = DB::table('password_reset_requests')->where('id', $id)->first();
-        if (!$item) {
-            return back()->with('error', 'Permohonan reset password tidak ditemukan.');
+        $item = PasswordResetRequest::findOrFail($id);
+        $user = User::where('username', $item->username)->first();
+
+        if (! $user) {
+            return back()->with('error', 'User akun "'.$item->username.'" tidak ditemukan.');
         }
 
-        $user = DB::table('users')->where('username', $item->username)->first();
-        if (!$user) {
-            return back()->with('error', 'User akun "' . $item->username . '" tidak ditemukan.');
-        }
-
-        $newPassword = $request->input('new_password', 'bankmini' . date('Y'));
-
-        DB::table('users')->where('id', $user->id)->update([
-            'password' => Hash::make($newPassword),
-            'updated_at' => now(),
+        $newPassword = $request->input('new_password', 'bankmini'.date('Y'));
+        $user->update([
+            'password' => $newPassword,
         ]);
 
         $adminName = Auth::user()->nama_petugas ?? 'Administrator';
 
-        DB::table('password_reset_requests')->where('id', $id)->update([
+        $item->update([
             'status' => 'completed',
-            'keterangan' => 'Disetujui oleh ' . $adminName . '. Password di-reset menjadi: ' . $newPassword,
-            'updated_at' => now(),
+            'keterangan' => 'Disetujui oleh '.$adminName.'. Password di-reset menjadi: '.$newPassword,
         ]);
 
-        return back()->with('success', 'Permohonan disetujui! Kata sandi akun ' . $item->username . ' berhasil direset menjadi: ' . $newPassword);
+        return back()->with('success', 'Permohonan disetujui! Kata sandi akun '.$item->username.' berhasil direset menjadi: '.$newPassword);
     }
 
-    public function rejectResetRequest(Request $request, $id)
+    public function rejectResetRequest(Request $request, int|string $id): RedirectResponse
     {
+        $item = PasswordResetRequest::findOrFail($id);
         $adminName = Auth::user()->nama_petugas ?? 'Administrator';
         $alasan = $request->input('alasan', 'Data tidak sesuai atau permohonan ditolak.');
 
-        DB::table('password_reset_requests')->where('id', $id)->update([
+        $item->update([
             'status' => 'rejected',
-            'keterangan' => 'Ditolak oleh ' . $adminName . ' (Alasan: ' . $alasan . ')',
-            'updated_at' => now(),
+            'keterangan' => 'Ditolak oleh '.$adminName.' (Alasan: '.$alasan.')',
         ]);
 
         return back()->with('success', 'Permohonan reset password berhasil ditolak.');
     }
 
-    public function konfigurasi()
+    public function konfigurasi(): View
     {
-        $setting = \App\Helpers\SettingHelper::getSettings();
+        $setting = SettingHelper::getSettings();
+
         return view('admin.konfigurasi', compact('setting'));
     }
 
-    public function updateKonfigurasi(Request $request)
+    public function updateKonfigurasi(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'saldo_mengendap_min' => 'required|numeric|min:0',
             'tahun_ajaran_aktif' => 'required|string|max:20',
             'nama_bank' => 'required|string|max:100',
+            'format_no_rekening' => 'nullable|string|max:50',
+            'biaya_administrasi_buku' => 'nullable|numeric|min:0',
         ]);
 
-        DB::table('pengaturan_sistem')->updateOrInsert(
+        PengaturanSistem::updateOrCreate(
             ['id' => 1],
             [
-                'saldo_mengendap_min' => $request->saldo_mengendap_min,
+                'saldo_mengendap_min' => $validated['saldo_mengendap_min'],
                 'scanner_kamera_aktif' => $request->boolean('scanner_kamera_aktif'),
-                'tahun_ajaran_aktif' => $request->tahun_ajaran_aktif,
-                'format_no_rekening' => $request->format_no_rekening ?? 'TA-JURUSAN-URUT',
-                'nama_bank' => $request->nama_bank,
-                'biaya_administrasi_buku' => $request->biaya_administrasi_buku ?? 5000,
-                'updated_at' => now(),
+                'tahun_ajaran_aktif' => $validated['tahun_ajaran_aktif'],
+                'format_no_rekening' => $validated['format_no_rekening'] ?? 'TA-JURUSAN-URUT',
+                'nama_bank' => $validated['nama_bank'],
+                'biaya_administrasi_buku' => $validated['biaya_administrasi_buku'] ?? 5000,
             ]
         );
 

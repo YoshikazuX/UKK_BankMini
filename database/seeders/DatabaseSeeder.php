@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-
     public function run(): void
     {
         $users = [
@@ -17,18 +16,32 @@ class DatabaseSeeder extends Seeder
                 'nama_petugas' => 'Administrator Utama',
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
+                'kelas' => 'Staff Administrasi',
+                'no_hp' => '081122334455',
             ],
             [
                 'username' => 'teller1',
-                'nama_petugas' => 'Petugas Loket Teller',
+                'nama_petugas' => 'Petugas Loket Teller 1',
                 'password' => Hash::make('teller123'),
                 'role' => 'teller',
+                'kelas' => 'XII AKL 1',
+                'no_hp' => '081234567890',
+            ],
+            [
+                'username' => 'teller2',
+                'nama_petugas' => 'Petugas Loket Teller 2',
+                'password' => Hash::make('teller123'),
+                'role' => 'teller',
+                'kelas' => 'XII AKL 2',
+                'no_hp' => '085712345678',
             ],
             [
                 'username' => 'spv1',
                 'nama_petugas' => 'Kepala Bank Mini',
                 'password' => Hash::make('spv123'),
                 'role' => 'supervisor',
+                'kelas' => 'Guru Pembimbing',
+                'no_hp' => '081398765432',
             ],
         ];
 
@@ -39,6 +52,8 @@ class DatabaseSeeder extends Seeder
                     'nama_petugas' => $userData['nama_petugas'],
                     'password' => $userData['password'],
                     'role' => $userData['role'],
+                    'kelas' => $userData['kelas'],
+                    'no_hp' => $userData['no_hp'],
                     'updated_at' => now(),
                 ]);
             } else {
@@ -47,6 +62,33 @@ class DatabaseSeeder extends Seeder
                     'nama_petugas' => $userData['nama_petugas'],
                     'password' => $userData['password'],
                     'role' => $userData['role'],
+                    'kelas' => $userData['kelas'],
+                    'no_hp' => $userData['no_hp'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // Sinkronisasi otomatis ke tabel avalis untuk teller
+        $tellers = DB::table('users')->where('role', 'teller')->get();
+        foreach ($tellers as $t) {
+            $avalis = DB::table('avalis')->where('user_id', $t->id)->first();
+            if ($avalis) {
+                DB::table('avalis')->where('id', $avalis->id)->update([
+                    'nama' => $t->nama_petugas,
+                    'kelas' => $t->kelas ?: 'XII AKL 1',
+                    'no_wa' => $t->no_hp ?: '081234567890',
+                    'status' => 'aktif',
+                    'updated_at' => now(),
+                ]);
+            } else {
+                DB::table('avalis')->insert([
+                    'nama' => $t->nama_petugas,
+                    'kelas' => $t->kelas ?: 'XII AKL 1',
+                    'no_wa' => $t->no_hp ?: '081234567890',
+                    'user_id' => $t->id,
+                    'status' => 'aktif',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

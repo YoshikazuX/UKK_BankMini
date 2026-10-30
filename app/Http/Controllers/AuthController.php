@@ -2,28 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PasswordResetRequest;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
     /**
      * Tampilkan halaman login utama
      */
-    public function showLoginForm()
+    public function showLoginForm(): View|RedirectResponse
     {
         if (Auth::check()) {
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        if (request('reset') === 'success' && !session()->has('success')) {
+        if (request('reset') === 'success' && ! session()->has('success')) {
             session()->flash('success', 'Kata sandi berhasil diperbarui! Silakan masuk menggunakan kata sandi baru Anda.');
         }
 
-        $adminUser = DB::table('users')->where('role', 'admin')->first();
+        $adminUser = User::where('role', 'admin')->first();
         $adminPhone = $adminUser->no_hp ?? '081234567890';
 
         return view('auth.login', compact('adminPhone'));
@@ -32,27 +33,30 @@ class AuthController extends Controller
     /**
      * Proses autentikasi login pengguna
      */
-    public function authenticate(Request $request)
+    public function authenticate(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'username' => ['required'],
-            'password' => ['required'],
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        return back()->with('error', 'Username atau Password salah! Periksa kembali kredensial Anda.')->withInput($request->only('username'));
+        return back()
+            ->with('error', 'Username atau Password salah! Periksa kembali kredensial Anda.')
+            ->withInput($request->only('username'));
     }
 
     /**
      * Logout pengguna dari sistem
      */
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
@@ -64,9 +68,9 @@ class AuthController extends Controller
     /**
      * Tampilkan antarmuka Lupa Password
      */
-    public function showForgotPassword()
+    public function showForgotPassword(): View
     {
-        $adminUser = DB::table('users')->where('role', 'admin')->first();
+        $adminUser = User::where('role', 'admin')->first();
         $adminPhone = $adminUser->no_hp ?? '081234567890';
 
         return view('auth.forgot-password', compact('adminPhone'));
@@ -75,7 +79,7 @@ class AuthController extends Controller
     /**
      * Minta Kode OTP Verifikasi (WhatsApp / Email)
      */
-    public function requestOtp(Request $request)
+    public function requestOtp(Request $request): RedirectResponse
     {
         $request->validate([
             'username' => 'required|string',
@@ -87,8 +91,8 @@ class AuthController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-        if (!$user) {
-            return back()->with('error', 'Username "' . $request->username . '" tidak terdaftar dalam sistem. Hubungi administrator.');
+        if (! $user) {
+            return back()->with('error', 'Username "'.$request->username.'" tidak terdaftar dalam sistem. Hubungi administrator.');
         }
 
         $metode = $request->metode;
@@ -96,14 +100,14 @@ class AuthController extends Controller
 
         // Jika nomor HP atau Email belum disetel di akun
         if (empty($rawContact)) {
-            // Jika user mengisi kontak darurat di input opsional atau verifikasi langsung
             if ($request->filled('manual_contact')) {
                 $rawContact = $request->manual_contact;
             } else {
-                return back()->with('warning', 'Akun "' . $user->username . '" (' . $user->nama_petugas . ') belum memiliki nomor WhatsApp atau Email yang terdaftar di profil. Anda dapat mengajukan tiket permohonan reset atau hubungi Admin via WhatsApp melalui tab di samping.')
-                             ->with('suggest_ticket', true)
-                             ->with('suggest_username', $user->username)
-                             ->with('suggest_nama', $user->nama_petugas);
+                return back()
+                    ->with('warning', 'Akun "'.$user->username.'" ('.$user->nama_petugas.') belum memiliki nomor WhatsApp atau Email yang terdaftar di profil. Anda dapat mengajukan tiket permohonan reset atau hubungi Admin via WhatsApp melalui tab di samping.')
+                    ->with('suggest_ticket', true)
+                    ->with('suggest_username', $user->username)
+                    ->with('suggest_nama', $user->nama_petugas);
             }
         }
 
@@ -111,8 +115,7 @@ class AuthController extends Controller
         $otp = (string) random_int(100000, 999999);
         $expiresAt = now()->addMinutes(15);
 
-        // Simpan ke database password_reset_requests
-        DB::table('password_reset_requests')->insert([
+        PasswordResetRequest::create([
             'user_id' => $user->id,
             'username' => $user->username,
             'nama_pemohon' => $user->nama_petugas,
@@ -123,8 +126,6 @@ class AuthController extends Controller
             'status' => 'pending',
             'keterangan' => 'Kode OTP pemulihan kata sandi dibuat',
             'ip_address' => $request->ip(),
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $maskedContact = $this->maskContact($rawContact, $metode);
@@ -132,7 +133,7 @@ class AuthController extends Controller
         // Buat pesan WhatsApp siap kirim jika metode WA
         $cleanWaNumber = preg_replace('/[^0-9]/', '', $rawContact);
         if (str_starts_with($cleanWaNumber, '0')) {
-            $cleanWaNumber = '62' . substr($cleanWaNumber, 1);
+            $cleanWaNumber = '62'.substr($cleanWaNumber, 1);
         }
         $waMessage = urlencode("Halo {$user->nama_petugas}, kode OTP verifikasi reset password LKM Mitra Siswa Abadi Anda adalah: {$otp}. Kode berlaku selama 15 menit. Jaga kerahasiaan kode ini.");
         $waLink = "https://wa.me/{$cleanWaNumber}?text={$waMessage}";
@@ -146,7 +147,7 @@ class AuthController extends Controller
             'pwd_reset_metode' => $metode,
             'pwd_reset_masked_contact' => $maskedContact,
             'pwd_reset_raw_contact' => $rawContact,
-            'pwd_reset_otp' => $otp, // Disimpan untuk verifikasi dan demonstrasi visual
+            'pwd_reset_otp' => $otp,
             'pwd_reset_wa_link' => $waLink,
             'pwd_reset_expires_at' => $expiresAt->timestamp,
         ]);
@@ -157,7 +158,7 @@ class AuthController extends Controller
     /**
      * Verifikasi OTP dan Update Password Baru
      */
-    public function verifyAndResetPassword(Request $request)
+    public function verifyAndResetPassword(Request $request): RedirectResponse
     {
         $request->validate([
             'otp_code' => 'required|numeric',
@@ -174,7 +175,7 @@ class AuthController extends Controller
         $sessionUsername = session('pwd_reset_username');
         $expiresAt = session('pwd_reset_expires_at');
 
-        if (!$sessionUserId || !$sessionOtp) {
+        if (! $sessionUserId || ! $sessionOtp) {
             return redirect()->route('password.request')->with('error', 'Sesi pemulihan kata sandi telah berakhir. Silakan ulangi proses.');
         }
 
@@ -183,27 +184,25 @@ class AuthController extends Controller
         }
 
         // Cek kecocokan OTP
-        if (trim($request->otp_code) !== trim($sessionOtp)) {
+        if (trim((string) $request->otp_code) !== trim((string) $sessionOtp)) {
             return back()->with('error', 'Kode verifikasi OTP yang Anda masukkan salah! Periksa kembali kode Anda.');
         }
 
         // Update password pengguna
         $user = User::find($sessionUserId);
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('password.request')->with('error', 'Pengguna tidak ditemukan.');
         }
 
-        $user->password = Hash::make($request->password);
+        $user->password = $request->password;
         $user->save();
 
         // Perbarui status tiket di database
-        DB::table('password_reset_requests')
-            ->where('user_id', $user->id)
+        PasswordResetRequest::where('user_id', $user->id)
             ->where('otp_code', $sessionOtp)
             ->update([
                 'status' => 'completed',
                 'keterangan' => 'Password berhasil direset mandiri oleh user menggunakan OTP',
-                'updated_at' => now(),
             ]);
 
         // Bersihkan session reset
@@ -220,13 +219,13 @@ class AuthController extends Controller
             'pwd_reset_expires_at',
         ]);
 
-        return redirect()->route('login')->with('success', 'Kata sandi akun "' . $sessionUsername . '" berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.');
+        return redirect()->route('login')->with('success', 'Kata sandi akun "'.$sessionUsername.'" berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.');
     }
 
     /**
      * Ajukan Tiket Permohonan Reset Password ke Admin
      */
-    public function submitResetTicket(Request $request)
+    public function submitResetTicket(Request $request): RedirectResponse
     {
         $request->validate([
             'username' => 'required|string',
@@ -242,7 +241,7 @@ class AuthController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-        $ticketId = DB::table('password_reset_requests')->insertGetId([
+        $ticket = PasswordResetRequest::create([
             'user_id' => $user ? $user->id : null,
             'username' => $request->username,
             'nama_pemohon' => $request->nama_pemohon,
@@ -251,30 +250,28 @@ class AuthController extends Controller
             'status' => 'pending',
             'keterangan' => $request->alasan,
             'ip_address' => $request->ip(),
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         // Ambil nomor admin
-        $adminUser = DB::table('users')->where('role', 'admin')->first();
+        $adminUser = User::where('role', 'admin')->first();
         $adminPhone = $adminUser->no_hp ?? '081234567890';
         $cleanAdminPhone = preg_replace('/[^0-9]/', '', $adminPhone);
         if (str_starts_with($cleanAdminPhone, '0')) {
-            $cleanAdminPhone = '62' . substr($cleanAdminPhone, 1);
+            $cleanAdminPhone = '62'.substr($cleanAdminPhone, 1);
         }
 
-        $waText = urlencode("Halo Admin LKM Mitra Siswa Abadi, saya {$request->nama_pemohon} (Username: {$request->username}) mengajukan permohonan reset password di sistem (No Tiket: #RST-{$ticketId}). No WA saya: {$request->no_wa}. Alasan: {$request->alasan}. Mohon bantuannya untuk memproses reset akun saya. Terima kasih.");
+        $waText = urlencode("Halo Admin LKM Mitra Siswa Abadi, saya {$request->nama_pemohon} (Username: {$request->username}) mengajukan permohonan reset password di sistem (No Tiket: #RST-{$ticket->id}). No WA saya: {$request->no_wa}. Alasan: {$request->alasan}. Mohon bantuannya untuk memproses reset akun saya. Terima kasih.");
         $waAdminLink = "https://wa.me/{$cleanAdminPhone}?text={$waText}";
 
         return back()->with('ticket_success', true)
-                     ->with('ticket_id', 'RST-' . str_pad($ticketId, 4, '0', STR_PAD_LEFT))
-                     ->with('wa_admin_link', $waAdminLink);
+            ->with('ticket_id', 'RST-'.str_pad((string) $ticket->id, 4, '0', STR_PAD_LEFT))
+            ->with('wa_admin_link', $waAdminLink);
     }
 
     /**
      * Batalkan proses reset dan kembali ke langkah awal
      */
-    public function resetForgotPasswordSession()
+    public function resetForgotPasswordSession(): RedirectResponse
     {
         session()->forget([
             'pwd_reset_step',
@@ -295,20 +292,20 @@ class AuthController extends Controller
     /**
      * Helper redirect berdasarkan role
      */
-    private function redirectBasedOnRole($user)
+    private function redirectBasedOnRole(mixed $user): RedirectResponse
     {
         $role = strtolower($user->role ?? '');
         $userRoles = array_map('trim', explode(',', $role));
 
-        if (in_array('admin', $userRoles)) {
+        if (in_array('admin', $userRoles, true)) {
             return redirect()->intended('/admin/dashboard');
-        } elseif (in_array('teller', $userRoles)) {
+        } elseif (in_array('teller', $userRoles, true)) {
             return redirect()->intended('/teller/dashboard');
-        } elseif (in_array('supervisor', $userRoles) || in_array('accounting', $userRoles)) {
+        } elseif (in_array('supervisor', $userRoles, true) || in_array('accounting', $userRoles, true)) {
             return redirect()->intended('/supervisor/dashboard');
-        } elseif (in_array('customer_service', $userRoles) || in_array('cs', $userRoles)) {
+        } elseif (in_array('customer_service', $userRoles, true) || in_array('cs', $userRoles, true)) {
             return redirect()->intended('/admin/data-nasabah');
-        } elseif (in_array('nasabah', $userRoles)) {
+        } elseif (in_array('nasabah', $userRoles, true)) {
             return redirect()->intended('/nasabah/dashboard');
         }
 
@@ -318,7 +315,7 @@ class AuthController extends Controller
     /**
      * Sensor nomor kontak untuk perlindungan privasi
      */
-    private function maskContact($contact, $type = 'whatsapp')
+    private function maskContact(?string $contact, string $type = 'whatsapp'): string
     {
         if (empty($contact)) {
             return 'Belum terdaftar';
@@ -331,19 +328,21 @@ class AuthController extends Controller
                 $domain = $parts[1];
                 $len = strlen($name);
                 if ($len <= 2) {
-                    $masked = substr($name, 0, 1) . '*';
+                    $masked = substr($name, 0, 1).'*';
                 } else {
-                    $masked = substr($name, 0, 2) . str_repeat('*', max(2, $len - 3)) . substr($name, -1);
+                    $masked = substr($name, 0, 2).str_repeat('*', max(2, $len - 3)).substr($name, -1);
                 }
-                return $masked . '@' . $domain;
+
+                return $masked.'@'.$domain;
             }
+
             return $contact;
         }
 
         $clean = preg_replace('/[^0-9]/', '', $contact);
         $len = strlen($clean);
         if ($len >= 8) {
-            return substr($clean, 0, 4) . '****' . substr($clean, -3);
+            return substr($clean, 0, 4).'****'.substr($clean, -3);
         }
 
         return $contact;

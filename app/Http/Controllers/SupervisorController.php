@@ -2,107 +2,126 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Helpers\AvalisSyncHelper;
+use App\Models\Brankas;
+use App\Models\Nasabah;
+use App\Models\PengajuanKas;
+use App\Models\Transaksi;
+use App\Models\User;
+use App\Services\ProfileImageService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class SupervisorController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        $totalNasabah = DB::table('nasabah')->count();
-        $totalSaldo = DB::table('nasabah')->sum('saldo');
+        $totalNasabah = Nasabah::count();
+        $totalSaldo = Nasabah::sum('saldo');
 
-        $transaksi = DB::table('transaksi')
-                        ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-                        ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.nis')
-                        ->orderBy('transaksi.created_at', 'desc')
-                        ->get();
+        $transaksi = Transaksi::with('nasabah')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $today = Carbon::today()->toDateString();
-        $brankasHariIni = DB::table('brankas')->where('tanggal', $today)->first();
+        $brankasHariIni = Brankas::where('tanggal', $today)->first();
         $kasTersedia = $brankasHariIni ? $brankasHariIni->total : 0;
         $kasAwal = $brankasHariIni ? $brankasHariIni->saldo_awal : 0;
-        $pendingPengajuanKasCount = DB::table('pengajuan_kas')->where('status', 'pending')->count();
+        $pendingPengajuanKasCount = PengajuanKas::where('status', 'pending')->count();
+        $absensiSummary = AvalisSyncHelper::getDashboardSummary($today);
 
-        return view('supervisor.dashboard', compact('totalNasabah', 'totalSaldo', 'transaksi', 'kasTersedia', 'kasAwal', 'pendingPengajuanKasCount'));
+        return view('supervisor.dashboard', compact(
+            'totalNasabah',
+            'totalSaldo',
+            'transaksi',
+            'kasTersedia',
+            'kasAwal',
+            'pendingPengajuanKasCount',
+            'absensiSummary'
+        ));
     }
 
-    public function laporan()
+    public function laporan(): View
     {
-        $transaksi = DB::table('transaksi')
-                        ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-                        ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.nis')
-                        ->whereDate('transaksi.created_at', Carbon::today())
-                        ->orderBy('transaksi.created_at', 'desc')
-                        ->get();
+        $transaksi = Transaksi::with('nasabah')
+            ->whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('supervisor.laporan', compact('transaksi'));
     }
 
-    public function approve($id)
+    public function approve(int|string $id): RedirectResponse
     {
-        DB::table('transaksi')->where('id', $id)->update([
-            'status' => 'sukses'
-        ]);
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->update(['status' => 'sukses']);
 
         return back()->with('success', 'Transaksi berhasil disetujui oleh Supervisor!');
     }
 
-    public function cetakHarian()
+    public function cetakHarian(): View
     {
         $hariIni = Carbon::today();
 
-        $brankas = DB::table('brankas')->where('tanggal', $hariIni->toDateString())->first();
-        if (!$brankas) {
+        $brankas = Brankas::where('tanggal', $hariIni->toDateString())->first();
+        if (! $brankas) {
             $brankas = (object) [
-                'saldo_awal' => 0, 'masuk' => 0, 'keluar' => 0, 'total' => 0
+                'saldo_awal' => 0,
+                'masuk' => 0,
+                'keluar' => 0,
+                'total' => 0,
             ];
         }
 
-        $totalAdmin = DB::table('transaksi')
-                        ->whereDate('created_at', $hariIni)
-                        ->where('jenis_transaksi', 'admin')
-                        ->sum('nominal');
+        $totalAdmin = Transaksi::whereDate('created_at', $hariIni)
+            ->where('jenis_transaksi', 'admin')
+            ->sum('nominal');
 
-        $transaksiHariIni = DB::table('transaksi')
-                        ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-                        ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-                        ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.nis', 'users.nama_petugas')
-                        ->whereDate('transaksi.created_at', $hariIni)
-                        ->orderBy('transaksi.created_at', 'asc')
-                        ->get();
+        $transaksiHariIni = Transaksi::with(['nasabah', 'petugas'])
+            ->whereDate('created_at', $hariIni)
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-        $petugasTeller = $transaksiHariIni->pluck('nama_petugas')->filter()->unique();
+        $petugasTeller = $transaksiHariIni->pluck('petugas.nama_petugas')->filter()->unique();
 
         return view('supervisor.cetak-harian', compact('brankas', 'totalAdmin', 'transaksiHariIni', 'petugasTeller'));
     }
 
-    public function profil()
+    public function profil(): View
     {
         $user = Auth::user();
+
         return view('supervisor.profil', compact('user'));
     }
 
-    public function updateProfil(Request $request)
+    public function updateProfil(Request $request, ProfileImageService $imageService): RedirectResponse
     {
+        /** @var User $user */
         $user = Auth::user();
+
         $request->validate([
             'no_hp' => 'nullable|string|max:20',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'foto' => 'nullable|file|image|mimes:jpeg,png,jpg|mimetypes:image/jpeg,image/png|max:2048',
+        ], [
+            'foto.file' => 'File foto yang dipilih tidak valid.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar ditolak! Hanya format PNG dan JPG yang diizinkan.',
+            'foto.mimetypes' => 'Format file ditolak! Hanya format PNG dan JPG yang diizinkan.',
+            'foto.max' => 'Ukuran file foto maksimal adalah 2 MB.',
         ]);
 
-        $dataUpdate = ['no_hp' => $request->no_hp, 'updated_at' => now()];
+        $user->no_hp = $request->no_hp;
 
         if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public', $filename);
-            $dataUpdate['foto'] = $filename;
+            $user->foto = $imageService->validateAndStore($request->file('foto'), $user->foto);
         }
 
-        DB::table('users')->where('id', $user->id)->update($dataUpdate);
-        return back()->with('success', 'Profil berhasil diperbarui!');
+        $user->save();
+        AvalisSyncHelper::autoSync(true);
+
+        return back()->with('success', 'Profil dan foto profil Anda berhasil diperbarui!');
     }
 }

@@ -64,6 +64,141 @@
             </div>
         </div>
 
+        <!-- SECTION REKAPITULASI PRESENSI PETUGAS AVALIS HARI INI -->
+        @if(isset($absensiSummary))
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base font-bold text-slate-900">Presensi Petugas Avalis Hari Ini</h2>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live Sync
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Penugasan shift jaga loket operasional tanggal {{ date('d F Y', strtotime($absensiSummary->tanggal)) }}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="{{ url('/admin/absensi-avalis') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm">
+                        <span>Kelola Absensi</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mini Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Petugas</span>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalPetugas }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hadir</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <p class="text-xl font-bold text-emerald-700 mt-0.5">{{ $absensiSummary->totalHadir }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Izin</span>
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    </div>
+                    <p class="text-xl font-bold text-amber-700 mt-0.5">{{ $absensiSummary->totalIzin }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tidak Masuk</span>
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    </div>
+                    <p class="text-xl font-bold text-rose-700 mt-0.5">{{ $absensiSummary->totalTidakMasuk }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shift Pagi</span>
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                    </div>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalShiftPagi }}</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shift Siang</span>
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    </div>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalShiftSiang }}</p>
+                </div>
+            </div>
+
+            <!-- List Petugas Jaga Hari Ini -->
+            @if(count($absensiSummary->daftarPetugas) > 0)
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                        <tr>
+                            <th class="py-2.5 px-3">Nama Petugas</th>
+                            <th class="py-2.5 px-3">Kelas</th>
+                            <th class="py-2.5 px-3">Shift Jaga</th>
+                            <th class="py-2.5 px-3">Status Kehadiran</th>
+                            <th class="py-2.5 px-3">Pos Tugas / Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        @foreach($absensiSummary->daftarPetugas as $petugas)
+                        <tr class="hover:bg-slate-50/70">
+                            <td class="py-2.5 px-3">
+                                <div class="flex items-center space-x-2.5">
+                                    @php
+                                        $petugasFotoUrl = $petugas->foto_url;
+                                        $initial = strtoupper(mb_substr(trim($petugas->nama), 0, 1));
+                                    @endphp
+                                    @if($petugasFotoUrl)
+                                        <img src="{{ $petugasFotoUrl }}" alt="Foto {{ $petugas->nama }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shadow-sm shrink-0">
+                                    @else
+                                        <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-[11px] shrink-0 shadow-sm">
+                                            {{ $initial }}
+                                        </div>
+                                    @endif
+                                    <span class="font-semibold text-slate-900">{{ $petugas->nama }}</span>
+                                </div>
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-600">{{ $petugas->kelas }}</td>
+                            <td class="py-2.5 px-3">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ str_contains($petugas->shift_jaga, 'Pagi') ? 'bg-sky-500' : 'bg-indigo-500' }}"></span>
+                                    {{ str_contains($petugas->shift_jaga, 'Pagi') ? 'Shift Pagi (07.30 - 11.30)' : 'Shift Siang (11.30 - 15.30)' }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-3">
+                                @if($petugas->status === 'Hadir')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hadir
+                                    </span>
+                                @elseif($petugas->status === 'Izin')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Izin
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Tidak Masuk
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-500">{{ $petugas->keterangan ?: '-' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </div>
+        @endif
+
         <!-- SECTION PERMOHONAN RESET PASSWORD PEGAWAI / AKUN -->
         @if(isset($resetRequests) && count($resetRequests) > 0)
         <div class="mb-8 bg-amber-50 border-2 border-amber-300 rounded-xl p-5 shadow-sm">

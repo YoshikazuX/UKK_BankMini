@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -16,7 +19,7 @@ class Nasabah extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'no_rekening',
@@ -25,6 +28,8 @@ class Nasabah extends Authenticatable
         'kelas',
         'jurusan',
         'username',
+        'email',
+        'no_hp',
         'password',
         'pin_keamanan',
         'saldo',
@@ -35,7 +40,7 @@ class Nasabah extends Authenticatable
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -57,18 +62,34 @@ class Nasabah extends Authenticatable
     }
 
     /**
-     * Relasi ke data transaksi nasabah
+     * Scope nasabah aktif.
      */
-    public function transaksi()
+    public function scopeAktif(Builder $query): Builder
+    {
+        return $query->where('status', 'aktif');
+    }
+
+    /**
+     * Relasi ke data transaksi nasabah.
+     */
+    public function transaksi(): HasMany
     {
         return $this->hasMany(Transaksi::class, 'nasabah_id');
     }
 
     /**
-     * Relasi ke akun aplikasi mobile nasabah (user_app)
+     * Relasi ke akun aplikasi mobile nasabah (user_app).
      */
-    public function userApp()
+    public function userApp(): HasOne
     {
         return $this->hasOne(UserApp::class, 'id_nasabah');
+    }
+
+    /**
+     * Relasi ke catatan verifikasi kunjungan siswa.
+     */
+    public function verifikasiKunjungan(): HasMany
+    {
+        return $this->hasMany(VerifikasiKunjunganSiswa::class, 'nasabah_id');
     }
 }

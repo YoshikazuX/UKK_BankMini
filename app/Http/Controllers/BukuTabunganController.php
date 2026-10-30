@@ -2,30 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Helpers\TerbilangHelper;
+use App\Models\Nasabah;
+use App\Models\Transaksi;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class BukuTabunganController extends Controller
 {
     /**
      * Tampilkan Halaman Buku Tabungan Fisik / Buku Besar Pembantu Nasabah
      */
-    public function show($id)
+    public function show(int|string $id): View|RedirectResponse
     {
-        $nasabah = DB::table('nasabah')->where('id', $id)->first();
-        if (!$nasabah) {
+        $nasabah = Nasabah::find($id);
+        if (! $nasabah) {
             return back()->with('error', 'Data nasabah tidak ditemukan!');
         }
 
         // Ambil seluruh riwayat mutasi transaksi nasabah
-        $transaksi = DB::table('transaksi')
-            ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-            ->select('transaksi.*', 'users.nama_petugas as nama_teller')
-            ->where('transaksi.nasabah_id', $id)
-            ->where('transaksi.status', '!=', 'dibatalkan')
-            ->orderBy('transaksi.created_at', 'asc')
+        $transaksi = Transaksi::with('petugas')
+            ->where('nasabah_id', $id)
+            ->where('status', '!=', 'dibatalkan')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         // Hitung Saldo Berjalan (Running Balance) untuk format buku tabungan
@@ -34,6 +35,7 @@ class BukuTabunganController extends Controller
         $totalTarik = 0;
 
         foreach ($transaksi as $trx) {
+            $trx->nama_teller = $trx->petugas->nama_petugas ?? 'Teller';
             if ($trx->jenis_transaksi === 'setor') {
                 $saldoBerjalan += $trx->nominal;
                 $totalSetor += $trx->nominal;
@@ -58,23 +60,22 @@ class BukuTabunganController extends Controller
     /**
      * Cetak Lembar Buku Tabungan (Ukuran Buku Bank Mini Biru)
      */
-    public function cetakBuku($id)
+    public function cetakBuku(int|string $id): View|RedirectResponse
     {
-        $nasabah = DB::table('nasabah')->where('id', $id)->first();
-        if (!$nasabah) {
+        $nasabah = Nasabah::find($id);
+        if (! $nasabah) {
             return back()->with('error', 'Data nasabah tidak ditemukan!');
         }
 
-        $transaksi = DB::table('transaksi')
-            ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-            ->select('transaksi.*', 'users.nama_petugas as nama_teller')
-            ->where('transaksi.nasabah_id', $id)
-            ->where('transaksi.status', '!=', 'dibatalkan')
-            ->orderBy('transaksi.created_at', 'asc')
+        $transaksi = Transaksi::with('petugas')
+            ->where('nasabah_id', $id)
+            ->where('status', '!=', 'dibatalkan')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         $saldoBerjalan = 0;
         foreach ($transaksi as $trx) {
+            $trx->nama_teller = $trx->petugas->nama_petugas ?? 'Teller';
             if ($trx->jenis_transaksi === 'setor') {
                 $saldoBerjalan += $trx->nominal;
             } else {
@@ -89,18 +90,20 @@ class BukuTabunganController extends Controller
     /**
      * Cetak Slip Setoran Tunai (2 Lembar Rangkap: Arsip Bank Mini & Nasabah)
      */
-    public function cetakSlipSetor($id)
+    public function cetakSlipSetor(int|string $id): View|RedirectResponse
     {
-        $trx = DB::table('transaksi')
-            ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-            ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-            ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.no_rekening', 'nasabah.nis', 'nasabah.kelas', 'nasabah.jurusan', 'users.nama_petugas as nama_teller')
-            ->where('transaksi.id', $id)
-            ->first();
+        $trx = Transaksi::with(['nasabah', 'petugas'])->find($id);
 
-        if (!$trx) {
+        if (! $trx) {
             return back()->with('error', 'Data transaksi tidak ditemukan!');
         }
+
+        $trx->nama_siswa = $trx->nasabah->nama_siswa ?? '-';
+        $trx->no_rekening = $trx->nasabah->no_rekening ?? '-';
+        $trx->nis = $trx->nasabah->nis ?? '-';
+        $trx->kelas = $trx->nasabah->kelas ?? '-';
+        $trx->jurusan = $trx->nasabah->jurusan ?? '-';
+        $trx->nama_teller = $trx->petugas->nama_petugas ?? 'Teller';
 
         $terbilang = TerbilangHelper::terbilang($trx->nominal);
 
@@ -110,18 +113,20 @@ class BukuTabunganController extends Controller
     /**
      * Cetak Slip Penarikan Tunai
      */
-    public function cetakSlipTarik($id)
+    public function cetakSlipTarik(int|string $id): View|RedirectResponse
     {
-        $trx = DB::table('transaksi')
-            ->join('nasabah', 'transaksi.nasabah_id', '=', 'nasabah.id')
-            ->leftJoin('users', 'transaksi.petugas_id', '=', 'users.id')
-            ->select('transaksi.*', 'nasabah.nama_siswa', 'nasabah.no_rekening', 'nasabah.nis', 'nasabah.kelas', 'nasabah.jurusan', 'users.nama_petugas as nama_teller')
-            ->where('transaksi.id', $id)
-            ->first();
+        $trx = Transaksi::with(['nasabah', 'petugas'])->find($id);
 
-        if (!$trx) {
+        if (! $trx) {
             return back()->with('error', 'Data transaksi tidak ditemukan!');
         }
+
+        $trx->nama_siswa = $trx->nasabah->nama_siswa ?? '-';
+        $trx->no_rekening = $trx->nasabah->no_rekening ?? '-';
+        $trx->nis = $trx->nasabah->nis ?? '-';
+        $trx->kelas = $trx->nasabah->kelas ?? '-';
+        $trx->jurusan = $trx->nasabah->jurusan ?? '-';
+        $trx->nama_teller = $trx->petugas->nama_petugas ?? 'Teller';
 
         $terbilang = TerbilangHelper::terbilang($trx->nominal);
 
@@ -131,16 +136,14 @@ class BukuTabunganController extends Controller
     /**
      * Ubah Status Nasabah (Aktif vs Alumni untuk cegah database bloat)
      */
-    public function ubahStatus(Request $request, $id)
+    public function ubahStatus(Request $request, int|string $id): RedirectResponse
     {
-        $request->validate([
-            'status' => 'required|in:aktif,alumni,nonaktif'
+        $validated = $request->validate([
+            'status' => 'required|in:aktif,alumni,nonaktif',
         ]);
 
-        DB::table('nasabah')->where('id', $id)->update([
-            'status' => $request->status,
-            'updated_at' => now()
-        ]);
+        $nasabah = Nasabah::findOrFail($id);
+        $nasabah->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Status nasabah berhasil diperbarui!');
     }

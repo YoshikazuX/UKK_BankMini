@@ -2,40 +2,35 @@
 
 namespace App\Helpers;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\PengaturanSistem;
 use Illuminate\Support\Facades\Schema;
 
 class SettingHelper
 {
-    public static function getSettings()
+    /**
+     * Ambil record pengaturan sistem global atau inisialisasi default jika belum ada.
+     */
+    public static function getSettings(): PengaturanSistem
     {
-        if (!Schema::hasTable('pengaturan_sistem')) {
-            return (object) [
+        if (! Schema::hasTable('pengaturan_sistem')) {
+            return new PengaturanSistem([
                 'saldo_mengendap_min' => 10000,
                 'scanner_kamera_aktif' => true,
                 'tahun_ajaran_aktif' => '2026/2027',
                 'format_no_rekening' => 'TA-JURUSAN-URUT',
                 'nama_bank' => 'LKM Mitra Siswa Abadi',
                 'biaya_administrasi_buku' => 5000,
-            ];
-        }
-
-        $setting = DB::table('pengaturan_sistem')->first();
-        if (!$setting) {
-            DB::table('pengaturan_sistem')->insert([
-                'saldo_mengendap_min' => 10000,
-                'scanner_kamera_aktif' => true,
-                'tahun_ajaran_aktif' => '2026/2027',
-                'format_no_rekening' => 'TA-JURUSAN-URUT',
-                'nama_bank' => 'LKM Mitra Siswa Abadi',
-                'biaya_administrasi_buku' => 5000,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
-            $setting = DB::table('pengaturan_sistem')->first();
         }
 
-        return $setting;
+        return PengaturanSistem::firstOrCreate([], [
+            'saldo_mengendap_min' => 10000,
+            'scanner_kamera_aktif' => true,
+            'tahun_ajaran_aktif' => '2026/2027',
+            'format_no_rekening' => 'TA-JURUSAN-URUT',
+            'nama_bank' => 'LKM Mitra Siswa Abadi',
+            'biaya_administrasi_buku' => 5000,
+        ]);
     }
 
     public static function getSaldoMengendapMin(): int

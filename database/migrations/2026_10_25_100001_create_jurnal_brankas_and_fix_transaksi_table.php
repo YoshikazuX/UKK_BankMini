@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         // Tabel 'jurnal' yang digunakan oleh TellerController & AdminController
-        if (!Schema::hasTable('jurnal')) {
+        if (! Schema::hasTable('jurnal')) {
             Schema::create('jurnal', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('transaksi_id');
@@ -24,7 +24,7 @@ return new class extends Migration
         }
 
         // Tabel 'brankas' yang digunakan oleh TellerController
-        if (!Schema::hasTable('brankas')) {
+        if (! Schema::hasTable('brankas')) {
             Schema::create('brankas', function (Blueprint $table) {
                 $table->id();
                 $table->date('tanggal')->unique();
@@ -38,11 +38,11 @@ return new class extends Migration
 
         // Tambah kolom yang kurang di tabel 'transaksi'
         Schema::table('transaksi', function (Blueprint $table) {
-            if (!Schema::hasColumn('transaksi', 'petugas_id')) {
+            if (! Schema::hasColumn('transaksi', 'petugas_id')) {
                 $table->unsignedBigInteger('petugas_id')->nullable()->after('nasabah_id');
                 $table->foreign('petugas_id')->references('id')->on('users')->onDelete('set null');
             }
-            if (!Schema::hasColumn('transaksi', 'alasan_batal')) {
+            if (! Schema::hasColumn('transaksi', 'alasan_batal')) {
                 $table->text('alasan_batal')->nullable()->after('status');
             }
         });
