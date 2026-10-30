@@ -43,7 +43,7 @@ class OperasionalKasApiController extends Controller
                 'nomor_pengajuan' => $p->nomor_pengajuan,
                 'tanggal' => $p->tanggal ? $p->tanggal->format('Y-m-d') : null,
                 'nominal' => (float) $p->nominal,
-                'formatted_nominal' => 'Rp ' . number_format($p->nominal, 0, ',', '.'),
+                'formatted_nominal' => 'Rp '.number_format($p->nominal, 0, ',', '.'),
                 'alasan' => $p->alasan,
                 'status' => $p->status,
                 'nama_spv' => $p->approver?->nama_petugas ?? '-',
@@ -77,7 +77,7 @@ class OperasionalKasApiController extends Controller
         $today = Carbon::today()->toDateString();
 
         $countToday = PengajuanKas::whereDate('tanggal', $today)->count() + 1;
-        $nomorPengajuan = 'PK-' . date('Ymd') . '-' . str_pad((string) $countToday, 3, '0', STR_PAD_LEFT);
+        $nomorPengajuan = 'PK-'.date('Ymd').'-'.str_pad((string) $countToday, 3, '0', STR_PAD_LEFT);
 
         $pengajuan = PengajuanKas::create([
             'nomor_pengajuan' => $nomorPengajuan,
@@ -95,7 +95,7 @@ class OperasionalKasApiController extends Controller
                 'id' => $pengajuan->id,
                 'nomor_pengajuan' => $pengajuan->nomor_pengajuan,
                 'nominal' => (float) $pengajuan->nominal,
-                'formatted_nominal' => 'Rp ' . number_format($pengajuan->nominal, 0, ',', '.'),
+                'formatted_nominal' => 'Rp '.number_format($pengajuan->nominal, 0, ',', '.'),
                 'status' => $pengajuan->status,
                 'tanggal' => $today,
             ],
@@ -137,13 +137,13 @@ class OperasionalKasApiController extends Controller
             'data' => [
                 'tanggal' => $today,
                 'opening_balance' => $openingBalance,
-                'formatted_opening' => 'Rp ' . number_format($openingBalance, 0, ',', '.'),
+                'formatted_opening' => 'Rp '.number_format($openingBalance, 0, ',', '.'),
                 'total_deposit' => $totalDeposit,
-                'formatted_deposit' => 'Rp ' . number_format($totalDeposit, 0, ',', '.'),
+                'formatted_deposit' => 'Rp '.number_format($totalDeposit, 0, ',', '.'),
                 'total_withdrawal' => $totalWithdrawal,
-                'formatted_withdrawal' => 'Rp ' . number_format($totalWithdrawal, 0, ',', '.'),
+                'formatted_withdrawal' => 'Rp '.number_format($totalWithdrawal, 0, ',', '.'),
                 'system_balance' => $systemBalance,
-                'formatted_system' => 'Rp ' . number_format($systemBalance, 0, ',', '.'),
+                'formatted_system' => 'Rp '.number_format($systemBalance, 0, ',', '.'),
                 'is_submitted' => $myReportToday !== null,
                 'report' => $myReportToday ? [
                     'id' => $myReportToday->id,
@@ -242,7 +242,7 @@ class OperasionalKasApiController extends Controller
             'nomor_pengajuan' => $p->nomor_pengajuan,
             'tanggal' => $p->tanggal ? $p->tanggal->format('Y-m-d') : null,
             'nominal' => (float) $p->nominal,
-            'formatted_nominal' => 'Rp ' . number_format($p->nominal, 0, ',', '.'),
+            'formatted_nominal' => 'Rp '.number_format($p->nominal, 0, ',', '.'),
             'alasan' => $p->alasan,
             'status' => $p->status,
             'nama_teller' => $p->user?->nama_petugas ?? '-',
@@ -332,7 +332,8 @@ class OperasionalKasApiController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal menyetujui pengajuan kas: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Gagal menyetujui pengajuan kas: '.$e->getMessage()], 500);
         }
     }
 

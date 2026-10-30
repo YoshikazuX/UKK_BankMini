@@ -281,4 +281,3 @@ class AvalisApiController extends Controller
         ], 200);
     }
 }
-
