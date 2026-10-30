@@ -191,106 +191,17 @@ class NasabahApiTest extends TestCase
             ]);
     }
 
-    public function test_transfer_saldo_sukses(): void
+    public function test_transfer_saldo_dinonaktifkan(): void
     {
-        // 1. Buat nasabah penerima
-        DB::table('nasabah')->insert([
-            'no_rekening' => '202601002',
-            'nis' => '17764',
-            'nama_siswa' => 'Siti Aminah',
-            'kelas' => 'XI RPL 1',
-            'jurusan' => 'RPL',
-            'username' => 'sitiaminah',
-            'password' => Hash::make('password123'),
-            'pin_keamanan' => Hash::make('112233'),
-            'saldo' => 10000,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // 2. Lakukan transfer dari 202601001 (saldo awal 50.000) ke 202601002 sebanyak 15.000
         $response = $this->postJson('/api/nasabah/transfer', [
             'no_rekening_pengirim' => '202601001',
             'no_rekening_tujuan' => '202601002',
             'nominal' => 15000,
             'pin' => '240808',
-            'catatan' => 'Bayar buku',
         ]);
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'data' => [
-                    'sisa_saldo' => 35000,
-                ],
-            ]);
-
-        // Cek saldo penerima bertambah jadi 25.000
-        $this->assertDatabaseHas('nasabah', [
-            'no_rekening' => '202601002',
-            'saldo' => 25000,
-        ]);
-    }
-
-    public function test_transfer_gagal_pin_salah(): void
-    {
-        DB::table('nasabah')->insert([
-            'no_rekening' => '202601002',
-            'nis' => '17764',
-            'nama_siswa' => 'Siti Aminah',
-            'kelas' => 'XI RPL 1',
-            'jurusan' => 'RPL',
-            'username' => 'sitiaminah',
-            'password' => Hash::make('password123'),
-            'pin_keamanan' => Hash::make('112233'),
-            'saldo' => 10000,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $response = $this->postJson('/api/nasabah/transfer', [
-            'no_rekening_pengirim' => '202601001',
-            'no_rekening_tujuan' => '202601002',
-            'nominal' => 5000,
-            'pin' => '999999', // PIN salah
-        ]);
-
-        $response->assertStatus(400)
-            ->assertJson([
-                'success' => false,
-                'message' => 'PIN Keamanan salah!',
-            ]);
-    }
-
-    public function test_transfer_gagal_saldo_kurang(): void
-    {
-        DB::table('nasabah')->insert([
-            'no_rekening' => '202601002',
-            'nis' => '17764',
-            'nama_siswa' => 'Siti Aminah',
-            'kelas' => 'XI RPL 1',
-            'jurusan' => 'RPL',
-            'username' => 'sitiaminah',
-            'password' => Hash::make('password123'),
-            'pin_keamanan' => Hash::make('112233'),
-            'saldo' => 10000,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Saldo pengirim 50.000, transfer 100.000
-        $response = $this->postJson('/api/nasabah/transfer', [
-            'no_rekening_pengirim' => '202601001',
-            'no_rekening_tujuan' => '202601002',
-            'nominal' => 100000,
-            'pin' => '240808',
-        ]);
-
-        $response->assertStatus(400)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Saldo Anda tidak mencukupi untuk transfer ini!',
-            ]);
+        // Fitur transfer antar siswa telah dihapus sehingga route tidak tersedia (404)
+        $response->assertStatus(404);
     }
 
     public function test_ganti_password(): void

@@ -8,24 +8,7 @@
 </head>
 <body class="bg-slate-50 font-sans">
 
-    <!-- NAVBAR ADMIN (Konsisten dengan Data Pegawai) -->
-    <nav class="bg-blue-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-xl font-bold tracking-wider">Administrator</div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ url('/admin/dashboard') }}" class="text-blue-100 hover:text-white font-medium hover:underline transition">Data Pegawai</a>
-                    <!-- Menu Data Nasabah Ditebalkan/Digarisbawahi karena sedang aktif -->
-                    <a href="{{ url('/admin/data-nasabah') }}" class="text-white font-bold underline decoration-2 underline-offset-4">Data Nasabah</a>
-                    <span class="text-sm font-medium border-l border-blue-400 pl-6">{{ Auth::user()->nama_petugas ?? 'Administrator' }}</span>
-                    <form action="{{ route('logout') }}" method="POST" class="ml-4">
-                        @csrf
-                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold py-1.5 px-4 rounded transition">Keluar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <x-navbar />
 
     <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
 

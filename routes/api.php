@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProfilNasabahController;
 use App\Http\Controllers\Api\SystemApiController;
 use App\Http\Controllers\Api\TellerApiController;
 use App\Http\Controllers\Api\TransaksiNasabahController;
+use App\Http\Controllers\Api\UniversalAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,17 @@ Route::get('/health', [SystemApiController::class, 'health'])->name('api.health'
 Route::get('/docs', [SystemApiController::class, 'docs'])->name('api.docs');
 
 // =========================================================================
+// 1B. AUTENTIKASI UNIVERSAL (ROLE DITENTUKAN OTOMATIS OLEH DATABASE)
+// =========================================================================
+Route::prefix('auth')->name('api.auth.')->group(function () {
+    Route::post('/login', [UniversalAuthController::class, 'login'])->name('login');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [UniversalAuthController::class, 'me'])->name('me');
+        Route::post('/logout', [UniversalAuthController::class, 'logout'])->name('logout');
+    });
+});
+
+// =========================================================================
 // 2. MODUL NASABAH (MOBILE BANKING SISWA)
 // =========================================================================
 Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
@@ -48,11 +60,9 @@ Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
 
     // Inquiry & Saldo
     Route::get('/saldo', [ProfilNasabahController::class, 'saldo'])->name('saldo');
-    Route::get('/cek-rekening', [ProfilNasabahController::class, 'cekRekening'])->name('cek-rekening');
     Route::get('/qris-payload', [ProfilNasabahController::class, 'qrisPayload'])->name('qris-payload');
 
-    // Mutasi & Transaksi Mobile
-    Route::post('/transfer', [TransaksiNasabahController::class, 'transfer'])->name('transfer');
+    // Mutasi & Transaksi Mobile (Transfer antar siswa dinonaktifkan: tabungan dikelola loket teller)
     Route::get('/riwayat', [TransaksiNasabahController::class, 'riwayat'])->name('riwayat');
     Route::get('/ringkasan', [TransaksiNasabahController::class, 'ringkasan'])->name('ringkasan');
 });

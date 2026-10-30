@@ -259,12 +259,11 @@
 
             <!-- BAGIAN ATAS: LOGO & NAMA APLIKASI -->
             <div class="relative z-10 flex items-center space-x-3 shrink-0">
-                <div class="w-10 h-10 rounded-lg bg-slate-800 text-white border border-slate-700/80 flex items-center justify-center shadow-sm shrink-0">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                    </svg>
+                <img src="{{ asset('images/SMK_Negeri_1_Bantul_logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-11 h-11 object-contain bg-white/10 rounded-lg p-1 border border-slate-700/80 shadow-sm shrink-0">
+                <div>
+                    <span class="text-base font-bold text-white tracking-tight block">LKM Mitra Siswa Abadi</span>
+                    <span class="text-xs text-slate-400 block">SMK Negeri 1 Bantul</span>
                 </div>
-                <span class="text-base font-bold text-white tracking-tight">LKM Mitra Siswa Abadi</span>
             </div>
 
             <!-- BAGIAN TENGAH / BAWAH: BLOK TEKS DESKRIPSI -->

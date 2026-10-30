@@ -1,60 +1,74 @@
 @php
     $user = Auth::user();
     $role = $user->role ?? 'admin';
+    // Style konsisten seluruh tautan navigasi website: font-size 14px (text-sm), tinggi baris seragam
+    $navItemClass = function(bool $isActive) {
+        $base = "text-sm whitespace-nowrap px-3 py-1.5 rounded-lg transition-all duration-150 focus:outline-none";
+        return $isActive 
+            ? "{$base} text-white bg-slate-700 font-semibold shadow-inner" 
+            : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/50 font-medium";
+    };
 @endphp
-<nav class="bg-slate-800 text-white shadow-md relative no-print z-40">
+
+<!-- Font Plus Jakarta Sans terstandarisasi untuk navigasi website -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<nav class="bg-slate-800 text-white shadow-md relative no-print z-40" style="font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
-            <!-- Brand Logo + Name -->
-            <a href="{{ url('/' . ($role === 'teller' ? 'teller/dashboard' : ($role === 'supervisor' ? 'supervisor/dashboard' : ($role === 'nasabah' ? 'nasabah/dashboard' : 'admin/dashboard')))) }}" class="flex items-center space-x-2.5 text-lg xl:text-xl font-bold tracking-wider whitespace-nowrap shrink-0 mr-4 focus:outline-none">
-                <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                </svg>
-                <span>LKM Mitra Siswa Abadi</span>
+            <!-- Brand Logo Resmi SMK Negeri 1 Bantul + Nama Institusi -->
+            <a href="{{ url('/' . ($role === 'teller' ? 'teller/dashboard' : ($role === 'supervisor' ? 'supervisor/dashboard' : ($role === 'nasabah' ? 'nasabah/dashboard' : 'admin/dashboard')))) }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
+                <img src="{{ asset('images/SMK_Negeri_1_Bantul_logo.png') }}" alt="Logo SMK Negeri 1 Bantul" class="w-9 h-9 object-contain shrink-0 rounded transition-transform group-hover:scale-105">
+                <div class="flex flex-col">
+                    <span class="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">LKM Mitra Siswa Abadi</span>
+                    <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">SMK Negeri 1 Bantul</span>
+                </div>
             </a>
 
-            <!-- Menu links according to role -->
+            <!-- Menu links according to role (Seluruh tautan menggunakan ukuran text-sm dan padding seragam) -->
             @if($role === 'teller')
-                <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/teller/dashboard') }}" class="{{ request()->is('teller/dashboard*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/teller/riwayat') }}" class="{{ request()->is('teller/riwayat*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Riwayat Saya</a>
-                    <a href="{{ url('/teller/daily-report') }}" class="{{ request()->is('teller/daily-report*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Tutup Kas</a>
-                    <a href="{{ url('/teller/pengajuan-kas') }}" class="{{ request()->is('teller/pengajuan-kas*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} flex items-center whitespace-nowrap focus:outline-none">
+                <div class="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 overflow-x-auto py-1">
+                    <a href="{{ url('/teller/dashboard') }}" class="{{ $navItemClass(request()->is('teller/dashboard*')) }}">Dashboard</a>
+                    <a href="{{ url('/teller/riwayat') }}" class="{{ $navItemClass(request()->is('teller/riwayat*')) }}">Riwayat Saya</a>
+                    <a href="{{ url('/teller/daily-report') }}" class="{{ $navItemClass(request()->is('teller/daily-report*')) }}">Tutup Kas</a>
+                    <a href="{{ url('/teller/pengajuan-kas') }}" class="{{ $navItemClass(request()->is('teller/pengajuan-kas*')) }} flex items-center">
                         Pengajuan Kas
                         @if(($pendingPengajuan ?? 0) > 0)
-                            <span class="ml-1 bg-amber-500 text-slate-900 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ $pendingPengajuan }}</span>
+                            <span class="ml-1.5 bg-amber-500 text-slate-900 text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ $pendingPengajuan }}</span>
                         @endif
                     </a>
-                    <a href="{{ url('/teller/absensi-avalis') }}" class="{{ request()->is('teller/absensi-avalis*') || request()->is('absensi-avalis*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Absensi Avalis</a>
+                    <a href="{{ url('/teller/absensi-avalis') }}" class="{{ $navItemClass(request()->is('teller/absensi-avalis*') || request()->is('absensi-avalis*')) }}">Absensi Avalis</a>
             @elseif($role === 'supervisor')
-                <div class="flex items-center space-x-2.5 lg:space-x-3.5 xl:space-x-5 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/supervisor/dashboard') }}" class="{{ request()->is('supervisor/dashboard*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/supervisor/laporan') }}" class="{{ request()->is('supervisor/laporan*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Laporan Transaksi</a>
-                    <a href="{{ url('/supervisor/daily-report') }}" class="{{ request()->is('supervisor/daily-report*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Daily Report</a>
-                    <a href="{{ url('/supervisor/pengajuan-kas') }}" class="{{ request()->is('supervisor/pengajuan-kas*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Pengajuan Kas</a>
-                    <a href="{{ url('/laporan/jurnal') }}" class="{{ request()->is('laporan/jurnal*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Jurnal</a>
-                    <a href="{{ url('/laporan/saldo-produk') }}" class="{{ request()->is('laporan/saldo-produk*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Produk</a>
-                    <a href="{{ url('/laporan/tahunan') }}" class="{{ request()->is('laporan/tahunan*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Tahunan</a>
-                    <a href="{{ url('/avalis/petugas') }}" class="{{ request()->is('avalis/petugas*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Data Teller</a>
-                    <a href="{{ url('/supervisor/absensi-avalis') }}" class="{{ request()->is('supervisor/absensi-avalis*') || request()->is('absensi-avalis*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Absensi</a>
+                <div class="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 overflow-x-auto py-1">
+                    <a href="{{ url('/supervisor/dashboard') }}" class="{{ $navItemClass(request()->is('supervisor/dashboard*')) }}">Dashboard</a>
+                    <a href="{{ url('/supervisor/laporan') }}" class="{{ $navItemClass(request()->is('supervisor/laporan*')) }}">Laporan</a>
+                    <a href="{{ url('/supervisor/daily-report') }}" class="{{ $navItemClass(request()->is('supervisor/daily-report*')) }}">Daily Report</a>
+                    <a href="{{ url('/supervisor/pengajuan-kas') }}" class="{{ $navItemClass(request()->is('supervisor/pengajuan-kas*')) }}">Pengajuan Kas</a>
+                    <a href="{{ url('/laporan/jurnal') }}" class="{{ $navItemClass(request()->is('laporan/jurnal*')) }}">Jurnal</a>
+                    <a href="{{ url('/laporan/saldo-produk') }}" class="{{ $navItemClass(request()->is('laporan/saldo-produk*')) }}">Produk</a>
+                    <a href="{{ url('/laporan/tahunan') }}" class="{{ $navItemClass(request()->is('laporan/tahunan*')) }}">Tahunan</a>
+                    <a href="{{ url('/avalis/petugas') }}" class="{{ $navItemClass(request()->is('avalis/petugas*')) }}">Data Teller</a>
+                    <a href="{{ url('/supervisor/absensi-avalis') }}" class="{{ $navItemClass(request()->is('supervisor/absensi-avalis*') || request()->is('absensi-avalis*')) }}">Absensi</a>
             @elseif($role === 'nasabah')
                 @php
                     $navNasabah = \Illuminate\Support\Facades\DB::table('nasabah')->where('username', $user->username ?? '')->orWhere('nis', $user->username ?? '')->first() ?? \Illuminate\Support\Facades\DB::table('nasabah')->first();
                     $navNasabahId = $navNasabah->id ?? 1;
                 @endphp
-                <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/nasabah/dashboard') }}" class="{{ request()->is('nasabah/dashboard*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/buku-tabungan/'.$navNasabahId) }}" class="{{ request()->is('buku-tabungan*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Buku Tabungan</a>
+                <div class="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 overflow-x-auto py-1">
+                    <a href="{{ url('/nasabah/dashboard') }}" class="{{ $navItemClass(request()->is('nasabah/dashboard*')) }}">Dashboard</a>
+                    <a href="{{ url('/buku-tabungan/'.$navNasabahId) }}" class="{{ $navItemClass(request()->is('buku-tabungan*')) }}">Buku Tabungan</a>
             @else
                 {{-- Default Admin --}}
-                <div class="flex items-center space-x-3 lg:space-x-5 xl:space-x-6 text-xs xl:text-sm font-medium">
-                    <a href="{{ url('/admin/dashboard') }}" class="{{ request()->is('admin/dashboard*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Dashboard</a>
-                    <a href="{{ url('/admin/data-nasabah') }}" class="{{ request()->is('admin/data-nasabah*') || request()->is('admin/*-nasabah*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Manajemen Nasabah</a>
-                    <a href="{{ url('/avalis/petugas') }}" class="{{ request()->is('avalis/petugas*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Petugas Avalis</a>
-                    <a href="{{ url('/laporan/jurnal') }}" class="{{ request()->is('laporan/jurnal*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Jurnal</a>
-                    <a href="{{ url('/admin/audit') }}" class="{{ request()->is('admin/audit*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Jejak Audit</a>
-                    <a href="{{ url('/admin/absensi-avalis') }}" class="{{ request()->is('admin/absensi-avalis*') || request()->is('absensi-avalis*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Absensi</a>
-                    <a href="{{ url('/admin/konfigurasi') }}" class="{{ request()->is('admin/konfigurasi*') ? 'text-white font-medium underline decoration-2 underline-offset-4' : 'text-slate-300 hover:text-white transition font-medium' }} whitespace-nowrap focus:outline-none">Konfigurasi</a>
+                <div class="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 overflow-x-auto py-1">
+                    <a href="{{ url('/admin/dashboard') }}" class="{{ $navItemClass(request()->is('admin/dashboard*')) }}">Dashboard</a>
+                    <a href="{{ url('/admin/data-nasabah') }}" class="{{ $navItemClass(request()->is('admin/data-nasabah*') || request()->is('admin/*-nasabah*')) }}">Manajemen Nasabah</a>
+                    <a href="{{ url('/avalis/petugas') }}" class="{{ $navItemClass(request()->is('avalis/petugas*')) }}">Petugas Avalis</a>
+                    <a href="{{ url('/laporan/jurnal') }}" class="{{ $navItemClass(request()->is('laporan/jurnal*')) }}">Jurnal</a>
+                    <a href="{{ url('/admin/audit') }}" class="{{ $navItemClass(request()->is('admin/audit*')) }}">Jejak Audit</a>
+                    <a href="{{ url('/admin/absensi-avalis') }}" class="{{ $navItemClass(request()->is('admin/absensi-avalis*') || request()->is('absensi-avalis*')) }}">Absensi</a>
+                    <a href="{{ url('/admin/konfigurasi') }}" class="{{ $navItemClass(request()->is('admin/konfigurasi*')) }}">Konfigurasi</a>
             @endif
 
                 <!-- Profile Dropdown -->
@@ -104,6 +118,21 @@
         </div>
     </div>
 </nav>
+
+<script>
+    function toggleUnifiedNavbarDropdown(e) {
+        if (e) e.stopPropagation();
+        const dd = document.getElementById('unified-profile-dropdown');
+        if (dd) dd.classList.toggle('hidden');
+    }
+    window.addEventListener('click', function(e) {
+        const btn = document.getElementById('unified-profile-btn');
+        const dd = document.getElementById('unified-profile-dropdown');
+        if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
+            dd.classList.add('hidden');
+        }
+    });
+</script>
 
 <script>
     function toggleUnifiedNavbarDropdown(e) {

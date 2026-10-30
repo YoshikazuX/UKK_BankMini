@@ -26,7 +26,7 @@ class SystemApiController extends Controller
             'modules' => [
                 'nasabah' => [
                     'prefix' => '/api/nasabah',
-                    'description' => 'Layanan Mobile Banking Siswa (Login, Saldo, Transfer, PIN, QRIS, Mutasi)',
+                    'description' => 'Layanan Mobile Banking Siswa (Login, Saldo, Mutasi, PIN, QRIS Kartu)',
                 ],
                 'petugas' => [
                     'prefix' => '/api/petugas',
@@ -95,7 +95,7 @@ class SystemApiController extends Controller
             'version' => '2.0.0',
             'auth_methods' => [
                 'bearer_token' => 'Gunakan header Authorization: Bearer <token> (diperoleh dari login)',
-                'nasabah_pin' => 'Otorisasi 6-digit PIN untuk transaksi finansial (transfer/tarik)',
+                'nasabah_pin' => 'Otorisasi 6-digit PIN untuk transaksi loket teller (penarikan tunai)',
             ],
             'endpoints' => [
                 'nasabah' => [
@@ -104,12 +104,10 @@ class SystemApiController extends Controller
                     ['method' => 'GET', 'path' => '/api/nasabah/me', 'auth' => true, 'desc' => 'Ambil profil lengkap nasabah yang sedang login'],
                     ['method' => 'POST', 'path' => '/api/nasabah/update-profil', 'auth' => true, 'desc' => 'Perbarui kontak no_hp & email nasabah'],
                     ['method' => 'GET', 'path' => '/api/nasabah/saldo', 'auth' => 'opsional', 'desc' => 'Inquiry saldo rekening tabungan'],
-                    ['method' => 'GET', 'path' => '/api/nasabah/cek-rekening', 'auth' => false, 'desc' => 'Inquiry nama & rekening tujuan sebelum transfer'],
                     ['method' => 'GET', 'path' => '/api/nasabah/qris-payload', 'auth' => 'opsional', 'desc' => 'Payload data QR untuk scan loket'],
                     ['method' => 'POST', 'path' => '/api/nasabah/verify-pin', 'auth' => false, 'desc' => 'Verifikasi 6-digit PIN kartu nasabah'],
                     ['method' => 'POST', 'path' => '/api/nasabah/ganti-password', 'auth' => false, 'desc' => 'Ganti password akun nasabah'],
                     ['method' => 'POST', 'path' => '/api/nasabah/ganti-pin', 'auth' => false, 'desc' => 'Ganti 6-digit PIN keamanan nasabah'],
-                    ['method' => 'POST', 'path' => '/api/nasabah/transfer', 'auth' => 'opsional', 'desc' => 'Transfer saldo antar rekening nasabah'],
                     ['method' => 'GET', 'path' => '/api/nasabah/riwayat', 'auth' => 'opsional', 'desc' => 'Riwayat mutasi transaksi nasabah'],
                     ['method' => 'GET', 'path' => '/api/nasabah/ringkasan', 'auth' => 'opsional', 'desc' => 'Ringkasan pemasukan & pengeluaran bulan berjalan'],
                 ],

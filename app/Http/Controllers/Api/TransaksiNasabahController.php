@@ -14,113 +14,13 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class TransaksiNasabahController extends Controller
 {
-    // 1. TRANSFER SALDO ANTAR NASABAH (E-WALLET / MOBILE)
+    // 1. TRANSFER SALDO ANTAR NASABAH (DINONAKTIFKAN / REMOVED)
     public function transfer(Request $request): JsonResponse
     {
-        $userNasabah = $this->resolveNasabah($request);
-
-        $request->validate([
-            'no_rekening_pengirim' => $userNasabah ? 'nullable|string' : 'required|string',
-            'no_rekening_tujuan' => 'required|string',
-            'nominal' => 'required|numeric|min:1000',
-            'pin' => 'required|digits:6',
-            'catatan' => 'nullable|string|max:100',
-        ]);
-
-        $noPengirim = $userNasabah ? $userNasabah->no_rekening : $request->no_rekening_pengirim;
-
-        if ($noPengirim === $request->no_rekening_tujuan) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak dapat melakukan transfer ke rekening sendiri!',
-            ], 400);
-        }
-
-        $pengirim = $userNasabah ?: Nasabah::where('no_rekening', $noPengirim)->first();
-        if (! $pengirim) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Rekening pengirim tidak valid!',
-            ], 404);
-        }
-
-        // Verifikasi PIN Pengirim
-        if (! Hash::check($request->pin, $pengirim->pin_keamanan)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PIN Keamanan salah!',
-            ], 400);
-        }
-
-        $penerima = Nasabah::where('no_rekening', $request->no_rekening_tujuan)->first();
-        if (! $penerima) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Rekening tujuan tidak ditemukan!',
-            ], 404);
-        }
-
-        $nominal = (int) $request->nominal;
-
-        if ($pengirim->saldo < $nominal) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Saldo Anda tidak mencukupi untuk transfer ini!',
-            ], 400);
-        }
-
-        DB::beginTransaction();
-        try {
-            // 1. Kurangi saldo pengirim
-            $pengirim->decrement('saldo', $nominal);
-
-            // 2. Tambah saldo penerima
-            $penerima->increment('saldo', $nominal);
-
-            $catatan = $request->catatan ? ' ('.$request->catatan.')' : '';
-
-            // 3. Catat mutasi keluar pada akun pengirim
-            Transaksi::create([
-                'nasabah_id' => $pengirim->id,
-                'jenis_transaksi' => 'transfer_keluar',
-                'nominal' => $nominal,
-                'keterangan' => 'Transfer ke '.$penerima->nama_siswa.$catatan,
-                'status' => 'sukses',
-            ]);
-
-            // 4. Catat mutasi masuk pada akun penerima
-            Transaksi::create([
-                'nasabah_id' => $penerima->id,
-                'jenis_transaksi' => 'transfer_masuk',
-                'nominal' => $nominal,
-                'keterangan' => 'Transfer dari '.$pengirim->nama_siswa.$catatan,
-                'status' => 'sukses',
-            ]);
-
-            DB::commit();
-
-            $sisaSaldo = (float) $pengirim->saldo;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transfer sejumlah Rp '.number_format($nominal, 0, ',', '.').' ke '.$penerima->nama_siswa.' berhasil!',
-                'data' => [
-                    'nominal' => $nominal,
-                    'no_rekening_tujuan' => $penerima->no_rekening,
-                    'nama_penerima' => $penerima->nama_siswa,
-                    'sisa_saldo' => (float) $sisaSaldo,
-                    'waktu' => now()->format('Y-m-d H:i:s'),
-                ],
-            ], 200);
-
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem saat transfer: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Fitur transfer antar siswa tidak tersedia. Transaksi keuangan hanya dapat dilakukan melalui loket teller.',
+        ], 403);
     }
 
     // 2. RIWAYAT TRANSAKSI / MUTASI
