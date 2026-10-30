@@ -104,4 +104,3 @@ class AuthPetugasController extends Controller
         ], 200);
     }
 }
-
