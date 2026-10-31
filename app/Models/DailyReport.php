@@ -26,6 +26,8 @@ class DailyReport extends Model
         'status',
         'approved_by',
         'notes',
+        'catatan_spv',
+        'alasan_penolakan',
     ];
 
     protected function casts(): array
@@ -64,5 +66,15 @@ class DailyReport extends Model
     public function transaksi(): HasMany
     {
         return $this->hasMany(Transaksi::class, 'daily_report_id');
+    }
+
+    /**
+     * Riwayat jejak keputusan supervisor atas daily report ini.
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(ApprovalHistory::class, 'pekerjaan_id')
+            ->where('pekerjaan_type', 'daily_report')
+            ->orderBy('created_at', 'desc');
     }
 }

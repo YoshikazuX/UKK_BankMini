@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="text-right text-xs text-slate-500">
-                    Total Laporan Ditemukan: <span class="font-bold text-slate-800 tabular-nums">{{ count($reports) }} dokumen</span>
+                    Total Laporan Ditemukan: <span class="font-bold text-slate-800 tabular-nums">{{ $reports->total() }} dokumen</span>
                 </div>
             </form>
         </div>
@@ -162,10 +162,16 @@
                             </td>
                             <td class="p-3 text-center">
                                 <div class="flex items-center justify-center space-x-1.5">
+                                    <!-- Tombol Detail / Periksa Lengkap -->
+                                    <a href="{{ route('supervisor.daily-report.detail', $r->id) }}"
+                                       class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-2.5 py-1.5 rounded-lg transition text-xs shadow-sm flex items-center">
+                                        Periksa
+                                    </a>
+
                                     <!-- Tombol Review Modal -->
                                     <button type="button" onclick="openApprovalModal({{ json_encode($r) }})"
                                             class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-2.5 py-1.5 rounded-lg transition text-xs shadow-sm flex items-center">
-                                        Review
+                                        Otorisasi
                                     </button>
 
                                     <!-- Tombol Cetak -->
@@ -187,6 +193,12 @@
                     </tbody>
                 </table>
             </div>
+
+            @if($reports->hasPages())
+            <div class="px-5 py-4 border-t border-slate-200 bg-slate-50">
+                {{ $reports->links() }}
+            </div>
+            @endif
         </div>
     </main>
 

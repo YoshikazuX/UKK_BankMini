@@ -105,11 +105,19 @@ Route::prefix('petugas')->name('api.petugas.')->group(function () {
 // 4. MODUL SUPERVISOR (APPROVAL DROPING KAS & VERIFIKASI DAILY REPORT)
 // =========================================================================
 Route::prefix('supervisor')->name('api.supervisor.')->middleware('auth:sanctum')->group(function () {
+    Route::get('/approval-center', [OperasionalKasApiController::class, 'approvalCenterSupervisor'])->name('approval-center');
     Route::get('/pengajuan-kas', [OperasionalKasApiController::class, 'listPengajuanKasSupervisor'])->name('pengajuan-kas');
+    Route::get('/pengajuan-kas/{id}', [OperasionalKasApiController::class, 'detailPengajuanKasSupervisor'])->name('pengajuan-kas.detail');
     Route::post('/pengajuan-kas/{id}/setujui', [OperasionalKasApiController::class, 'setujuiPengajuanKas'])->name('pengajuan-kas.setujui');
     Route::post('/pengajuan-kas/{id}/tolak', [OperasionalKasApiController::class, 'tolakPengajuanKas'])->name('pengajuan-kas.tolak');
     Route::get('/daily-report', [OperasionalKasApiController::class, 'listDailyReportSupervisor'])->name('daily-report');
+    Route::get('/daily-report/{id}', [OperasionalKasApiController::class, 'detailDailyReportSupervisor'])->name('daily-report.detail');
     Route::post('/daily-report/{id}/status', [OperasionalKasApiController::class, 'updateStatusDailyReport'])->name('daily-report.status');
+    Route::get('/riwayat-approval', [OperasionalKasApiController::class, 'riwayatApprovalSupervisor'])->name('riwayat-approval');
+    Route::get('/monitoring-teller', [OperasionalKasApiController::class, 'monitoringTellerSupervisor'])->name('monitoring-teller');
+    Route::get('/rekonsiliasi', [OperasionalKasApiController::class, 'rekonsiliasiSupervisor'])->name('rekonsiliasi');
+    Route::get('/notifikasi', [OperasionalKasApiController::class, 'notifikasiSupervisor'])->name('notifikasi');
+    Route::post('/notifikasi/baca-semua', [OperasionalKasApiController::class, 'bacaSemuaNotifikasiSupervisor'])->name('notifikasi.baca-semua');
 });
 
 // =========================================================================

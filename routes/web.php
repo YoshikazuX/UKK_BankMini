@@ -119,14 +119,36 @@ Route::middleware(['auth', 'role:supervisor,accounting'])->group(function () {
     Route::get('/supervisor/profil', [SupervisorController::class, 'profil'])->name('supervisor.profil');
     Route::post('/supervisor/profil/update', [SupervisorController::class, 'updateProfil'])->name('supervisor.profil.update');
 
-    // DAILY REPORT APPROVAL / HOLD
-    Route::get('/supervisor/daily-report', [DailyReportController::class, 'index'])->name('supervisor.daily-report');
-    Route::post('/supervisor/daily-report/status/{id}', [DailyReportController::class, 'updateStatus'])->name('supervisor.daily-report.status');
+    // FITUR 1: PUSAT PERSETUJUAN (APPROVAL CENTER)
+    Route::get('/supervisor/approval-center', [SupervisorController::class, 'approvalCenter'])->name('supervisor.approval-center');
 
-    // PENGAJUAN KAS APPROVAL (DROPING DANA OPERASIONAL LOKET)
+    // FITUR 3: RIWAYAT PERSETUJUAN (APPROVAL HISTORY)
+    Route::get('/supervisor/riwayat-approval', [SupervisorController::class, 'riwayatApproval'])->name('supervisor.riwayat-approval');
+
+    // FITUR 5: MONITORING PRODUKTIVITAS DAN AKTIVITAS TELLER
+    Route::get('/supervisor/monitoring-teller', [SupervisorController::class, 'monitoringTeller'])->name('supervisor.monitoring-teller');
+
+    // FITUR 6: REKONSILIASI LAPORAN DAN KAS
+    Route::get('/supervisor/rekonsiliasi', [SupervisorController::class, 'rekonsiliasi'])->name('supervisor.rekonsiliasi');
+
+    // FITUR 8: NOTIFIKASI PEKERJAAN SUPERVISOR
+    Route::get('/supervisor/notifikasi', [SupervisorController::class, 'notifikasi'])->name('supervisor.notifikasi');
+    Route::get('/supervisor/notifikasi/baca/{id}', [SupervisorController::class, 'bacaNotifikasi'])->name('supervisor.notifikasi.baca');
+    Route::post('/supervisor/notifikasi/baca-semua', [SupervisorController::class, 'bacaSemuaNotifikasi'])->name('supervisor.notifikasi.baca-semua');
+
+    // DAILY REPORT APPROVAL / HOLD & DETAIL
+    Route::get('/supervisor/daily-report', [DailyReportController::class, 'index'])->name('supervisor.daily-report');
+    Route::get('/supervisor/daily-report/{id}', [DailyReportController::class, 'show'])->name('supervisor.daily-report.detail');
+    Route::post('/supervisor/daily-report/status/{id}', [DailyReportController::class, 'updateStatus'])->name('supervisor.daily-report.status');
+    Route::match(['post', 'patch'], '/daily-report/{id}/status', [DailyReportController::class, 'updateStatus']);
+
+    // PENGAJUAN KAS APPROVAL (DROPING DANA OPERASIONAL LOKET) & DETAIL
     Route::get('/supervisor/pengajuan-kas', [PengajuanKasController::class, 'indexSupervisor'])->name('supervisor.pengajuan-kas');
+    Route::get('/supervisor/pengajuan-kas/{id}', [PengajuanKasController::class, 'show'])->name('supervisor.pengajuan-kas.detail');
     Route::post('/supervisor/pengajuan-kas/setujui/{id}', [PengajuanKasController::class, 'setujui'])->name('supervisor.pengajuan-kas.setujui');
+    Route::post('/supervisor/pengajuan-kas/{id}/setujui', [PengajuanKasController::class, 'setujui']);
     Route::post('/supervisor/pengajuan-kas/tolak/{id}', [PengajuanKasController::class, 'tolak'])->name('supervisor.pengajuan-kas.tolak');
+    Route::post('/supervisor/pengajuan-kas/{id}/tolak', [PengajuanKasController::class, 'tolak']);
 });
 
 // PENGATURAN KAS AWAL HARI INI (DISET OLEH PETUGAS)

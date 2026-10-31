@@ -257,8 +257,9 @@
     <!-- ========================================================================= -->
     <!-- MODAL DETAIL AKTIVITAS PERUBAHAN (FEATURE 3) -->
     <!-- ========================================================================= -->
-    <div id="modal-detail-audit" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-8">
+    <div id="modal-detail-audit" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-8">
             <div class="bg-slate-900 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-white flex items-center gap-2">
@@ -340,6 +341,7 @@
                     Tutup
                 </button>
             </div>
+        </div>
         </div>
     </div>
 

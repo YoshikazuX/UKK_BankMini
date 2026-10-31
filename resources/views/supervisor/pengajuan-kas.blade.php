@@ -122,7 +122,7 @@
                 @endif
             </form>
 
-            <span class="text-xs text-slate-500">Total: <strong class="tabular-nums text-slate-800">{{ count($pengajuanList) }} Pengajuan</strong></span>
+            <span class="text-xs text-slate-500">Total: <strong class="tabular-nums text-slate-800">{{ $pengajuanList->total() }} Pengajuan</strong></span>
         </div>
 
         <!-- TABEL PENGAJUAN KAS TELLER -->
@@ -181,8 +181,13 @@
                                 <span class="text-slate-500 italic">{{ $p->catatan_spv ?? '-' }}</span>
                             </td>
                             <td class="p-3 text-center">
-                                @if($p->status === 'pending')
-                                    <div class="flex items-center justify-center space-x-1.5">
+                                <div class="flex items-center justify-center space-x-1.5">
+                                    <!-- Tombol Detail -->
+                                    <a href="{{ route('supervisor.pengajuan-kas.detail', $p->id) }}" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-2.5 py-1.5 rounded-lg transition text-xs shadow-sm flex items-center">
+                                        Periksa
+                                    </a>
+
+                                    @if($p->status === 'pending')
                                         <!-- Tombol Setujui -->
                                         <form action="{{ url('/supervisor/pengajuan-kas/setujui/'.$p->id) }}" method="POST" class="inline"
                                               onsubmit="return confirm('Setujui pengajuan kas sebesar Rp {{ number_format($p->nominal, 0, ',', '.') }}? Kas operasional loket akan otomatis bertambah.')">
@@ -198,10 +203,8 @@
                                                 class="bg-white hover:bg-slate-50 text-rose-700 border border-slate-300 font-medium px-2.5 py-1.5 rounded-lg transition text-xs">
                                             Tolak
                                         </button>
-                                    </div>
-                                @else
-                                    <span class="text-slate-400 text-[11px] italic">Selesai diproses</span>
-                                @endif
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @empty
@@ -214,6 +217,12 @@
                     </tbody>
                 </table>
             </div>
+
+            @if($pengajuanList->hasPages())
+            <div class="px-5 py-4 border-t border-slate-200 bg-slate-50">
+                {{ $pengajuanList->links() }}
+            </div>
+            @endif
         </div>
     </main>
 
@@ -221,7 +230,7 @@
     <div id="modal-tolak" class="hidden fixed inset-0 bg-slate-900 bg-opacity-75 z-50 p-4 backdrop-blur-sm overflow-y-auto">
         <div class="min-h-full flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+            <div class="bg-rose-900 text-white px-6 py-4 flex items-center justify-between">
                 <h3 class="text-base font-semibold" id="m-tolak-title">Tolak Pengajuan Kas</h3>
                 <button type="button" onclick="closeModalTolak()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
@@ -231,9 +240,9 @@
                 <div class="p-6 space-y-4 text-xs">
                     <p class="text-slate-600" id="m-tolak-desc">Masukkan alasan penolakan permohonan dana kas ini:</p>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Catatan Penolakan *</label>
-                        <textarea name="catatan_spv" required rows="3" placeholder="Contoh: Kas fisik di loket saat ini dinilai masih cukup..."
-                                  class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700"></textarea>
+                        <label class="block font-semibold text-slate-700 mb-1">Alasan Penolakan Supervisor * <span class="text-rose-600 font-normal">(Wajib diisi)</span></label>
+                        <textarea name="alasan_penolakan" required minlength="5" rows="3" placeholder="Contoh: Kas fisik di loket saat ini dinilai masih mencukupi..."
+                                  class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"></textarea>
                     </div>
                 </div>
 

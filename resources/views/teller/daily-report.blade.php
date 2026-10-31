@@ -176,18 +176,29 @@
                     </h2>
 
                     @if($myReportToday)
-                    <div class="mb-4 p-4 rounded-xl {{ $myReportToday->status === 'approved' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : ($myReportToday->status === 'hold' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-blue-50 border border-blue-200 text-blue-800') }}">
+                    <div class="mb-4 p-4 rounded-xl {{ $myReportToday->status === 'approved' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : ($myReportToday->status === 'hold' ? 'bg-amber-50 border border-amber-200 text-amber-900' : ($myReportToday->status === 'rejected' ? 'bg-rose-50 border border-rose-200 text-rose-900' : 'bg-blue-50 border border-blue-200 text-blue-800')) }}">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-xs font-semibold">Status Laporan Hari Ini:</span>
                             @if($myReportToday->status === 'approved')
-                                <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Approved</span>
+                                <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Disetujui (Approved)</span>
                             @elseif($myReportToday->status === 'hold')
-                                <span class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded font-semibold">Hold (Pending)</span>
+                                <span class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded font-semibold">Perlu Klarifikasi / Perbaikan (Hold)</span>
+                            @elseif($myReportToday->status === 'rejected')
+                                <span class="bg-rose-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Ditolak Supervisor</span>
                             @else
                                 <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-semibold">Menunggu Approval</span>
                             @endif
                         </div>
                         <p class="text-xs mt-1">Telah disubmit dengan kas fisik: <strong class="tabular-nums">Rp {{ number_format($myReportToday->physical_balance, 0, ',', '.') }}</strong></p>
+
+                        @if(($myReportToday->status === 'hold' || $myReportToday->status === 'rejected') && ($myReportToday->catatan_spv || $myReportToday->alasan_penolakan))
+                        <div class="mt-3 p-3 bg-white/80 rounded-lg border {{ $myReportToday->status === 'hold' ? 'border-amber-300' : 'border-rose-300' }}">
+                            <p class="text-[11px] font-bold uppercase tracking-wider {{ $myReportToday->status === 'hold' ? 'text-amber-800' : 'text-rose-800' }}">Catatan Supervisor:</p>
+                            <p class="text-xs mt-1 italic text-slate-800 font-medium">"{{ $myReportToday->catatan_spv ?: $myReportToday->alasan_penolakan }}"</p>
+                            <p class="text-[11px] text-slate-600 mt-2 font-medium">⚠️ Silakan hitung ulang kas fisik di laci Anda, sesuaikan input nominal di bawah, lalu klik <strong>"Perbarui Laporan Tutup Kas"</strong>.</p>
+                        </div>
+                        @endif
+
                         @if($myReportToday->status === 'approved')
                             <p class="text-xs mt-2 text-emerald-700 font-medium">Laporan sudah disetujui Supervisor. Silakan cetak lembar bukti penutupan kas.</p>
                             <a href="{{ url('/daily-report/cetak/'.$myReportToday->id) }}" target="_blank" class="mt-3 inline-flex items-center text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm transition">

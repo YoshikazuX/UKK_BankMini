@@ -178,9 +178,14 @@
                                 </td>
                                 <td class="p-3 text-slate-600 text-[11px]">
                                     @if($p->nama_spv)
-                                        <span class="font-semibold text-slate-800">{{ $p->nama_spv }}:</span>
+                                        <span class="font-semibold text-slate-800 block">{{ $p->nama_spv }}:</span>
                                     @endif
-                                    {{ $p->catatan_spv ?? ($p->status === 'pending' ? 'Belum ditinjau' : '-') }}
+                                    @if($p->status === 'ditolak')
+                                        <span class="text-rose-700 font-semibold block">Alasan Penolakan:</span>
+                                        <span class="text-rose-600 block">{{ $p->alasan_penolakan ?: ($p->catatan_spv ?: 'Tidak ada alasan rinci.') }}</span>
+                                    @else
+                                        {{ $p->catatan_spv ?? ($p->status === 'pending' ? 'Belum ditinjau' : '-') }}
+                                    @endif
                                 </td>
                             </tr>
                             @empty

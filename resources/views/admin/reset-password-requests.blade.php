@@ -323,62 +323,64 @@
     <!-- ========================================================================= -->
     <!-- MODAL DETAIL TIKET LENGKAP (FEATURE 5) -->
     <!-- ========================================================================= -->
-    <div id="modal-detail-tiket" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
-            <div class="bg-slate-900 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-bold text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                        Rincian Permohonan Reset Password
-                    </h3>
-                    <p class="text-xs text-slate-400 mt-0.5" id="tiket-detail-id">Tiket #</p>
-                </div>
-                <button type="button" onclick="tutupDetailTiket()" class="text-slate-400 hover:text-white transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-4 text-xs">
-                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+    <div id="modal-detail-tiket" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-900 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
                     <div>
-                        <span class="text-slate-500 block mb-0.5">Nama Pemohon</span>
-                        <strong class="text-slate-900 text-sm" id="tiket-detail-nama">-</strong>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Rincian Permohonan Reset Password
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5" id="tiket-detail-id">Tiket #</p>
                     </div>
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Username Akun</span>
-                        <strong class="text-slate-900 font-mono text-sm" id="tiket-detail-user">-</strong>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Metode Saluran</span>
-                        <strong class="text-slate-800 uppercase" id="tiket-detail-metode">-</strong>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Kontak Terdaftar</span>
-                        <strong class="text-slate-800 font-mono" id="tiket-detail-kontak">-</strong>
-                    </div>
+                    <button type="button" onclick="tutupDetailTiket()" class="text-slate-400 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
 
-                <div class="space-y-2">
-                    <span class="text-slate-500 font-semibold block">Catatan / Keterangan Pemohon:</span>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-slate-800 leading-relaxed font-sans" id="tiket-detail-keterangan">
-                        -
+                <div class="p-6 space-y-4 text-xs">
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-slate-500 block mb-0.5">Nama Pemohon</span>
+                            <strong class="text-slate-900 text-sm" id="tiket-detail-nama">-</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-0.5">Username Akun</span>
+                            <strong class="text-slate-900 font-mono text-sm" id="tiket-detail-user">-</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-0.5">Metode Saluran</span>
+                            <strong class="text-slate-800 uppercase" id="tiket-detail-metode">-</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-0.5">Kontak Terdaftar</span>
+                            <strong class="text-slate-800 font-mono" id="tiket-detail-kontak">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="text-slate-500 font-semibold block">Catatan / Keterangan Pemohon:</span>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-slate-800 leading-relaxed font-sans" id="tiket-detail-keterangan">
+                            -
+                        </div>
+                    </div>
+
+                    <!-- Info Penanganan Admin -->
+                    <div class="p-3 bg-slate-100/70 rounded-xl border border-slate-200 space-y-1 text-[11px] text-slate-600">
+                        <div>Waktu Pengajuan: <strong class="text-slate-800" id="tiket-detail-created">-</strong></div>
+                        <div>Alamat IP Pemohon: <strong class="text-slate-800 font-mono" id="tiket-detail-ip">-</strong></div>
+                        <div id="tiket-detail-handled-container">
+                            Penanganan: <strong class="text-slate-800" id="tiket-detail-handled">-</strong>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Info Penanganan Admin -->
-                <div class="p-3 bg-slate-100/70 rounded-xl border border-slate-200 space-y-1 text-[11px] text-slate-600">
-                    <div>Waktu Pengajuan: <strong class="text-slate-800" id="tiket-detail-created">-</strong></div>
-                    <div>Alamat IP Pemohon: <strong class="text-slate-800 font-mono" id="tiket-detail-ip">-</strong></div>
-                    <div id="tiket-detail-handled-container">
-                        Penanganan: <strong class="text-slate-800" id="tiket-detail-handled">-</strong>
-                    </div>
+                <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
+                    <button type="button" onclick="tutupDetailTiket()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition">
+                        Tutup
+                    </button>
                 </div>
-            </div>
-
-            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
-                <button type="button" onclick="tutupDetailTiket()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition">
-                    Tutup
-                </button>
             </div>
         </div>
     </div>
@@ -386,75 +388,79 @@
     <!-- ========================================================================= -->
     <!-- MODAL KONFIRMASI APPROVE (FEATURE 7) -->
     <!-- ========================================================================= -->
-    <div id="modal-confirm-approve" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div class="p-6">
-                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900">Setujui Permohonan Reset Password?</h3>
-                <p class="text-xs text-slate-600 mt-2">
-                    Sistem akan membuat kata sandi sementara yang aman secara acak untuk akun ini. Kata sandi lama akan langsung diganti dan status tiket menjadi <strong>Completed</strong>.
-                </p>
+    <div id="modal-confirm-approve" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+                <div class="p-6">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Setujui Permohonan Reset Password?</h3>
+                    <p class="text-xs text-slate-600 mt-2">
+                        Sistem akan membuat kata sandi sementara yang aman secara acak untuk akun ini. Kata sandi lama akan langsung diganti dan status tiket menjadi <strong>Completed</strong>.
+                    </p>
 
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-4 space-y-1">
-                    <div>Username: <strong id="approve-modal-user">-</strong></div>
-                    <div>Nama: <strong id="approve-modal-nama">-</strong></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-4 space-y-1">
+                        <div>Username: <strong id="approve-modal-user">-</strong></div>
+                        <div>Nama: <strong id="approve-modal-nama">-</strong></div>
+                    </div>
                 </div>
+
+                <form id="form-approve" method="POST" action="" class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
+                    @csrf
+                    <button type="button" onclick="tutupApproveModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-submit-approve" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
+                        <span>Ya, Setujui & Reset Sandi</span>
+                    </button>
+                </form>
             </div>
-
-            <form id="form-approve" method="POST" action="" class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
-                @csrf
-                <button type="button" onclick="tutupApproveModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
-                    Batal
-                </button>
-                <button type="submit" id="btn-submit-approve" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
-                    <span>Ya, Setujui & Reset Sandi</span>
-                </button>
-            </form>
         </div>
     </div>
 
     <!-- ========================================================================= -->
     <!-- MODAL KONFIRMASI REJECT DENGAN ALASAN WAJIB (FEATURE 5 & 7) -->
     <!-- ========================================================================= -->
-    <div id="modal-confirm-reject" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div class="p-6">
-                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900">Tolak Permohonan Reset Password</h3>
-                <p class="text-xs text-slate-600 mt-2">
-                    Sesuai SOP keamanan perbankan, penolakan permohonan pemulihan akun wajib disertai alasan yang jelas agar tercatat di jejak audit.
-                </p>
-
-                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-3 mb-4">
-                    Username: <strong id="reject-modal-user">-</strong>
-                </div>
-
-                <form id="form-reject" method="POST" action="">
-                    @csrf
-                    <label class="block text-slate-700 text-xs font-semibold mb-1.5" for="input-alasan-reject">
-                        Alasan Penolakan <span class="text-rose-500">*</span>
-                    </label>
-                    <textarea
-                        name="alasan"
-                        id="input-alasan-reject"
-                        rows="3"
-                        required
-                        placeholder="Contoh: Identitas kontak tidak cocok dengan data kepegawaian..."
-                        class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none"></textarea>
-
-                    <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-slate-100">
-                        <button type="button" onclick="tutupRejectModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
-                            Batal
-                        </button>
-                        <button type="submit" id="btn-submit-reject" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
-                            <span>Tolak Permohonan</span>
-                        </button>
+    <div id="modal-confirm-reject" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+                <div class="p-6">
+                    <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     </div>
-                </form>
+                    <h3 class="text-lg font-bold text-slate-900">Tolak Permohonan Reset Password</h3>
+                    <p class="text-xs text-slate-600 mt-2">
+                        Sesuai SOP keamanan perbankan, penolakan permohonan pemulihan akun wajib disertai alasan yang jelas agar tercatat di jejak audit.
+                    </p>
+
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-3 mb-4">
+                        Username: <strong id="reject-modal-user">-</strong>
+                    </div>
+
+                    <form id="form-reject" method="POST" action="">
+                        @csrf
+                        <label class="block text-slate-700 text-xs font-semibold mb-1.5" for="input-alasan-reject">
+                            Alasan Penolakan <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea
+                            name="alasan"
+                            id="input-alasan-reject"
+                            rows="3"
+                            required
+                            placeholder="Contoh: Identitas kontak tidak cocok dengan data kepegawaian..."
+                            class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none"></textarea>
+
+                        <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-slate-100">
+                            <button type="button" onclick="tutupRejectModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
+                                Batal
+                            </button>
+                            <button type="submit" id="btn-submit-reject" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
+                                <span>Tolak Permohonan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

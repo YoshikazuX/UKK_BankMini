@@ -116,9 +116,9 @@
                         name="foto"
                         id="foto"
                         accept=".png, .jpg, .jpeg, image/png, image/jpeg"
-                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-300 rounded-md @error('foto') border-rose-500 @enderror"
+                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-300 rounded-md"
                     >
-                    <div id="file-error" class="hidden text-xs text-rose-600 font-bold mt-1.5 flex items-center gap-1"></div>
+                    <div id="file-error" class="hidden text-xs text-rose-600 font-bold mt-1.5"></div>
                     @error('foto')
                         <p class="text-xs text-rose-600 font-bold mt-1.5 flex items-center gap-1">
                             <svg class="w-4 h-4 inline shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>

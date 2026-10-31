@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditHelper;
+use App\Helpers\NotificationHelper;
+use App\Models\ApprovalHistory;
 use App\Models\Brankas;
 use App\Models\DailyReport;
 use App\Models\Jurnal;
@@ -34,11 +37,32 @@ class DailyReportController extends Controller
             if ($request->filled('tanggal')) {
                 $query->whereDate('report_date', $request->tanggal);
             }
+            if ($request->filled('dari_tanggal') && $request->filled('sampai_tanggal')) {
+                $query->whereBetween('report_date', [$request->dari_tanggal, $request->sampai_tanggal]);
+            } elseif ($request->filled('dari_tanggal')) {
+                $query->whereDate('report_date', '>=', $request->dari_tanggal);
+            } elseif ($request->filled('sampai_tanggal')) {
+                $query->whereDate('report_date', '<=', $request->sampai_tanggal);
+            }
+
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
             }
+            if ($request->filled('teller_id')) {
+                $query->where('user_id', $request->teller_id);
+            }
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('nama_petugas', 'like', "%{$search}%")
+                                ->orWhere('username', 'like', "%{$search}%");
+                        });
+                });
+            }
 
-            $reports = $query->orderBy('report_date', 'desc')->orderBy('id', 'desc')->get();
+            $reports = $query->orderBy('report_date', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
             // Transformasikan nama teller dan nama approver untuk kompatibilitas view
             $reports->each(function ($r) {
@@ -46,7 +70,9 @@ class DailyReportController extends Controller
                 $r->nama_approver = $r->approver->nama_petugas ?? '-';
             });
 
-            return view('supervisor.daily-report', compact('reports', 'role'));
+            $tellers = User::where('role', 'teller')->orderBy('nama_petugas')->get();
+
+            return view('supervisor.daily-report', compact('reports', 'role', 'tellers'));
         }
 
         // Tampilan Teller: Buat Laporan Harian Hari Ini & Riwayat Laporan Sendiri
@@ -145,11 +171,15 @@ class DailyReportController extends Controller
                 ->whereDate('report_date', $today)
                 ->first();
 
+            $isRevision = false;
+
             if ($existing) {
-                // Update jika status masih pending/hold
+                // Update jika status masih pending/hold/rejected
                 if ($existing->status === 'approved') {
                     return back()->with('error', 'Laporan hari ini sudah disetujui (Approved) oleh Supervisor dan tidak dapat diubah.');
                 }
+
+                $isRevision = in_array($existing->status, ['hold', 'rejected']);
 
                 $existing->update([
                     'opening_balance' => $openingBalance,
@@ -185,6 +215,38 @@ class DailyReportController extends Controller
                 ->whereDate('created_at', $today)
                 ->update(['daily_report_id' => $reportId]);
 
+            // Audit log
+            AuditHelper::log(
+                jenisAktivitas: $isRevision ? 'REVISI_DAILY_REPORT' : 'KIRIM_DAILY_REPORT',
+                modul: 'Daily Report',
+                objekId: "#REP-{$reportId}",
+                oldValues: $existing ? ['status' => $existing->status, 'physical_balance' => $existing->physical_balance] : null,
+                newValues: [
+                    'system_balance' => $systemBalance,
+                    'physical_balance' => $physicalBalance,
+                    'difference' => $difference,
+                ]
+            );
+
+            // Notifikasi ke seluruh Supervisor
+            $namaTeller = Auth::user()->nama_petugas ?? 'Teller Loket';
+            $notifTitle = $isRevision ? 'Daily Report Telah Diperbaiki' : 'Daily Report Baru Menunggu Verifikasi';
+            $notifMsg = $isRevision
+                ? "Teller {$namaTeller} telah memperbaiki dan mengirim ulang Daily Report (#REP-".str_pad($reportId, 4, '0', STR_PAD_LEFT).'). Siap diverifikasi.'
+                : "Teller {$namaTeller} mengirimkan Daily Report Tutup Kas (#REP-".str_pad($reportId, 4, '0', STR_PAD_LEFT).') dengan Kas Fisik Rp '.number_format($physicalBalance, 0, ',', '.').'.';
+
+            NotificationHelper::notifySupervisors([
+                'task_type' => 'daily_report',
+                'task_id' => $reportId,
+                'nomor_referensi' => '#REP-'.str_pad($reportId, 4, '0', STR_PAD_LEFT),
+                'nama_teller' => $namaTeller,
+                'title' => $notifTitle,
+                'message' => $notifMsg,
+                'nominal' => $physicalBalance,
+                'status' => 'pending',
+                'action_url' => url('/supervisor/daily-report/'.$reportId),
+            ]);
+
             DB::commit();
 
             $pesan = ($difference === 0)
@@ -201,34 +263,121 @@ class DailyReportController extends Controller
     }
 
     /**
+     * Detail Daily Report & Rekonsiliasi Kas untuk Pemeriksaan Mendalam Supervisor
+     */
+    public function show(Request $request, int|string $id): View
+    {
+        $report = DailyReport::with(['user', 'approver', 'histories.supervisor'])->findOrFail($id);
+
+        // Ambil rincian transaksi terkait daily report ini
+        $trxQuery = Transaksi::with(['nasabah', 'petugas'])
+            ->where(function ($q) use ($report) {
+                $q->where('daily_report_id', $report->id)
+                    ->orWhere(function ($sub) use ($report) {
+                        $sub->where('petugas_id', $report->user_id)
+                            ->whereDate('created_at', $report->report_date);
+                    });
+            });
+
+        // Filter dalam transaksi pendukung
+        if ($request->filled('trx_jenis')) {
+            $trxQuery->where('jenis_transaksi', $request->trx_jenis);
+        }
+        if ($request->filled('trx_status')) {
+            $trxQuery->where('status', $request->trx_status);
+        }
+
+        $transaksi = $trxQuery->orderBy('created_at', 'asc')->get();
+
+        // Statistik transaksi pendukung
+        $transaksiSuksesCount = $transaksi->where('status', '!=', 'dibatalkan')->count();
+        $transaksiBatalCount = $transaksi->where('status', 'dibatalkan')->count();
+        $totalSetoranTrx = $transaksi->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->where('status', '!=', 'dibatalkan')->sum('nominal');
+        $totalPenarikanTrx = $transaksi->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->where('status', '!=', 'dibatalkan')->sum('nominal');
+
+        // Droping kas terkait teller ini pada tanggal tersebut
+        $dropingKasList = PengajuanKas::where('user_id', $report->user_id)
+            ->whereDate('tanggal', $report->report_date)
+            ->get();
+
+        // Kondisi rekonsiliasi kas
+        $selisih = $report->difference;
+        $statusRekonsiliasi = $selisih == 0 ? 'sesuai' : ($selisih > 0 ? 'surplus' : 'defisit');
+
+        // Tandai notifikasi pekerjaan sebagai terbaca
+        NotificationHelper::markTaskAsRead(Auth::user(), 'daily_report', $report->id);
+
+        return view('supervisor.detail-daily-report', compact(
+            'report',
+            'transaksi',
+            'transaksiSuksesCount',
+            'transaksiBatalCount',
+            'totalSetoranTrx',
+            'totalPenarikanTrx',
+            'dropingKasList',
+            'statusRekonsiliasi'
+        ));
+    }
+
+    /**
      * Supervisor / Accounting Memeriksa & Mengesahkan Laporan (Review Satu per Satu)
+     * Dilengkapi Proteksi Row Locking & Idempotensi Mencegah Double Decision
      */
     public function updateStatus(Request $request, int|string $id): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:approved,hold,rejected',
+            'status' => 'required|in:approved,verified,hold,rejected',
             'notes' => 'nullable|string|max:500',
+            'alasan_penolakan' => 'nullable|string|max:500',
         ]);
 
-        $report = DailyReport::find($id);
-        if (! $report) {
-            return back()->with('error', 'Data Daily Report tidak ditemukan!');
+        $targetStatus = $request->status === 'verified' ? 'approved' : $request->status;
+        $notes = trim($request->notes ?? $request->alasan_penolakan ?? '');
+
+        // Validasi wajib isi alasan jika status ditolak atau diminta klarifikasi (hold)
+        if (in_array($targetStatus, ['hold', 'rejected']) && empty($notes)) {
+            $tindakan = $targetStatus === 'hold' ? 'permintaan klarifikasi / perbaikan (Hold)' : 'penolakan';
+            $pesanError = "Catatan penjelasan wajib diisi untuk tindakan {$tindakan} Daily Report agar Teller mengetahui perbaikan yang diperlukan!";
+
+            return back()->withInput()
+                ->withErrors(['notes' => $pesanError])
+                ->with('error', $pesanError);
         }
 
         DB::beginTransaction();
         try {
-            $report->update([
-                'status' => $request->status,
+            // Row-level lock untuk konsistensi status
+            $report = DailyReport::where('id', $id)->lockForUpdate()->first();
+            if (! $report) {
+                DB::rollBack();
+
+                return back()->with('error', 'Data Daily Report tidak ditemukan!');
+            }
+
+            // Cegah duplikasi persetujuan jika sudah approved
+            if ($report->status === 'approved' && $targetStatus === 'approved') {
+                DB::rollBack();
+
+                return back()->with('error', "Laporan Daily Report #REP-{$id} sudah disahkan (Approved) sebelumnya dan tidak dapat disetujui ulang.");
+            }
+
+            $statusSebelum = $report->status;
+            $teller = User::find($report->user_id);
+            $tellerName = $teller ? $teller->nama_petugas : 'Teller';
+            $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
+
+            $updateData = [
+                'status' => $targetStatus,
                 'approved_by' => Auth::id(),
-                'notes' => $request->notes ?? $report->notes,
-            ]);
+                'catatan_spv' => $notes ?: $report->catatan_spv,
+            ];
+            if ($targetStatus === 'rejected') {
+                $updateData['alasan_penolakan'] = $notes;
+            }
+            $report->update($updateData);
 
             // Jika Disetujui (Approved), memicu pembukuan pemindahan kas loket ke Brankas Utama
-            if ($request->status === 'approved') {
-                $teller = User::find($report->user_id);
-                $tellerName = $teller ? $teller->nama_petugas : 'Teller';
-                $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
-
+            if ($targetStatus === 'approved') {
                 // 1. Otorisasi seluruh transaksi loket terkait menjadi status 'sukses'
                 Transaksi::where('daily_report_id', $id)
                     ->where('status', 'pending')
@@ -247,15 +396,72 @@ class DailyReportController extends Controller
                 ]);
             }
 
+            // Catat jejak keputusan ke approval_histories
+            $jenisKeputusan = match ($targetStatus) {
+                'approved' => 'disetujui',
+                'hold' => 'klarifikasi_hold',
+                'rejected' => 'ditolak',
+            };
+
+            ApprovalHistory::record(
+                pekerjaanType: 'daily_report',
+                pekerjaanId: $report->id,
+                nomorReferensi: '#REP-'.str_pad($report->id, 4, '0', STR_PAD_LEFT),
+                tellerId: $report->user_id,
+                namaTeller: $tellerName,
+                jenisKeputusan: $jenisKeputusan,
+                statusSebelum: $statusSebelum,
+                statusSesudah: $targetStatus,
+                nominal: $report->physical_balance ?: $report->system_balance,
+                catatan: $notes,
+                alasanPenolakan: $targetStatus === 'rejected' ? $notes : null
+            );
+
+            // Audit log
+            AuditHelper::log(
+                jenisAktivitas: strtoupper($jenisKeputusan).'_DAILY_REPORT',
+                modul: 'Pusat Persetujuan',
+                objekId: '#REP-'.str_pad($report->id, 4, '0', STR_PAD_LEFT),
+                oldValues: ['status' => $statusSebelum],
+                newValues: [
+                    'status' => $targetStatus,
+                    'approved_by' => Auth::id(),
+                    'catatan_spv' => $notes,
+                ]
+            );
+
+            // Kirim notifikasi hasil verifikasi ke Teller
+            $pesanNotif = match ($targetStatus) {
+                'approved' => "Daily Report #REP-{$report->id} tanggal {$report->report_date->format('d/m/Y')} telah DISETUJUI & diverifikasi oleh {$spvName}.",
+                'hold' => "Daily Report #REP-{$report->id} ditangguhkan (Hold) oleh {$spvName}: {$notes}. Mohon periksa kembali fisik kas.",
+                'rejected' => "Daily Report #REP-{$report->id} DITOLAK oleh {$spvName}. Alasan: {$notes}.",
+            };
+
+            NotificationHelper::notifyUser($report->user_id, [
+                'task_type' => 'daily_report',
+                'task_id' => $report->id,
+                'nomor_referensi' => '#REP-'.str_pad($report->id, 4, '0', STR_PAD_LEFT),
+                'nama_teller' => $tellerName,
+                'title' => 'Status Daily Report Diperbarui',
+                'message' => $pesanNotif,
+                'nominal' => $report->physical_balance ?: $report->system_balance,
+                'status' => $targetStatus,
+                'action_url' => url('/teller/daily-report'),
+            ]);
+
+            // Tandai notifikasi pekerjaan sebagai terbaca
+            NotificationHelper::markTaskAsRead(Auth::user(), 'daily_report', $report->id);
+
             DB::commit();
 
-            $statusText = match ($request->status) {
+            $statusText = match ($targetStatus) {
                 'approved' => 'DISETUJUI (Approved) & Pembukuan Pemindahan Kas ke Brankas Utama Berhasil Dicatat',
-                'hold' => 'DITAHAN / PENDING (Hold - Laporan ditangguhkan untuk investigasi selisih kas)',
+                'hold' => 'DITAHAN / PENDING (Hold - Laporan ditangguhkan untuk klarifikasi/investigasi selisih kas)',
                 'rejected' => 'DITOLAK (Perlu revisi perhitungan kas fisik teller)',
             };
 
-            return back()->with('success', "Daily Report #{$id} berhasil diproses: {$statusText}.");
+            return redirect()->route('supervisor.daily-report.detail', $report->id)
+                ->with('success', 'Daily Report #REP-'.str_pad($report->id, 4, '0', STR_PAD_LEFT)." berhasil diproses: {$statusText}.");
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -280,7 +486,13 @@ class DailyReportController extends Controller
 
         // Ambil rincian transaksi terkait daily report ini
         $transaksi = Transaksi::with('nasabah')
-            ->where('daily_report_id', $id)
+            ->where(function ($q) use ($report) {
+                $q->where('daily_report_id', $report->id)
+                    ->orWhere(function ($sub) use ($report) {
+                        $sub->where('petugas_id', $report->user_id)
+                            ->whereDate('created_at', $report->report_date);
+                    });
+            })
             ->orderBy('created_at', 'asc')
             ->get();
 

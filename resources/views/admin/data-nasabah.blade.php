@@ -363,61 +363,65 @@
     <!-- ========================================================================= -->
     <!-- MODAL KONFIRMASI TINDAKAN PENTING (FEATURE 7) -->
     <!-- ========================================================================= -->
-    <div id="modal-konfirmasi" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div class="p-6">
-                <div class="w-12 h-12 rounded-full flex items-center justify-center mb-4" id="modal-icon-container">
-                    <svg class="w-6 h-6" id="modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Konfirmasi Tindakan</h3>
-                <p class="text-xs text-slate-600 mt-2" id="modal-message"></p>
+    <div id="modal-konfirmasi" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+                <div class="p-6">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mb-4" id="modal-icon-container">
+                        <svg class="w-6 h-6" id="modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900" id="modal-title">Konfirmasi Tindakan</h3>
+                    <p class="text-xs text-slate-600 mt-2" id="modal-message"></p>
 
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-4 space-y-1">
-                    <div>Nasabah: <strong id="modal-nama">-</strong></div>
-                    <div>No. Rekening: <strong id="modal-rek">-</strong></div>
-                    <div id="modal-extra-info"></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-4 space-y-1">
+                        <div>Nasabah: <strong id="modal-nama">-</strong></div>
+                        <div>No. Rekening: <strong id="modal-rek">-</strong></div>
+                        <div id="modal-extra-info"></div>
+                    </div>
                 </div>
+
+                <form id="form-konfirmasi" method="POST" action="" class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
+                    @csrf
+                    <div id="modal-form-inputs"></div>
+                    <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-submit-konfirmasi" class="px-4 py-2 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
+                        <span id="btn-konfirmasi-text">Konfirmasi</span>
+                    </button>
+                </form>
             </div>
-
-            <form id="form-konfirmasi" method="POST" action="" class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
-                @csrf
-                <div id="modal-form-inputs"></div>
-                <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
-                    Batal
-                </button>
-                <button type="submit" id="btn-submit-konfirmasi" class="px-4 py-2 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
-                    <span id="btn-konfirmasi-text">Konfirmasi</span>
-                </button>
-            </form>
         </div>
     </div>
 
     <!-- MODAL POP-UP IMPORT CSV -->
-    <div id="modal-import" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div class="bg-slate-900 px-6 py-4 border-b border-slate-800">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    Import Data Nasabah (CSV)
-                </h3>
+    <div id="modal-import" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-900 px-6 py-4 border-b border-slate-800">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Import Data Nasabah (CSV)
+                    </h3>
+                </div>
+                <form action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                    @csrf
+                    <div class="mb-4">
+                        <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis menghasilkan Nomor Rekening terstandar untuk setiap siswa yang di-import.</p>
+                        <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
+                            &darr; Unduh Template CSV Resmi
+                        </a>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-slate-700 text-xs font-semibold mb-2">Pilih File CSV (.csv / .txt):</label>
+                        <input type="file" name="file_csv" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
+                    </div>
+                    <div class="flex justify-end space-x-2 border-t border-slate-100 pt-4">
+                        <button type="button" onclick="tutupModalImport()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">Proses Import Data</button>
+                    </div>
+                </form>
             </div>
-            <form action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
-                @csrf
-                <div class="mb-4">
-                    <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis menghasilkan Nomor Rekening terstandar untuk setiap siswa yang di-import.</p>
-                    <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
-                        &darr; Unduh Template CSV Resmi
-                    </a>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-slate-700 text-xs font-semibold mb-2">Pilih File CSV (.csv / .txt):</label>
-                    <input type="file" name="file_csv" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
-                </div>
-                <div class="flex justify-end space-x-2 border-t border-slate-100 pt-4">
-                    <button type="button" onclick="tutupModalImport()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">Proses Import Data</button>
-                </div>
-            </form>
         </div>
     </div>
 
