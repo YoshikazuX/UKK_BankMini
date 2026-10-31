@@ -4,8 +4,10 @@ use App\Http\Controllers\Api\AuthNasabahController;
 use App\Http\Controllers\Api\AuthPetugasController;
 use App\Http\Controllers\Api\AvalisApiController;
 use App\Http\Controllers\Api\LaporanApiController;
+use App\Http\Controllers\Api\NotificationApiController;
 use App\Http\Controllers\Api\OperasionalKasApiController;
 use App\Http\Controllers\Api\ProfilNasabahController;
+use App\Http\Controllers\Api\SavingGoalApiController;
 use App\Http\Controllers\Api\SystemApiController;
 use App\Http\Controllers\Api\TellerApiController;
 use App\Http\Controllers\Api\TransaksiNasabahController;
@@ -66,6 +68,29 @@ Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
     // Mutasi & Transaksi Mobile (Transfer antar siswa dinonaktifkan: tabungan dikelola loket teller)
     Route::get('/riwayat', [TransaksiNasabahController::class, 'riwayat'])->name('riwayat');
     Route::get('/ringkasan', [TransaksiNasabahController::class, 'ringkasan'])->name('ringkasan');
+
+    // Fitur Tambahan Nasabah Mobile: Emergency Freeze, Badges, Sessions & Saving Goals
+    Route::post('/emergency-freeze', [ProfilNasabahController::class, 'emergencyFreeze'])->name('emergency-freeze');
+    Route::get('/badges', [ProfilNasabahController::class, 'badges'])->name('badges');
+    Route::get('/sessions', [ProfilNasabahController::class, 'sessions'])->name('sessions');
+    Route::get('/notifikasi', [NotificationApiController::class, 'index'])->name('notifikasi');
+
+    // Target Tabungan Impian (Saving Goals)
+    Route::get('/goals', [SavingGoalApiController::class, 'index'])->name('goals.index');
+    Route::post('/goals', [SavingGoalApiController::class, 'store'])->name('goals.store');
+    Route::get('/goals/{id}', [SavingGoalApiController::class, 'show'])->name('goals.show');
+    Route::match(['put', 'post'], '/goals/{id}', [SavingGoalApiController::class, 'update'])->name('goals.update');
+    Route::delete('/goals/{id}', [SavingGoalApiController::class, 'destroy'])->name('goals.destroy');
+});
+
+// =========================================================================
+// 2B. PUSAT NOTIFIKASI UNIVERSAL (NASABAH & PETUGAS)
+// =========================================================================
+Route::prefix('notifikasi')->name('api.notifikasi.')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [NotificationApiController::class, 'index'])->name('index');
+    Route::get('/unread-count', [NotificationApiController::class, 'unreadCount'])->name('unread-count');
+    Route::patch('/{id}/read', [NotificationApiController::class, 'markAsRead'])->name('read');
+    Route::post('/read-all', [NotificationApiController::class, 'markAllAsRead'])->name('read-all');
 });
 
 // =========================================================================

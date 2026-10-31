@@ -92,4 +92,12 @@ class Nasabah extends Authenticatable
     {
         return $this->hasMany(VerifikasiKunjunganSiswa::class, 'nasabah_id');
     }
+
+    /**
+     * Relasi ke target tabungan impian (saving goals).
+     */
+    public function savingGoals(): HasMany
+    {
+        return $this->hasMany(SavingGoal::class, 'nasabah_id');
+    }
 }

@@ -77,6 +77,42 @@ class TransaksiNasabahController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('nominal');
 
+        // Agregasi Arus Kas 6 Bulan Terakhir
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $targetDate = now()->subMonths($i);
+            $m = (int) $targetDate->month;
+            $y = (int) $targetDate->year;
+            $monthName = $targetDate->format('M');
+
+            $setoranBulan = (float) Transaksi::where('nasabah_id', $nasabah->id)
+                ->where('status', 'sukses')
+                ->whereIn('jenis_transaksi', ['setor', 'transfer_masuk'])
+                ->whereMonth('created_at', $m)
+                ->whereYear('created_at', $y)
+                ->sum('nominal');
+
+            $penarikanBulan = (float) Transaksi::where('nasabah_id', $nasabah->id)
+                ->where('status', 'sukses')
+                ->whereIn('jenis_transaksi', ['tarik', 'transfer_keluar'])
+                ->whereMonth('created_at', $m)
+                ->whereYear('created_at', $y)
+                ->sum('nominal');
+
+            $monthlyTrend[] = [
+                'month' => $m,
+                'month_name' => $monthName,
+                'year' => $y,
+                'label' => $monthName,
+                'setoran' => $setoranBulan,
+                'penarikan' => $penarikanBulan,
+                'net' => $setoranBulan - $penarikanBulan,
+            ];
+        }
+
+        $totalSetoran6Bln = array_sum(array_column($monthlyTrend, 'setoran'));
+        $avgMonthly = $totalSetoran6Bln / 6.0;
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -88,6 +124,8 @@ class TransaksiNasabahController extends Controller
                 'formatted_masuk' => 'Rp '.number_format($totalMasuk, 0, ',', '.'),
                 'total_keluar' => (float) $totalKeluar,
                 'formatted_keluar' => 'Rp '.number_format($totalKeluar, 0, ',', '.'),
+                'monthly_trend_6_months' => $monthlyTrend,
+                'average_monthly_deposit' => (float) $avgMonthly,
             ],
         ]);
     }
