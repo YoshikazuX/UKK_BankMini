@@ -58,7 +58,6 @@
                 <span>Semua Transaksi</span>
             </a>
             <a href="{{ url('/teller/riwayat') }}?tab=void" class="pb-3 border-b-2 flex items-center gap-2 {{ ($tab ?? 'semua') === 'void' ? 'border-rose-600 text-rose-700' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                 <span>Riwayat Void & Koreksi (Reversal)</span>
             </a>
         </div>
@@ -223,17 +222,11 @@
                             <!-- Status -->
                             <td class="py-3 px-4 text-center">
                                 @if($r->status === 'dibatalkan')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                                        Dibatalkan
-                                    </span>
+                                    <span class="text-xs font-semibold text-rose-700">Dibatalkan</span>
                                 @elseif($r->status === 'sukses')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        Berhasil
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-700">Berhasil</span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 capitalize">
-                                        {{ $r->status }}
-                                    </span>
+                                    <span class="text-xs font-semibold text-amber-700 capitalize">{{ $r->status }}</span>
                                 @endif
                             </td>
 

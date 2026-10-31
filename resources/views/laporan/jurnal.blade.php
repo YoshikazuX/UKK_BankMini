@@ -60,7 +60,7 @@
             <div class="p-5 rounded-xl border {{ $isBalanced ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900' }} shadow-sm">
                 <div class="flex items-center justify-between">
                     <p class="text-xs font-semibold uppercase tracking-wider">Status Keseimbangan (Audit)</p>
-                    <span class="text-xs font-bold px-2 py-0.5 rounded {{ $isBalanced ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' }}">
+                    <span class="text-xs font-bold {{ $isBalanced ? 'text-emerald-700' : 'text-rose-700' }}">
                         {{ $isBalanced ? 'SEIMBANG' : 'DEFISIT / SELISIH' }}
                     </span>
                 </div>

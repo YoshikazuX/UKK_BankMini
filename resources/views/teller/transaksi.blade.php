@@ -49,12 +49,7 @@
         <!-- HEADER FORM -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Form Layanan Loket Teller</h1>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-900 text-white">
-                        Standard POS
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Form Layanan Loket Teller</h1>
                 <p class="text-slate-500 text-sm mt-1">Verifikasi identitas dan saldo rekening nasabah sebelum mengeksekusi transaksi.</p>
             </div>
             <a href="{{ url('/teller/dashboard') }}" class="inline-flex items-center self-start sm:self-auto bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm">
@@ -73,13 +68,9 @@
                         <div class="flex items-center gap-2">
                             <h2 class="text-base font-bold text-white">{{ $nasabah->nama_siswa }}</h2>
                             @if($nasabah->status === 'aktif')
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Rekening Aktif
-                                </span>
+                                <span class="text-xs font-medium text-emerald-400">Rekening Aktif</span>
                             @else
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-400/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Nonaktif / Ditangguhkan
-                                </span>
+                                <span class="text-xs font-medium text-rose-400">Nonaktif / Ditangguhkan</span>
                             @endif
                         </div>
                         <p class="text-xs text-slate-400 mt-0.5">Verifikasi data rekening pemilik buku tabungan Bank Mini Sekolah</p>
@@ -88,7 +79,7 @@
 
                 <div class="text-left sm:text-right">
                     <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">Kategori Nasabah</span>
-                    <span class="text-xs font-semibold text-slate-200 uppercase bg-slate-800 px-2.5 py-1 rounded inline-block mt-0.5">
+                    <span class="text-xs font-semibold text-slate-200 uppercase inline-block mt-0.5">
                         {{ $nasabah->kategori === 'guru_karyawan' || $nasabah->kategori === 'guru' ? 'Guru & Karyawan' : 'Siswa Sekolah' }}
                     </span>
                 </div>
@@ -118,10 +109,7 @@
                     </div>
 
                     <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <p class="text-emerald-900 text-xs font-bold">Saldo Siap Ditarik</p>
-                            <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Tersedia</span>
-                        </div>
+                        <p class="text-emerald-900 text-xs font-bold">Saldo Siap Ditarik</p>
                         <p class="font-black text-emerald-700 text-lg mt-1 tabular-nums">
                             Rp {{ number_format($saldoTersedia, 0, ',', '.') }}
                         </p>
@@ -139,7 +127,6 @@
                     </div>
 
                     <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                        <span class="w-2 h-2 rounded-full {{ ($kasTersedia ?? 0) <= 0 ? 'bg-rose-500' : 'bg-emerald-500' }}"></span>
                         <span>Kas Fisik Loket Teller: <strong class="text-slate-900 font-bold tabular-nums">Rp {{ number_format($kasTersedia ?? 0, 0, ',', '.') }}</strong></span>
                     </div>
                 </div>

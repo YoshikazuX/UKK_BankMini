@@ -12,6 +12,7 @@ use App\Models\Nasabah;
 use App\Models\PengajuanKas;
 use App\Models\Transaksi;
 use App\Models\User;
+use App\Services\DashboardWidgetService;
 use App\Services\ProfileImageService;
 use Carbon\Carbon;
 use Exception;
@@ -27,7 +28,7 @@ use Illuminate\View\View;
 
 class TellerController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, DashboardWidgetService $widgetService): View
     {
         $katakunci = $request->cari;
 
@@ -98,7 +99,38 @@ class TellerController extends Controller
         $pendingPengajuan = PengajuanKas::where('user_id', Auth::id())->where('status', 'pending')->count();
         $absensiSummary = AvalisSyncHelper::getDashboardSummary($today);
 
-        return view('teller.dashboard', compact('nasabah', 'kasTersedia', 'kasAwal', 'pendingPengajuan', 'absensiSummary'));
+        // Arus Kas Operasional Loket Hari Ini
+        $kasMasuk = Transaksi::where('petugas_id', Auth::id())
+            ->whereDate('created_at', $today)
+            ->where('jenis_transaksi', 'setor')
+            ->where('status', '!=', 'dibatalkan')
+            ->sum('nominal');
+
+        $kasKeluar = Transaksi::where('petugas_id', Auth::id())
+            ->whereDate('created_at', $today)
+            ->whereIn('jenis_transaksi', ['tarik', 'admin'])
+            ->where('status', '!=', 'dibatalkan')
+            ->sum('nominal');
+
+        // Layanan Metrik & Peringatan Khusus Teller
+        $nasabahSummary = $widgetService->getNasabahSummary();
+        $pegawaiSummary = $widgetService->getPegawaiSummary();
+        $tellerActivities = $widgetService->getTellerRecentActivities((int) Auth::id(), 5);
+        $tellerAlerts = $widgetService->getTellerOperationalAlerts(Auth::user());
+
+        return view('teller.dashboard', compact(
+            'nasabah',
+            'kasTersedia',
+            'kasAwal',
+            'kasMasuk',
+            'kasKeluar',
+            'pendingPengajuan',
+            'absensiSummary',
+            'nasabahSummary',
+            'pegawaiSummary',
+            'tellerActivities',
+            'tellerAlerts'
+        ));
     }
 
     public function cariByNis(string $nis): RedirectResponse

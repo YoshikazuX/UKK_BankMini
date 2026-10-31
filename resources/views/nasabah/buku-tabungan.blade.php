@@ -60,9 +60,9 @@
                 <div class="flex items-center space-x-3">
                     <h1 class="text-xl font-bold text-slate-900">{{ ucwords(strtolower($nasabah->nama_siswa)) }}</h1>
                     @if(($nasabah->status ?? 'aktif') === 'aktif')
-                        <span class="bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5 rounded-full">Aktif</span>
+                        <span class="text-xs font-semibold text-emerald-700">Aktif</span>
                     @else
-                        <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">Nonaktif</span>
+                        <span class="text-xs font-semibold text-slate-500">Nonaktif</span>
                     @endif
                 </div>
 

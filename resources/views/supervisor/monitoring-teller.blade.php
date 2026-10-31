@@ -20,12 +20,7 @@
         <!-- HEADER -->
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Monitoring Produktivitas & Aktivitas Teller</h1>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                        Operational Intelligence
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Monitoring Produktivitas & Aktivitas Teller</h1>
                 <p class="text-slate-500 text-sm mt-1">
                     Pemantauan kinerja operasional loket berbasis data transaksi nyata tanpa membandingkan nominal secara subyektif.
                 </p>
@@ -239,7 +234,7 @@
                             </td>
                             <td class="py-3 px-4 text-center tabular-nums">
                                 @if($stat->transaksi_batal > 0)
-                                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                    <span class="text-xs font-semibold text-rose-700">
                                         {{ $stat->transaksi_batal }} Void
                                     </span>
                                 @else
@@ -248,7 +243,7 @@
                             </td>
                             <td class="py-3 px-4 text-center tabular-nums">
                                 @if($stat->pengajuan_kas_count > 0)
-                                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                    <span class="text-xs font-semibold text-amber-700">
                                         {{ $stat->pengajuan_kas_count }} Tiket
                                     </span>
                                 @else
@@ -257,13 +252,13 @@
                             </td>
                             <td class="py-3 px-4 text-center">
                                 @if($stat->daily_report_status === 'approved')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Approved</span>
+                                    <span class="text-xs font-semibold text-emerald-700">Approved</span>
                                 @elseif($stat->daily_report_status === 'hold')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Hold</span>
+                                    <span class="text-xs font-semibold text-amber-700">Hold</span>
                                 @elseif($stat->daily_report_status === 'rejected')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">Rejected</span>
+                                    <span class="text-xs font-semibold text-rose-700">Rejected</span>
                                 @elseif($stat->daily_report_status === 'pending')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Pending Review</span>
+                                    <span class="text-xs font-semibold text-blue-700">Pending Review</span>
                                 @else
                                     <span class="text-slate-400 italic text-[11px]">Belum Tutup Kas</span>
                                 @endif

@@ -126,27 +126,19 @@
                             <td class="p-3 text-right font-semibold text-slate-900 tabular-nums">Rp {{ number_format($r->physical_balance, 0, ',', '.') }}</td>
                             <td class="p-3 text-right font-semibold tabular-nums {{ $r->difference == 0 ? 'text-emerald-600' : ($r->difference > 0 ? 'text-blue-600' : 'text-rose-600') }}">
                                 <span>{{ $r->difference >= 0 ? '+' : '' }}Rp {{ number_format($r->difference, 0, ',', '.') }}</span>
-                                <span class="block text-[10px] font-normal uppercase">
+                                <span class="block text-[10px] font-semibold uppercase">
                                     {{ $r->difference == 0 ? 'Seimbang' : ($r->difference > 0 ? 'Surplus' : 'Defisit') }}
                                 </span>
                             </td>
                             <td class="p-3 text-center">
                                 @if($r->status === 'approved')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                                        Approved
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-700">Approved</span>
                                 @elseif($r->status === 'hold')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">
-                                        Hold (Pending)
-                                    </span>
+                                    <span class="text-xs font-semibold text-amber-700">Hold (Pending)</span>
                                 @elseif($r->status === 'rejected')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-800">
-                                        Rejected
-                                    </span>
+                                    <span class="text-xs font-semibold text-rose-700">Rejected</span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">
-                                        Menunggu
-                                    </span>
+                                    <span class="text-xs font-semibold text-blue-700">Menunggu</span>
                                 @endif
                             </td>
                             <td class="p-3 text-slate-600">

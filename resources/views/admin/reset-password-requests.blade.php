@@ -208,27 +208,22 @@
                             </td>
 
                             <!-- Role -->
-                            <td class="py-3.5 px-4">
-                                <span class="bg-slate-100 text-slate-700 border border-slate-200 font-semibold px-2 py-0.5 rounded text-[10px] uppercase">
-                                    {{ $req->user->role ?? 'Pegawai' }}
-                                </span>
+                            <td class="py-3.5 px-4 text-xs font-medium text-slate-700 uppercase">
+                                {{ $req->user->role ?? 'Pegawai' }}
                             </td>
 
                             <!-- Metode -->
                             <td class="py-3.5 px-4">
                                 @if($req->metode === 'whatsapp')
-                                    <span class="inline-flex items-center gap-1 font-semibold text-emerald-700">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span class="font-semibold text-xs text-emerald-700">
                                         WhatsApp OTP
                                     </span>
                                 @elseif($req->metode === 'email')
-                                    <span class="inline-flex items-center gap-1 font-semibold text-indigo-700">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                    <span class="font-semibold text-xs text-indigo-700">
                                         Email OTP
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 font-semibold text-amber-700">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    <span class="font-semibold text-xs text-amber-700">
                                         Tiket Administrator
                                     </span>
                                 @endif
@@ -243,26 +238,15 @@
                             <!-- Status -->
                             <td class="py-3.5 px-4">
                                 @if($req->status === 'pending')
-                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-semibold px-2.5 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                        Pending
-                                    </span>
+                                    <span class="text-xs font-semibold text-amber-700">Pending</span>
                                 @elseif($req->status === 'verified')
-                                    <span class="inline-flex items-center gap-1 bg-sky-50 text-sky-800 border border-sky-200 font-semibold px-2.5 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                        Verified
-                                    </span>
+                                    <span class="text-xs font-semibold text-sky-700">Verified</span>
                                 @elseif($req->status === 'completed')
-                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold px-2.5 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Completed
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-700">Completed</span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-800 border border-rose-200 font-semibold px-2.5 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                        Rejected
-                                    </span>
+                                    <span class="text-xs font-semibold text-rose-700">Rejected</span>
                                 @endif
+                            </td>
                             </td>
 
                             <!-- Aksi -->

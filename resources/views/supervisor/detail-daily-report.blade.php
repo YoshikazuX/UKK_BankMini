@@ -50,7 +50,7 @@
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                         Detail Pemeriksaan & Rekonsiliasi Tutup Kas
                     </h1>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border {{ $report->status === 'approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : ($report->status === 'rejected' ? 'bg-rose-100 text-rose-800 border-rose-200' : ($report->status === 'hold' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-blue-100 text-blue-800 border-blue-200')) }}">
+                    <span class="text-xs font-semibold {{ $report->status === 'approved' ? 'text-emerald-700' : ($report->status === 'rejected' ? 'text-rose-700' : ($report->status === 'hold' ? 'text-amber-700' : 'text-blue-700')) }}">
                         {{ $report->status === 'approved' ? 'Disetujui (Approved)' : ($report->status === 'rejected' ? 'Ditolak' : ($report->status === 'hold' ? 'Perlu Klarifikasi (Hold)' : 'Menunggu Review')) }}
                     </span>
                 </div>
@@ -87,8 +87,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-2">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
+                    <h2 class="text-base font-bold text-slate-900">
                         Perbandingan Kas Komparatif (Sistem vs Hasil Hitung Fisik Teller)
                     </h2>
                     <p class="text-xs text-slate-500 mt-0.5">
@@ -96,21 +95,18 @@
                     </p>
                 </div>
 
-                <!-- BADGE STATUS REKONSILIASI -->
+                <!-- STATUS REKONSILIASI -->
                 <div>
                     @if($report->difference == 0)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-bold text-emerald-700">
                             Kas Fisik SEIMBANG (Rp 0)
                         </span>
                     @elseif($report->difference > 0)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800 border border-blue-300">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span class="text-xs font-bold text-blue-700">
                             SURPLUS (+ Rp {{ number_format($report->difference, 0, ',', '.') }})
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300">
-                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span class="text-xs font-bold text-rose-700">
                             DEFISIT (- Rp {{ number_format(abs($report->difference), 0, ',', '.') }})
                         </span>
                     @endif
@@ -256,17 +252,11 @@
                                     </td>
                                     <td class="py-2.5 px-3 text-center">
                                         @if($t->status === 'dibatalkan')
-                                            <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800">
-                                                Dibatalkan
-                                            </span>
+                                            <span class="text-xs font-semibold text-rose-700">Dibatalkan</span>
                                         @elseif($t->status === 'sukses')
-                                            <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
-                                                Sukses
-                                            </span>
+                                            <span class="text-xs font-semibold text-emerald-700">Sukses</span>
                                         @else
-                                            <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
-                                                Pending
-                                            </span>
+                                            <span class="text-xs font-semibold text-amber-700">Pending</span>
                                         @endif
                                     </td>
                                     <td class="py-2.5 px-3 text-[11px] text-slate-500">
@@ -297,10 +287,10 @@
             <div class="space-y-6">
                 <!-- JEJAK APPROVAL HISTORY -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h2 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100 flex items-center justify-between">
-                        <span>Jejak Pemeriksaan Supervisor</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">Audit Trail</span>
-                    </h2>
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <h2 class="text-sm font-bold text-slate-900">Jejak Pemeriksaan Supervisor</h2>
+                        <span class="text-xs text-slate-500 font-medium">Audit Trail</span>
+                    </div>
 
                     <div class="space-y-4">
                         @forelse($report->histories as $h)
@@ -340,7 +330,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="font-bold text-slate-900 tabular-nums block">Rp {{ number_format($dk->nominal, 0, ',', '.') }}</span>
-                                <span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-bold {{ $dk->status === 'disetujui' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                <span class="text-xs font-semibold {{ $dk->status === 'disetujui' ? 'text-emerald-700' : 'text-amber-700' }}">
                                     {{ ucfirst($dk->status) }}
                                 </span>
                             </div>

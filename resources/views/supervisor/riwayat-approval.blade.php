@@ -20,14 +20,9 @@
         <!-- HEADER -->
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Riwayat Persetujuan & Jejak Otorisasi</h1>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                        Audit Trail Terproteksi
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Riwayat Persetujuan & Jejak Otorisasi</h1>
                 <p class="text-slate-500 text-sm mt-1">
-                    Catatan immutable seluruh keputusan Maker-Checker Supervisor atas pengajuan kas dan daily report teller.
+                    Catatan seluruh keputusan Maker-Checker Supervisor atas pengajuan kas dan daily report teller.
                 </p>
             </div>
 
@@ -160,7 +155,7 @@
                                 <span class="text-[10px] text-slate-400">{{ $h->created_at->format('H:i:s') }} WIB</span>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold {{ $h->pekerjaan_type === 'pengajuan_kas' ? 'bg-amber-100 text-amber-800' : ($h->pekerjaan_type === 'daily_report' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-800') }} mb-0.5">
+                                <span class="text-xs font-medium text-slate-700 block mb-0.5">
                                     {{ ucfirst(str_replace('_', ' ', $h->pekerjaan_type)) }}
                                 </span>
                                 <span class="font-mono font-bold text-slate-900 block tabular-nums">{{ $h->nomor_referensi }}</span>
@@ -173,7 +168,7 @@
                                 <span class="text-[10px] text-slate-400">ID SPV: #{{ $h->supervisor_id }}</span>
                             </td>
                             <td class="py-3 px-4 text-center">
-                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold {{ $h->jenis_keputusan === 'disetujui' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : ($h->jenis_keputusan === 'ditolak' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200') }}">
+                                <span class="text-xs font-semibold {{ $h->jenis_keputusan === 'disetujui' ? 'text-emerald-700' : ($h->jenis_keputusan === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
                                     {{ ucfirst(str_replace('_', ' ', $h->jenis_keputusan)) }}
                                 </span>
                             </td>

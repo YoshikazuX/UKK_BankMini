@@ -3,404 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin</title>
+    <title>Dashboard Administrator - Bank Mini Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        html {
-            scrollbar-gutter: stable;
-            overflow-y: scroll;
-        }
+        html { scrollbar-gutter: stable; overflow-y: scroll; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans">
+<body class="bg-slate-50 font-sans text-slate-800">
 
-    <!-- NAVBAR UNIFIKASI -->
+    <!-- NAVBAR RESPONSIF -->
     <x-navbar />
 
-    <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-
-        <!-- DETEKTOR ANOMALI KESEIMBANGAN JURNAL -->
-        @if(!$isBalanced)
-        <div class="bg-rose-600 text-white p-5 mb-8 rounded-lg shadow-lg flex items-start border-l-8 border-rose-800 animate-pulse">
-            <svg class="w-8 h-8 mr-4 text-rose-200 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- HEADER ADMIN -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <h2 class="text-xl font-black tracking-wide">PERINGATAN ANOMALI SISTEM!</h2>
-                <p class="mt-1 font-medium text-rose-100">Terdeteksi ketidakseimbangan antara catatan Jurnal dan Mutasi Saldo Nasabah hari ini. Segera periksa log audit kasir yang bertugas.</p>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pusat Administrasi & Keamanan Sistem</h1>
+                <p class="text-slate-500 text-sm mt-1">
+                    Tata kelola akun pegawai, manajemen data nasabah, otorisasi reset sandi, dan pemantauan sistem.
+                </p>
             </div>
-        </div>
-        @else
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 mb-8 rounded-lg shadow-sm flex items-center">
-            <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="font-bold">Status Keseimbangan Keuangan: <span class="text-emerald-600">Aman & Stabil</span> (Selisih Rp 0)</p>
-        </div>
-        @endif
-
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-slate-800">Metrik Pengawasan Operasional</h1>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-none">
-                <p class="text-sm font-medium text-slate-500 mb-1">Total Pemasukan (Debit)</p>
-                <p class="text-2xl font-black text-slate-800">Rp {{ number_format($totalDebit, 0, ',', '.') }}</p>
-                @if(isset($totalDropingKas) && $totalDropingKas > 0)
-                    <p class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center">
-                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        Droping Kas: Rp {{ number_format($totalDropingKas, 0, ',', '.') }}
-                    </p>
-                @endif
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-none">
-                <p class="text-sm font-medium text-slate-500 mb-1">Total Penarikan (Kredit)</p>
-                <p class="text-2xl font-black text-slate-800">Rp {{ number_format($totalKredit, 0, ',', '.') }}</p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-none">
-                <p class="text-sm font-medium text-slate-500 mb-1">Transaksi Void</p>
-                <p class="text-2xl font-black {{ $totalVoid > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $totalVoid }} <span class="text-sm font-normal text-slate-500">Kejadian</span></p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-none">
-                <p class="text-sm font-medium text-slate-500 mb-1">Kegagalan Sistem</p>
-                <p class="text-2xl font-black {{ $totalGagalSistem > 0 ? 'text-rose-600' : 'text-slate-900' }}">{{ $totalGagalSistem }} <span class="text-sm font-normal text-slate-500">Log Error</span></p>
-            </div>
-        </div>
-
-        <!-- SECTION REKAPITULASI PRESENSI PETUGAS AVALIS HARI INI -->
-        @if(isset($absensiSummary))
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
-                <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-base font-bold text-slate-900">Presensi Petugas Avalis Hari Ini</h2>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Live Sync
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Penugasan shift jaga loket operasional tanggal {{ date('d F Y', strtotime($absensiSummary->tanggal)) }}</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <a href="{{ url('/admin/absensi-avalis') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm">
-                        <span>Kelola Absensi</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Mini Summary Cards -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Petugas</span>
-                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalPetugas }}</p>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hadir</span>
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    </div>
-                    <p class="text-xl font-bold text-emerald-700 mt-0.5">{{ $absensiSummary->totalHadir }}</p>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Izin</span>
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                    </div>
-                    <p class="text-xl font-bold text-amber-700 mt-0.5">{{ $absensiSummary->totalIzin }}</p>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tidak Masuk</span>
-                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    </div>
-                    <p class="text-xl font-bold text-rose-700 mt-0.5">{{ $absensiSummary->totalTidakMasuk }}</p>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shift Pagi</span>
-                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-                    </div>
-                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalShiftPagi }}</p>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shift Siang</span>
-                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                    </div>
-                    <p class="text-xl font-bold text-slate-900 mt-0.5">{{ $absensiSummary->totalShiftSiang }}</p>
-                </div>
-            </div>
-
-            <!-- List Petugas Jaga Hari Ini -->
-            @if(count($absensiSummary->daftarPetugas) > 0)
-            <div class="overflow-x-auto rounded-lg border border-slate-200">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                        <tr>
-                            <th class="py-2.5 px-3">Nama Petugas</th>
-                            <th class="py-2.5 px-3">Kelas</th>
-                            <th class="py-2.5 px-3">Shift Jaga</th>
-                            <th class="py-2.5 px-3">Status Kehadiran</th>
-                            <th class="py-2.5 px-3">Pos Tugas / Keterangan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-700">
-                        @foreach($absensiSummary->daftarPetugas as $petugas)
-                        <tr class="hover:bg-slate-50/70">
-                            <td class="py-2.5 px-3">
-                                <div class="flex items-center space-x-2.5">
-                                    @php
-                                        $petugasFotoUrl = $petugas->foto_url;
-                                        $initial = strtoupper(mb_substr(trim($petugas->nama), 0, 1));
-                                    @endphp
-                                    @if($petugasFotoUrl)
-                                        <img src="{{ $petugasFotoUrl }}" alt="Foto {{ $petugas->nama }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shadow-sm shrink-0">
-                                    @else
-                                        <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-[11px] shrink-0 shadow-sm">
-                                            {{ $initial }}
-                                        </div>
-                                    @endif
-                                    <span class="font-semibold text-slate-900">{{ $petugas->nama }}</span>
-                                </div>
-                            </td>
-                            <td class="py-2.5 px-3 text-slate-600">{{ $petugas->kelas }}</td>
-                            <td class="py-2.5 px-3">
-                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ str_contains($petugas->shift_jaga, 'Pagi') ? 'bg-sky-500' : 'bg-indigo-500' }}"></span>
-                                    {{ str_contains($petugas->shift_jaga, 'Pagi') ? 'Shift Pagi (07.30 - 11.30)' : 'Shift Siang (11.30 - 15.30)' }}
-                                </span>
-                            </td>
-                            <td class="py-2.5 px-3">
-                                @if($petugas->status === 'Hadir')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hadir
-                                    </span>
-                                @elseif($petugas->status === 'Izin')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Izin
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Tidak Masuk
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="py-2.5 px-3 text-slate-500">{{ $petugas->keterangan ?: '-' }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @endif
-        </div>
-        @endif
-
-        <!-- SECTION PERMOHONAN RESET PASSWORD PEGAWAI / AKUN -->
-        @if(isset($resetRequests) && count($resetRequests) > 0)
-        <div class="mb-8 bg-amber-50 border-2 border-amber-300 rounded-xl p-5 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center space-x-2">
-                    <span class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
-                    <h2 class="text-lg font-bold text-slate-800">Permohonan Reset Password Masuk</h2>
-                    <span class="bg-amber-200 text-amber-900 text-xs font-black px-2 py-0.5 rounded-full">{{ count($resetRequests) }} Tiket</span>
-                </div>
-                <a href="{{ route('admin.reset.index') }}" class="text-xs font-bold text-slate-800 hover:text-slate-900 underline flex items-center gap-1">
-                    <span>Buka Kelola Tiket Lengkap &rarr;</span>
+            <div class="flex items-center gap-2.5">
+                <a href="{{ url('/admin/data-pegawai') }}" class="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-3.5 py-2 rounded-lg text-xs transition shadow-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    Kelola Pegawai
+                </a>
+                <a href="{{ url('/admin/konfigurasi') }}" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs transition shadow-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Konfigurasi Sistem
                 </a>
             </div>
+        </div>
 
-            <div class="overflow-x-auto bg-white rounded-lg border border-amber-200">
-                <table class="min-w-full text-left text-xs text-slate-700">
-                    <thead class="bg-amber-100/70 font-bold text-slate-800">
-                        <tr>
-                            <th class="py-2.5 px-3">Waktu</th>
-                            <th class="py-2.5 px-3">Username / Nama</th>
-                            <th class="py-2.5 px-3">Saluran & Kontak</th>
-                            <th class="py-2.5 px-3">Keterangan / Alasan</th>
-                            <th class="py-2.5 px-3 text-center">Tindakan Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($resetRequests as $req)
-                        <tr class="hover:bg-amber-50/40">
-                            <td class="py-2.5 px-3 whitespace-nowrap text-slate-500">{{ \Carbon\Carbon::parse($req->created_at)->diffForHumans() }}</td>
-                            <td class="py-2.5 px-3">
-                                <span class="font-bold text-slate-900">{{ $req->username }}</span>
-                                <div class="text-[11px] text-slate-500">{{ $req->nama_pemohon ?? '-' }}</div>
-                            </td>
-                            <td class="py-2.5 px-3">
-                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase {{ $req->metode == 'whatsapp' ? 'bg-emerald-100 text-emerald-800' : ($req->metode == 'email' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') }}">
-                                    {{ $req->metode }}
-                                </span>
-                                <div class="text-[11px] tabular-nums text-slate-600 mt-0.5">{{ $req->kontak ?? '-' }}</div>
-                            </td>
-                            <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="{{ $req->keterangan }}">
-                                {{ $req->keterangan ?? '-' }}
-                            </td>
-                            <td class="py-2.5 px-3 text-center whitespace-nowrap space-x-1.5">
-                                @php
-                                    $cleanKontak = preg_replace('/[^0-9]/', '', $req->kontak ?? '');
-                                    if (str_starts_with($cleanKontak, '0')) { $cleanKontak = '62' . substr($cleanKontak, 1); }
-                                    $waReplyMsg = urlencode("Halo {$req->nama_pemohon}, permohonan reset password akun {$req->username} Anda di LKM Mitra Siswa Abadi telah diproses oleh Admin. Password sementara Anda adalah: bankmini" . date('Y'));
-                                @endphp
-                                @if(!empty($cleanKontak))
-                                    <a href="https://wa.me/{{ $cleanKontak }}?text={{ $waReplyMsg }}" target="_blank" class="inline-flex items-center px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] transition">
-                                        WA
-                                    </a>
-                                @endif
-                                <form action="{{ url('/admin/reset-password-request/'.$req->id.'/approve') }}" method="POST" class="inline-block" onsubmit="return confirm('Reset password akun {{ $req->username }} menjadi: bankmini{{ date('Y') }}?')">
-                                    @csrf
-                                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded font-bold text-[11px] transition shadow-sm">
-                                        Reset Password
-                                    </button>
-                                </form>
-                                <form action="{{ url('/admin/reset-password-request/'.$req->id.'/reject') }}" method="POST" class="inline-block" onsubmit="return confirm('Tolak permohonan reset ini?')">
-                                    @csrf
-                                    <button type="submit" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded font-bold text-[11px] transition">
-                                        Tolak
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        @if(session('success'))
+        <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-4 mb-6 rounded-r shadow-sm flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-sm font-medium">{{ session('success') }}</p>
             </div>
+            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">&times;</button>
         </div>
         @endif
 
-        <div class="flex justify-between items-center mb-4 mt-10">
-            <h1 class="text-xl font-bold text-slate-800">Manajemen Hak Akses Pegawai</h1>
-            <a href="{{ url('/admin/tambah-pegawai') }}" class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-4 rounded text-sm font-bold shadow transition">+ Tambah Pegawai</a>
+        <!-- 3 WIDGET UTAMA DASHBOARD ADMIN -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <!-- 1. Total Nasabah -->
+            <a href="{{ route('admin.nasabah.index') }}" class="group bg-white p-5 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                        <span>Total Nasabah Terdaftar</span>
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <p class="text-2xl font-black text-slate-900 tabular-nums">
+                        {{ number_format($nasabahSummary['total'], 0, ',', '.') }}
+                        <span class="text-xs font-normal text-slate-500">Siswa</span>
+                    </p>
+                    <div class="flex items-center gap-2 mt-3 text-xs">
+                        <span class="font-semibold text-emerald-700">
+                            {{ $nasabahSummary['aktif'] }} Aktif
+                        </span>
+                        <span class="text-slate-300">&bull;</span>
+                        <span class="font-medium text-slate-500">
+                            {{ $nasabahSummary['nonaktif'] }} Nonaktif
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-semibold group-hover:text-indigo-800">
+                    <span>Manajemen Nasabah</span>
+                    <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </a>
+
+            <!-- 2. Total Pegawai Aktif -->
+            <a href="{{ url('/admin/data-pegawai') }}" class="group bg-white p-5 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                        <span>Total Pegawai Aktif</span>
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <p class="text-2xl font-black text-slate-900 tabular-nums">
+                        {{ $pegawaiSummary['total_aktif'] }}
+                        <span class="text-xs font-normal text-slate-500">Pegawai Aktif</span>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-2.5 text-xs text-slate-600">
+                        <span class="font-medium">Teller: {{ $pegawaiSummary['roles']['teller'] }}</span>
+                        <span class="text-slate-300">&bull;</span>
+                        <span class="font-medium">Spv: {{ $pegawaiSummary['roles']['supervisor'] }}</span>
+                        <span class="text-slate-300">&bull;</span>
+                        <span class="font-medium">Adm: {{ $pegawaiSummary['roles']['admin'] }}</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-700 font-semibold group-hover:text-emerald-900">
+                    <span>Manajemen Pegawai</span>
+                    <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </a>
+
+            <!-- 3. Permohonan Reset Password -->
+            <a href="{{ route('admin.reset.index') }}" class="group bg-white p-5 rounded-xl border {{ $resetPasswordSummary['pending'] > 0 ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200' }} hover:border-slate-300 shadow-sm transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                        <span>Permohonan Reset Password</span>
+                        <svg class="w-5 h-5 {{ $resetPasswordSummary['pending'] > 0 ? 'text-amber-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <p class="text-2xl font-black {{ $resetPasswordSummary['pending'] > 0 ? 'text-amber-600' : 'text-slate-900' }} tabular-nums">
+                            {{ $resetPasswordSummary['pending'] }}
+                        </p>
+                        <span class="text-xs font-semibold text-slate-500">Tiket Butuh Tindakan</span>
+                    </div>
+                    @if($resetPasswordSummary['latest'])
+                        <p class="text-[11px] text-slate-500 mt-2 truncate">
+                            Terbaru: <strong class="text-slate-700">{{ $resetPasswordSummary['latest']['username'] }}</strong> ({{ $resetPasswordSummary['latest']['time_ago'] }})
+                        </p>
+                    @else
+                        <p class="text-[11px] text-slate-400 mt-2">Tidak ada permohonan tertunda</p>
+                    @endif
+                    <div class="text-[11px] text-slate-400 mt-0.5">
+                        Diproses: {{ $resetPasswordSummary['processing'] }} &bull; Selesai: {{ $resetPasswordSummary['completed'] }}
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-amber-700 font-semibold group-hover:text-amber-900">
+                    <span>Buka Kelola Tiket</span>
+                    <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </a>
         </div>
 
-        <div class="bg-white rounded-xl shadow-none border border-slate-200 overflow-hidden">
-            <table class="min-w-full bg-white text-left">
-                <thead class="bg-slate-100 text-slate-700">
-                    <tr>
-                        <th class="py-3 px-4 font-bold border-b border-slate-200 text-sm">Nama Petugas</th>
-                        <th class="py-3 px-4 font-bold border-b border-slate-200 text-sm">Username</th>
-                        <th class="py-3 px-4 font-bold border-b border-slate-200 text-sm">Jabatan</th>
-                        <th class="py-3 px-4 font-bold border-b border-slate-200 text-sm text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="text-slate-700 text-sm">
-                    @foreach ($pegawai as $p)
-                    <tr class="hover:bg-slate-50 border-b border-slate-100">
-                        <td class="py-3 px-4 font-bold text-slate-800">{{ $p->nama_petugas }}</td>
-                        <td class="py-3 px-4 text-slate-600">{{ $p->username }}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2.5 py-1 text-xs font-semibold rounded-full
-                                {{ $p->role == 'admin' ? 'bg-slate-100 text-slate-800' : ($p->role == 'supervisor' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800') }}">
-                                {{ $p->role == 'admin' ? 'Admin' : ($p->role == 'supervisor' ? 'Supervisor' : 'Teller') }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-right space-x-2">
-                            <a href="{{ url('/admin/edit-pegawai/'.$p->id) }}" class="inline-block border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-medium py-1 px-3 rounded text-xs transition">Edit Akses</a>
-                            @if(Auth::user()->id != $p->id)
-                                <button type="button" onclick="openModalHapusPegawai('{{ $p->id }}', '{{ addslashes($p->nama_petugas) }}', '{{ addslashes($p->username) }}', '{{ ucfirst($p->role) }}')" class="inline-block border border-red-200 bg-white text-red-600 hover:bg-red-50 font-medium py-1 px-3 rounded text-xs transition">Blokir / Hapus</button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- KOLOM KIRI (2 KOLOM): TIKET RESET PASSWORD & PUSAT NAVIGASI SISTEM -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- TIKET RESET PASSWORD MENUNGGU TINDAKAN -->
+                @if(isset($resetRequests) && count($resetRequests) > 0)
+                <div class="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-amber-100 bg-amber-50/60 flex items-center justify-between">
+                        <h2 class="font-bold text-slate-900 text-sm">Permohonan Reset Password Menunggu Otorisasi</h2>
+                        <a href="{{ route('admin.reset.index') }}" class="text-xs font-semibold text-amber-800 hover:text-amber-900">
+                            Kelola Semua Tiket &rarr;
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-4">Waktu</th>
+                                    <th class="py-2.5 px-4">Akun Pemohon</th>
+                                    <th class="py-2.5 px-4">Kontak / Saluran</th>
+                                    <th class="py-2.5 px-4">Keterangan</th>
+                                    <th class="py-2.5 px-4 text-center">Tindakan Admin</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
+                                @foreach($resetRequests as $req)
+                                <tr class="hover:bg-slate-50/70 transition">
+                                    <td class="py-2.5 px-4 whitespace-nowrap text-slate-500">
+                                        {{ \Carbon\Carbon::parse($req->created_at)->diffForHumans() }}
+                                    </td>
+                                    <td class="py-2.5 px-4">
+                                        <span class="font-bold text-slate-900">{{ $req->username }}</span>
+                                        <span class="text-[11px] text-slate-500 block">{{ $req->nama_pemohon ?? '-' }}</span>
+                                    </td>
+                                    <td class="py-2.5 px-4">
+                                        <span class="text-xs font-semibold uppercase {{ $req->metode === 'whatsapp' ? 'text-emerald-700' : 'text-blue-700' }}">
+                                            {{ $req->metode }}
+                                        </span>
+                                        <div class="text-[11px] tabular-nums text-slate-600 mt-0.5">{{ $req->kontak ?? '-' }}</div>
+                                    </td>
+                                    <td class="py-2.5 px-4 text-slate-600 max-w-xs truncate" title="{{ $req->keterangan }}">
+                                        {{ $req->keterangan ?? '-' }}
+                                    </td>
+                                    <td class="py-2.5 px-4 text-center whitespace-nowrap space-x-1.5">
+                                        <form action="{{ url('/admin/reset-password-request/'.$req->id.'/approve') }}" method="POST" class="inline-block" onsubmit="return confirm('Reset password akun {{ $req->username }}?')">
+                                            @csrf
+                                            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1 rounded-lg font-semibold text-[11px] transition shadow-sm">
+                                                Reset Sandi
+                                            </button>
+                                        </form>
+                                        <form action="{{ url('/admin/reset-password-request/'.$req->id.'/reject') }}" method="POST" class="inline-block" onsubmit="return confirm('Tolak permohonan ini?')">
+                                            @csrf
+                                            <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg font-semibold text-[11px] transition">
+                                                Tolak
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endif
+
+                <!-- PUSAT JALAN PINTAS ADMINISTRATIF (ENTERPRISE ACTION CENTER) -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="border-b border-slate-100 pb-3 mb-4">
+                        <h2 class="text-sm font-bold text-slate-900">Aksi Administratif Cepat</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Navigasi langsung ke modul tata kelola data dan konfigurasi sistem.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <a href="{{ url('/admin/data-pegawai') }}" class="p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition flex items-center justify-between group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-emerald-700">Daftar Pegawai & Akses</span>
+                                    <span class="text-[11px] text-slate-500">Kelola akun, role, dan kredensial</span>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+
+                        <a href="{{ url('/admin/tambah-pegawai') }}" class="p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition flex items-center justify-between group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-slate-900">Tambah Akun Pegawai</span>
+                                    <span class="text-[11px] text-slate-500">Registrasi petugas Teller / Supervisor</span>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+
+                        <a href="{{ url('/admin/data-nasabah') }}" class="p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition flex items-center justify-between group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-indigo-700">Data Master Nasabah</span>
+                                    <span class="text-[11px] text-slate-500">Rekening siswa, status & saldo</span>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+
+                        <a href="{{ url('/admin/konfigurasi') }}" class="p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition flex items-center justify-between group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-amber-800">Kebijakan & Konfigurasi</span>
+                                    <span class="text-[11px] text-slate-500">Saldo mengendap, scanner, format rekening</span>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN (1 KOLOM): JEJAK AUDIT SISTEM & INFORMASI SERVER -->
+            <div class="space-y-8">
+                <!-- JEJAK AUDIT TERBARU -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        <h2 class="text-sm font-bold text-slate-900">Jejak Audit Aktivitas</h2>
+                        <a href="{{ url('/admin/audit') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                            Semua Log &rarr;
+                        </a>
+                    </div>
+
+                    <div class="space-y-3">
+                        @forelse($recentAuditLogs as $log)
+                        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-900">{{ $log->jenis_aktivitas }}</span>
+                                <span class="text-[10px] text-slate-400 tabular-nums">{{ $log->created_at->diffForHumans() }}</span>
+                            </div>
+                            <p class="text-slate-600 text-[11px] mt-0.5">
+                                Oleh: <strong class="text-slate-800">{{ $log->nama_user ?? 'Sistem' }}</strong> ({{ ucfirst($log->role_user ?? '-') }})
+                            </p>
+                            @if($log->objek_id)
+                                <span class="inline-block mt-1 text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                    ID: {{ $log->objek_id }}
+                                </span>
                             @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        </div>
+                        @empty
+                        <p class="text-xs text-slate-400 italic py-4 text-center">Belum ada catatan aktivitas tercatat.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- LINGKUNGAN SISTEM & TEKNOLOGI -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 text-xs space-y-2.5">
+                    <h3 class="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2.5 mb-3">Spesifikasi Sistem</h3>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Framework:</span>
+                        <span class="font-semibold text-slate-800">Laravel v13.24 (PHP 8.5)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Database Driver:</span>
+                        <span class="font-semibold text-slate-800">{{ config('database.default') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Storage Driver:</span>
+                        <span class="font-semibold text-slate-800">{{ config('filesystems.default') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Timezone:</span>
+                        <span class="font-semibold text-slate-800">{{ config('app.timezone') }}</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex justify-between text-slate-400 text-[11px]">
+                        <span>LKM Mitra Siswa Abadi</span>
+                        <span>SMK Negeri 1 Bantul</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- MODAL KONFIRMASI HAPUS / BLOKIR PEGAWAI (CUSTOM TAILWIND MODAL - FEATURE 7) -->
-    <div id="modalHapusPegawai" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden p-4 overflow-y-auto" onclick="handlePegawaiBackdropClick(event)">
-        <div class="min-h-full flex items-center justify-center">
-            <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden p-6 text-left transform transition-all" onclick="event.stopPropagation()">
-                <div class="flex items-center space-x-3 text-rose-600 mb-4">
-                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900">Konfirmasi Hapus / Blokir Pegawai</h3>
-                        <p class="text-xs text-slate-500">Tindakan ini memerlukan perhatian khusus</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-xs space-y-1.5">
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Nama Petugas:</span>
-                        <strong class="text-slate-800" id="hapus_pegawai_nama">-</strong>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Username:</span>
-                        <span class="text-slate-800 font-mono font-medium" id="hapus_pegawai_user">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Hak Akses:</span>
-                        <span class="text-slate-800 font-medium" id="hapus_pegawai_role">-</span>
-                    </div>
-                </div>
-
-                <p class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3 mb-5 leading-relaxed">
-                    <strong>Peringatan Konsekuensi:</strong> Akun pegawai ini akan dihapus dari sistem dan seluruh sesi login akan ditutup. Pegawai tidak akan dapat mengakses sistem kembali. Tindakan ini dicatat dalam audit trail.
-                </p>
-
-                <form id="formHapusPegawai" method="GET" onsubmit="handleHapusPegawaiSubmit(this)">
-                    <div class="flex items-center justify-end gap-2.5">
-                        <button type="button" onclick="closeModalHapusPegawai()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition">
-                            Batal
-                        </button>
-                        <button type="submit" id="btnSubmitHapusPegawai" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs shadow-sm transition">
-                            <span id="btnHapusPegawaiText">Ya, Hapus Pegawai</span>
-                            <svg id="btnHapusPegawaiSpinner" class="w-3.5 h-3.5 animate-spin hidden text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script>
-        function toggleDropdown() { document.getElementById('profile-dropdown').classList.toggle('hidden'); }
-        window.addEventListener('click', function(e) {
-            const btn = document.getElementById('profile-btn');
-            const drop = document.getElementById('profile-dropdown');
-            if (btn && drop && !btn.contains(e.target) && !drop.contains(e.target)) {
-                drop.classList.add('hidden');
-            }
-        });
-
-        // Modal Hapus Pegawai (Feature 7)
-        function openModalHapusPegawai(id, nama, username, role) {
-            document.getElementById('formHapusPegawai').action = "{{ url('/admin/hapus-pegawai') }}/" + id;
-            document.getElementById('hapus_pegawai_nama').textContent = nama;
-            document.getElementById('hapus_pegawai_user').textContent = username;
-            document.getElementById('hapus_pegawai_role').textContent = role;
-            document.getElementById('modalHapusPegawai').classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-        function closeModalHapusPegawai() {
-            document.getElementById('modalHapusPegawai').classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-        function handlePegawaiBackdropClick(event) {
-            if (event.target.id === 'modalHapusPegawai') {
-                closeModalHapusPegawai();
-            }
-        }
-        function handleHapusPegawaiSubmit(form) {
-            const btn = document.getElementById('btnSubmitHapusPegawai');
-            const spinner = document.getElementById('btnHapusPegawaiSpinner');
-            const text = document.getElementById('btnHapusPegawaiText');
-            btn.disabled = true;
-            spinner.classList.remove('hidden');
-            text.textContent = 'Memproses...';
-        }
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModalHapusPegawai();
-            }
-        });
+        function toggleDropdown() { document.getElementById('profile-dropdown')?.classList.toggle('hidden'); }
     </script>
 </body>
 </html>

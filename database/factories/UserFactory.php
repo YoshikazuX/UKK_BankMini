@@ -28,10 +28,21 @@ class UserFactory extends Factory
             'nama_petugas' => fake()->name(),
             'username' => fake()->unique()->userName(),
             'role' => 'teller',
+            'status' => 'aktif',
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Indicate that the user is nonaktif.
+     */
+    public function nonaktif(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'nonaktif',
+        ]);
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Models\Nasabah;
 use App\Models\PengajuanKas;
 use App\Models\Transaksi;
 use App\Models\User;
+use App\Services\DashboardWidgetService;
 use App\Services\ProfileImageService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -24,11 +25,16 @@ class SupervisorController extends Controller
     /**
      * Dashboard Utama Pengawasan Operasional Supervisor
      */
-    public function index(): View
+    public function index(DashboardWidgetService $widgetService): View
     {
         $today = Carbon::today()->toDateString();
 
-        $totalNasabah = Nasabah::count();
+        $nasabahSummary = $widgetService->getNasabahSummary();
+        $pegawaiSummary = $widgetService->getPegawaiSummary();
+        $supervisorActivities = $widgetService->getSupervisorRecentActivities(6);
+        $supervisorAlerts = $widgetService->getSupervisorOperationalAlerts();
+
+        $totalNasabah = $nasabahSummary['total'];
         $totalSaldo = Nasabah::sum('saldo');
 
         $brankasHariIni = Brankas::whereDate('tanggal', $today)->first();
@@ -83,6 +89,76 @@ class SupervisorController extends Controller
             'total_selisih_nominal' => $reportsHariIni->sum('difference'),
         ];
 
+        // GABUNGAN PEKERJAAN MENUNGGU TINDAKAN (PUSAT PERSETUJUAN TABBED)
+        $pekerjaanMenunggu = collect();
+
+        foreach ($pendingPengajuanKas as $pk) {
+            $pekerjaanMenunggu->push([
+                'id' => $pk->id,
+                'kategori' => 'kas',
+                'kategori_label' => 'Pengajuan Kas',
+                'nomor_ref' => $pk->nomor_pengajuan,
+                'teller' => $pk->user->nama_petugas ?? 'Teller',
+                'teller_kelas' => $pk->user->kelas ?? '-',
+                'tanggal' => $pk->created_at,
+                'ringkasan' => 'Droping Kas: Rp '.number_format($pk->nominal, 0, ',', '.'),
+                'detail' => $pk->alasan ?? 'Droping kas operasional',
+                'status' => 'Menunggu Otorisasi',
+                'status_color' => 'amber',
+                'url_detail' => route('supervisor.pengajuan-kas.detail', $pk->id),
+            ]);
+        }
+
+        foreach ($pendingDailyReports as $dr) {
+            $pekerjaanMenunggu->push([
+                'id' => $dr->id,
+                'kategori' => 'report',
+                'kategori_label' => 'Daily Report',
+                'nomor_ref' => 'DR-'.Carbon::parse($dr->report_date)->format('Ymd').'-'.$dr->id,
+                'teller' => $dr->user->nama_petugas ?? 'Teller',
+                'teller_kelas' => $dr->user->kelas ?? '-',
+                'tanggal' => $dr->updated_at ?? Carbon::parse($dr->report_date),
+                'ringkasan' => 'Tutup Kas Fisik: Rp '.number_format($dr->physical_balance, 0, ',', '.').($dr->difference != 0 ? ' (Selisih: Rp '.number_format($dr->difference, 0, ',', '.').')' : ''),
+                'detail' => $dr->notes ?? ($dr->difference != 0 ? 'Terdapat selisih kas fisik vs sistem' : 'Kas fisik klop dengan sistem'),
+                'status' => $dr->status === 'hold' ? 'Perlu Revisi (Hold)' : 'Menunggu Verifikasi',
+                'status_color' => $dr->status === 'hold' ? 'amber' : 'blue',
+                'url_detail' => route('supervisor.daily-report.detail', $dr->id),
+            ]);
+        }
+
+        $pekerjaanMenungguTindakan = $pekerjaanMenunggu->sortByDesc('tanggal')->values();
+
+        // GABUNGAN AKTIVITAS DAN JEJAK KEPUTUSAN TERBARU
+        $riwayatGabungan = collect();
+
+        foreach ($supervisorActivities as $act) {
+            $riwayatGabungan->push([
+                'pelaku' => $act['petugas'] ?? 'Petugas Loket',
+                'jenis' => $act['title'],
+                'keterangan' => $act['subtitle'] ?? '-',
+                'waktu' => $act['timestamp'],
+                'time_ago' => $act['time_ago'] ?? '-',
+                'status' => $act['status_badge'] ?? 'Selesai',
+                'status_color' => $act['status_color'] ?? 'slate',
+                'is_keputusan' => false,
+            ]);
+        }
+
+        foreach ($keputusanTerakhir as $kep) {
+            $riwayatGabungan->push([
+                'pelaku' => $kep->user->nama_petugas ?? 'Supervisor',
+                'jenis' => 'Keputusan Otorisasi Checker',
+                'keterangan' => $kep->catatan ?? 'Otorisasi pengajuan operasional',
+                'waktu' => $kep->created_at,
+                'time_ago' => $kep->created_at ? $kep->created_at->diffForHumans() : '-',
+                'status' => ucfirst($kep->status),
+                'status_color' => $kep->status === 'disetujui' ? 'emerald' : 'rose',
+                'is_keputusan' => true,
+            ]);
+        }
+
+        $riwayatAktivitasDanKeputusan = $riwayatGabungan->sortByDesc('waktu')->take(8)->values();
+
         return view('supervisor.dashboard', compact(
             'totalNasabah',
             'totalSaldo',
@@ -98,7 +174,13 @@ class SupervisorController extends Controller
             'transaksiPending',
             'keputusanTerakhir',
             'notifikasiTerbaru',
-            'rekapRekonsiliasiHariIni'
+            'rekapRekonsiliasiHariIni',
+            'nasabahSummary',
+            'pegawaiSummary',
+            'supervisorActivities',
+            'supervisorAlerts',
+            'pekerjaanMenungguTindakan',
+            'riwayatAktivitasDanKeputusan'
         ));
     }
 

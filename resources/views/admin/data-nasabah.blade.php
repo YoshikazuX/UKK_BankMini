@@ -232,39 +232,24 @@
                             </td>
 
                             <!-- Kategori -->
-                            <td class="py-3.5 px-4 whitespace-nowrap capitalize font-medium text-slate-700">
+                            <td class="py-3.5 px-4 whitespace-nowrap capitalize text-xs font-medium text-slate-700">
                                 @if(in_array($n->kategori, ['guru', 'guru_karyawan']))
-                                    <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-semibold">
-                                        Guru / Karyawan
-                                    </span>
+                                    Guru / Karyawan
                                 @elseif($n->kategori === 'alumni')
-                                    <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-semibold">
-                                        Alumni
-                                    </span>
+                                    Alumni
                                 @else
-                                    <span class="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-semibold">
-                                        Siswa
-                                    </span>
+                                    Siswa
                                 @endif
                             </td>
 
                             <!-- Status Rekening -->
                             <td class="py-3.5 px-4 whitespace-nowrap">
                                 @if(($n->status ?? 'aktif') === 'aktif')
-                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Aktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-700">Aktif</span>
                                 @elseif(($n->status ?? '') === 'nonaktif')
-                                    <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                        Nonaktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-rose-700">Nonaktif</span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                        Alumni
-                                    </span>
+                                    <span class="text-xs font-semibold text-amber-700">Alumni</span>
                                 @endif
                             </td>
 

@@ -66,15 +66,15 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <h1 class="text-2xl font-bold text-slate-900">{{ $nasabah->nama_siswa }}</h1>
                             @if($nasabah->status === 'aktif')
-                                <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                <span class="text-xs font-semibold text-emerald-700">
                                     Rekening Aktif
                                 </span>
                             @elseif($nasabah->status === 'nonaktif')
-                                <span class="bg-rose-100 text-rose-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-rose-200">
+                                <span class="text-xs font-semibold text-rose-700">
                                     Nonaktif
                                 </span>
                             @else
-                                <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">
+                                <span class="text-xs font-semibold text-amber-700">
                                     Arsip Alumni
                                 </span>
                             @endif
@@ -188,7 +188,7 @@
                     <h2 class="text-base font-bold text-slate-900">Riwayat Transaksi Tabungan</h2>
                     <p class="text-xs text-slate-500 mt-0.5">Seluruh mutasi tercatat secara atomik di database operasional perbankan mini.</p>
                 </div>
-                <span class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                <span class="text-xs text-slate-500 font-medium">
                     Total Transaksi: {{ $transaksi->total() }} data
                 </span>
             </div>
@@ -245,11 +245,11 @@
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
                                 @if($t->status === 'sukses')
-                                    <span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded text-[10px]">Sukses</span>
+                                    <span class="text-xs font-semibold text-emerald-700">Sukses</span>
                                 @elseif($t->status === 'dibatalkan')
-                                    <span class="bg-rose-100 text-rose-800 font-semibold px-2 py-0.5 rounded text-[10px]">Dibatalkan</span>
+                                    <span class="text-xs font-semibold text-rose-700">Dibatalkan</span>
                                 @else
-                                    <span class="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]">{{ $t->status }}</span>
+                                    <span class="text-xs font-semibold text-amber-700">{{ $t->status }}</span>
                                 @endif
                             </td>
                             <td class="py-3 px-4 text-slate-500 max-w-xs truncate" title="{{ $t->alasan_batal ?: ($t->jenis_layanan ?? '-') }}">

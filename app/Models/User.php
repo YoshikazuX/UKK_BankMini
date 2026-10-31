@@ -25,6 +25,7 @@ class User extends Authenticatable
         'nama_petugas',
         'password',
         'role',
+        'status',
         'kelas',
         'no_hp',
         'email',
@@ -103,5 +104,21 @@ class User extends Authenticatable
     public function verifikasiKunjungan(): HasMany
     {
         return $this->hasMany(VerifikasiKunjunganSiswa::class, 'user_id');
+    }
+
+    /**
+     * Scope query untuk hanya mengambil user yang aktif.
+     */
+    public function scopeAktif($query)
+    {
+        return $query->where('status', 'aktif');
+    }
+
+    /**
+     * Cek apakah user berstatus aktif.
+     */
+    public function isAktif(): bool
+    {
+        return ($this->status ?? 'aktif') === 'aktif';
     }
 }

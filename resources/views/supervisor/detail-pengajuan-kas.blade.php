@@ -50,7 +50,7 @@
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                         Detail Pengajuan Droping Kas
                     </h1>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border {{ $pengajuan->status === 'disetujui' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : ($pengajuan->status === 'ditolak' ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200') }}">
+                    <span class="text-xs font-semibold {{ $pengajuan->status === 'disetujui' ? 'text-emerald-700' : ($pengajuan->status === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
                         {{ ucfirst($pengajuan->status) }}
                     </span>
                 </div>
@@ -83,8 +83,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- 1. KARTU INFORMASI PENGAJUAN DANA -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h2 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100 flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                    <h2 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100">
                         Informasi Permohonan Droping Kas
                     </h2>
 
@@ -122,10 +121,7 @@
                 <!-- 2. KARTU EVALUASI KONDISI KAS & AKTIVITAS TRANSAKSI TELLER HARI INI -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <h2 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100 flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                            Evaluasi Likuiditas Kas Teller pada Tanggal Pengajuan
-                        </span>
+                        <span>Evaluasi Likuiditas Kas Teller pada Tanggal Pengajuan</span>
                         <span class="text-xs font-normal text-slate-500 tabular-nums">
                             {{ $pengajuan->tanggal ? $pengajuan->tanggal->format('d F Y') : '-' }}
                         </span>
@@ -197,7 +193,7 @@
                                     <td class="py-2 px-3 tabular-nums text-slate-500">{{ $r->tanggal ? $r->tanggal->format('d/m/Y') : '-' }}</td>
                                     <td class="py-2 px-3 text-right font-bold text-slate-800 tabular-nums">Rp {{ number_format($r->nominal, 0, ',', '.') }}</td>
                                     <td class="py-2 px-3">
-                                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold {{ $r->status === 'disetujui' ? 'bg-emerald-100 text-emerald-800' : ($r->status === 'ditolak' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800') }}">
+                                        <span class="text-xs font-semibold {{ $r->status === 'disetujui' ? 'text-emerald-700' : ($r->status === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
                                             {{ ucfirst($r->status) }}
                                         </span>
                                     </td>
@@ -244,10 +240,10 @@
 
                 <!-- TIMELINE JEJAK KEPUTUSAN APPROVAL HISTORY -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h2 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100 flex items-center justify-between">
-                        <span>Jejak Riwayat Keputusan</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">Audit Trail</span>
-                    </h2>
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <h2 class="text-sm font-bold text-slate-900">Jejak Riwayat Keputusan</h2>
+                        <span class="text-xs text-slate-500 font-medium">Audit Trail</span>
+                    </div>
 
                     <div class="space-y-4">
                         @forelse($pengajuan->histories as $histori)

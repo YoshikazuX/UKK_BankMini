@@ -17,14 +17,10 @@
     <x-navbar />
 
     <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- HEADER -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Laporan Transaksi Operasional</h1>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                        Buku Jurnal Kas
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Laporan Transaksi Operasional</h1>
                 <p class="text-slate-500 text-sm mt-1">
                     Seluruh riwayat mutasi setoran dan penarikan nasabah yang diproses loket teller dengan multi-filter lengkap.
                 </p>
@@ -160,11 +156,11 @@
                             </td>
                             <td class="py-3 px-4 text-center">
                                 @if($t->status === 'dibatalkan')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">Dibatalkan</span>
+                                    <span class="text-xs font-semibold text-rose-700">Dibatalkan</span>
                                 @elseif($t->status === 'sukses')
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Sukses</span>
+                                    <span class="text-xs font-semibold text-emerald-700">Sukses</span>
                                 @else
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Pending</span>
+                                    <span class="text-xs font-semibold text-amber-700">Pending</span>
                                 @endif
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap space-x-1">

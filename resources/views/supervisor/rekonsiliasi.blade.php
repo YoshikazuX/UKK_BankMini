@@ -20,12 +20,7 @@
         <!-- HEADER -->
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Rekonsiliasi Kas Sistem vs Kas Fisik</h1>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                        Audit Keseimbangan Kas
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Rekonsiliasi Kas Sistem vs Kas Fisik</h1>
                 <p class="text-slate-500 text-sm mt-1">
                     Membandingkan kas transaksi sistem komputer dengan kas fisik uang tunai di laci loket teller hasil cash opname.
                 </p>
@@ -168,7 +163,7 @@
                                 </span>
                             </td>
                             <td class="py-3 px-4 text-center">
-                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold {{ $r->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : ($r->status === 'rejected' ? 'bg-rose-100 text-rose-800' : ($r->status === 'hold' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800')) }}">
+                                <span class="text-xs font-semibold {{ $r->status === 'approved' ? 'text-emerald-700' : ($r->status === 'rejected' ? 'text-rose-700' : ($r->status === 'hold' ? 'text-amber-700' : 'text-blue-700')) }}">
                                     {{ ucfirst($r->status) }}
                                 </span>
                             </td>

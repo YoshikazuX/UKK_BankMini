@@ -53,8 +53,7 @@
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded uppercase">Produk 1</span>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Tabungan Siswa</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tabungan Siswa</p>
                     </div>
                     <span class="text-xs tabular-nums font-semibold text-slate-500">{{ count($siswaList) }} Siswa</span>
                 </div>
@@ -67,8 +66,7 @@
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <span class="bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded uppercase">Produk 2</span>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Tabungan Guru & Karyawan</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tabungan Guru & Karyawan</p>
                     </div>
                     <span class="text-xs tabular-nums font-semibold text-slate-500">{{ count($guruList) }} Nasabah</span>
                 </div>

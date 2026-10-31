@@ -31,7 +31,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-xs uppercase tracking-widest text-slate-400 font-bold">Kartu Rekening Bank Mini</span>
-                            <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-bold uppercase">{{ $nasabah->status ?? 'Aktif' }}</span>
+                            <span class="text-xs font-semibold text-emerald-400 uppercase">{{ $nasabah->status ?? 'Aktif' }}</span>
                         </div>
                         <p class="text-2xl font-bold tracking-tight mb-1">{{ $nasabah->nama_siswa }}</p>
                         <p class="text-sm text-slate-400 tabular-nums">No. Rek: <span class="text-white font-semibold">{{ $nasabah->no_rekening }}</span> | NIS: <span class="text-white">{{ $nasabah->nis }}</span></p>
@@ -86,7 +86,6 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <h3 class="text-base font-bold text-slate-800">10 Mutasi Transaksi Terakhir</h3>
-                    <span class="text-xs text-slate-400">Diperbarui secara real-time</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -106,9 +105,9 @@
                                     <td class="px-6 py-3 text-xs text-slate-500 tabular-nums">{{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</td>
                                     <td class="px-6 py-3">
                                         @if(strtolower($t->jenis_transaksi) === 'setor' || strtolower($t->jenis_transaksi) === 'setoran')
-                                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Setoran</span>
+                                            <span class="text-xs font-semibold text-emerald-700">Setoran</span>
                                         @else
-                                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Penarikan</span>
+                                            <span class="text-xs font-semibold text-rose-700">Penarikan</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-3 tabular-nums text-xs font-medium text-slate-600">{{ $t->kode_sandi ?? '-' }}</td>

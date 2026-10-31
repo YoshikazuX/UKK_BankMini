@@ -14,6 +14,7 @@ use App\Models\PengajuanKas;
 use App\Models\PengaturanSistem;
 use App\Models\Transaksi;
 use App\Models\User;
+use App\Services\DashboardWidgetService;
 use App\Services\ProfileImageService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -26,13 +27,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
-    public function index(): View
+    public function index(DashboardWidgetService $widgetService): View
     {
         $hariIni = Carbon::today();
 
-        $totalNasabah = Nasabah::count();
-        $totalPegawai = User::whereIn('role', ['teller', 'supervisor'])->count();
-        $pegawai = User::all();
+        $nasabahSummary = $widgetService->getNasabahSummary();
+        $pegawaiSummary = $widgetService->getPegawaiSummary();
+        $resetPasswordSummary = $widgetService->getPasswordResetSummary();
+        $systemHealthSummary = $widgetService->getSystemHealthSummary();
+
+        $totalNasabah = $nasabahSummary['total'];
+        $totalPegawai = $pegawaiSummary['total_aktif'];
+        $pegawai = User::orderBy('nama_petugas')->get();
 
         $totalDebit = Jurnal::whereDate('tanggal', $hariIni)->sum('debit');
         $totalKredit = Jurnal::whereDate('tanggal', $hariIni)->sum('kredit');
@@ -72,6 +78,13 @@ class AdminController extends Controller
 
         $resetRequests = PasswordResetRequest::where('status', 'pending')
             ->orderBy('id', 'desc')
+            ->take(5)
+            ->get();
+
+        // 6 Log Audit Sistem Terbaru untuk Pemantauan Administrator
+        $recentAuditLogs = AuditLog::with('user')
+            ->latest('created_at')
+            ->take(6)
             ->get();
 
         // Ringkasan Kehadiran Petugas Avalis Hari Ini
@@ -88,8 +101,43 @@ class AdminController extends Controller
             'totalGagalSistem',
             'resetRequests',
             'totalDropingKas',
-            'absensiSummary'
+            'absensiSummary',
+            'nasabahSummary',
+            'pegawaiSummary',
+            'resetPasswordSummary',
+            'systemHealthSummary',
+            'recentAuditLogs'
         ));
+    }
+
+    /**
+     * Halaman Khusus Manajemen Pegawai & Hak Akses (Refactoring Section B).
+     */
+    public function pegawaiIndex(Request $request): View
+    {
+        $query = User::query();
+
+        if ($request->filled('cari')) {
+            $cari = $request->cari;
+            $query->where(function ($q) use ($cari) {
+                $q->where('nama_petugas', 'like', "%{$cari}%")
+                    ->orWhere('username', 'like', "%{$cari}%")
+                    ->orWhere('email', 'like', "%{$cari}%")
+                    ->orWhere('kelas', 'like', "%{$cari}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $pegawai = $query->orderBy('nama_petugas')->paginate(15)->withQueryString();
+
+        return view('admin.data-pegawai', compact('pegawai'));
     }
 
     public function create(): View
@@ -104,6 +152,7 @@ class AdminController extends Controller
             'username' => 'required|string|max:50|unique:users,username',
             'password' => 'required|string|min:6',
             'role' => 'required|in:admin,teller,supervisor,customer_service,avalis,accounting',
+            'status' => 'nullable|in:aktif,nonaktif',
             'kelas' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:25',
             'email' => 'nullable|email|max:150',
@@ -114,6 +163,7 @@ class AdminController extends Controller
             'username' => $validated['username'],
             'password' => $validated['password'], // Otomatis di-hash oleh model cast 'password' => 'hashed'
             'role' => $validated['role'],
+            'status' => $validated['status'] ?? 'aktif',
             'kelas' => $validated['kelas'] ?? null,
             'no_hp' => $validated['no_hp'] ?? null,
             'email' => $validated['email'] ?? null,
@@ -162,6 +212,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'nama_petugas' => 'required|string|max:150',
             'role' => 'required|in:admin,teller,supervisor,customer_service,avalis,accounting',
+            'status' => 'nullable|in:aktif,nonaktif',
             'kelas' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:25',
             'email' => 'nullable|email|max:150',
@@ -171,6 +222,7 @@ class AdminController extends Controller
         $oldValues = [
             'nama_petugas' => $user->nama_petugas,
             'role' => $user->role,
+            'status' => $user->status,
             'kelas' => $user->kelas,
             'email' => $user->email,
             'no_hp' => $user->no_hp,
@@ -178,6 +230,9 @@ class AdminController extends Controller
 
         $user->nama_petugas = $validated['nama_petugas'];
         $user->role = $validated['role'];
+        if ($request->filled('status')) {
+            $user->status = $validated['status'];
+        }
         $user->kelas = $validated['kelas'] ?? null;
         $user->no_hp = $validated['no_hp'] ?? null;
         $user->email = $validated['email'] ?? null;

@@ -34,8 +34,8 @@
                 <div class="flex items-center gap-2">
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pusat Notifikasi Pekerjaan</h1>
                     @if($unreadCount > 0)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-slate-900">
-                            {{ $unreadCount }} Belum Dibaca
+                        <span class="text-xs font-bold text-amber-700">
+                            ({{ $unreadCount }} Belum Dibaca)
                         </span>
                     @endif
                 </div>
@@ -90,7 +90,7 @@
                             <div class="flex items-center gap-2">
                                 <h3 class="text-sm font-bold text-slate-900">{{ $notif->data['title'] ?? 'Pemberitahuan Tugas' }}</h3>
                                 @if($isUnread)
-                                    <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+                                    <span class="text-[11px] font-bold text-amber-700">Baru</span>
                                 @endif
                             </div>
                             <p class="text-xs text-slate-700 mt-1 leading-relaxed">{{ $notif->data['message'] ?? '-' }}</p>

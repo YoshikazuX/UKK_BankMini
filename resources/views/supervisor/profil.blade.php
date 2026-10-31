@@ -58,9 +58,7 @@
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">{{ $user->nama_petugas }}</h1>
                     <p class="text-slate-500 text-sm mt-0.5">Username: <span class="font-medium text-slate-700">{{ $user->username }}</span></p>
-                    <span class="inline-block bg-slate-100 text-slate-800 text-xs px-2.5 py-0.5 rounded-full font-medium mt-2 border border-slate-200">
-                        Role: {{ ucfirst($user->role) }}
-                    </span>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Role: <strong class="text-slate-800">{{ ucfirst($user->role) }}</strong></p>
                 </div>
             </div>
 

@@ -267,8 +267,8 @@
                     <h2 class="text-base font-bold text-slate-900">Rincian Transaksi Loket Saya Hari Ini</h2>
                     <p class="text-xs text-slate-500">Daftar transaksi yang Anda proses pada tanggal {{ \Carbon\Carbon::today()->format('d/m/Y') }}.</p>
                 </div>
-                <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-full tabular-nums">
-                    {{ count($trxHariIni) }} Transaksi
+                <span class="text-xs font-semibold text-slate-500 tabular-nums">
+                    Total: {{ count($trxHariIni) }} Transaksi
                 </span>
             </div>
 
@@ -302,11 +302,11 @@
                             </td>
                             <td class="p-3">
                                 @if($t->status === 'sukses')
-                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded">Sukses</span>
+                                    <span class="text-xs font-semibold text-emerald-700">Sukses</span>
                                 @elseif($t->status === 'pending')
-                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded">Pending SPV</span>
+                                    <span class="text-xs font-semibold text-amber-700">Pending SPV</span>
                                 @else
-                                    <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2 py-0.5 rounded capitalize">{{ $t->status }}</span>
+                                    <span class="text-xs font-semibold text-rose-700 capitalize">{{ $t->status }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -358,11 +358,11 @@
                             </td>
                             <td class="p-3 text-center">
                                 @if($rep->status === 'approved')
-                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded">Approved</span>
+                                    <span class="text-xs font-semibold text-emerald-700">Approved</span>
                                 @elseif($rep->status === 'hold')
-                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded">Hold</span>
+                                    <span class="text-xs font-semibold text-amber-700">Hold</span>
                                 @else
-                                    <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded">Pending</span>
+                                    <span class="text-xs font-semibold text-blue-700">Pending</span>
                                 @endif
                             </td>
                             <td class="p-3 text-center">

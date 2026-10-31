@@ -45,6 +45,14 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-slate-700 text-xs font-semibold mb-2">Status Keaktifan Akun</label>
+                    <select name="status" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm bg-white" required>
+                        <option value="aktif" {{ ($pegawai->status ?? 'aktif') === 'aktif' ? 'selected' : '' }}>Aktif (Pegawai Dapat Mengakses Sistem)</option>
+                        <option value="nonaktif" {{ ($pegawai->status ?? 'aktif') === 'nonaktif' ? 'selected' : '' }}>Nonaktif (Akun Ditangguhkan / Blokir Akses)</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Kelas (Khusus Murid)</label>
                     <input type="text" name="kelas" value="{{ $pegawai->kelas }}" placeholder="Contoh: XI RPL 1" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
                 </div>

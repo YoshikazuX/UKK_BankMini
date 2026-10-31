@@ -41,12 +41,7 @@
         <!-- HEADER PUSAT PERSETUJUAN -->
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pusat Persetujuan (Approval Center)</h1>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                        Workflow Terpadu
-                    </span>
-                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pusat Persetujuan (Approval Center)</h1>
                 <p class="text-slate-500 text-sm mt-1">
                     Satu tempat terpusat untuk seluruh permohonan kas dan laporan tutup kas yang membutuhkan verifikasi atau pengesahan Supervisor.
                 </p>
@@ -215,7 +210,7 @@
                         @forelse($pekerjaanList as $item)
                         <tr class="hover:bg-slate-50/80 transition">
                             <td class="py-3 px-4">
-                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold {{ $item->pekerjaan_type === 'pengajuan_kas' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }} mb-1">
+                                <span class="text-xs font-semibold uppercase {{ $item->pekerjaan_type === 'pengajuan_kas' ? 'text-amber-700' : 'text-blue-700' }} block mb-0.5">
                                     {{ $item->pekerjaan_label }}
                                 </span>
                                 <span class="font-bold text-slate-900 block tabular-nums">{{ $item->nomor_referensi }}</span>
@@ -245,7 +240,7 @@
                                 @endif
                             </td>
                             <td class="py-3 px-4 text-center">
-                                <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $item->status_badge }}">
+                                <span class="text-xs font-semibold {{ $item->status_asli === 'disetujui' || $item->status_asli === 'approved' ? 'text-emerald-700' : ($item->status_asli === 'ditolak' || $item->status_asli === 'rejected' ? 'text-rose-700' : 'text-amber-700') }}">
                                     {{ $item->status_text }}
                                 </span>
                             </td>

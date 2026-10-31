@@ -71,7 +71,7 @@
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
                     <p class="text-xs font-semibold text-slate-500">Sisa Kas Fisik Loket Saat Ini</p>
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded {{ $kasTersedia <= 0 ? 'bg-rose-100 text-rose-800' : ($kasTersedia < 100000 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800') }}">
+                    <span class="text-xs font-semibold {{ $kasTersedia <= 0 ? 'text-rose-700' : ($kasTersedia < 100000 ? 'text-amber-700' : 'text-emerald-700') }}">
                         {{ $kasTersedia <= 0 ? 'Kas Habis' : ($kasTersedia < 100000 ? 'Kas Menipis' : 'Kas Aman') }}
                     </span>
                 </div>
@@ -162,19 +162,9 @@
                                     {{ $p->alasan }}
                                 </td>
                                 <td class="p-3 text-center">
-                                    @if($p->status === 'disetujui')
-                                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                            Disetujui
-                                        </span>
-                                    @elseif($p->status === 'ditolak')
-                                        <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                            Ditolak
-                                        </span>
-                                    @else
-                                        <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                            Menunggu
-                                        </span>
-                                    @endif
+                                    <span class="text-xs font-semibold {{ $p->status === 'disetujui' ? 'text-emerald-700' : ($p->status === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
+                                        {{ $p->status === 'disetujui' ? 'Disetujui' : ($p->status === 'ditolak' ? 'Ditolak' : 'Menunggu') }}
+                                    </span>
                                 </td>
                                 <td class="p-3 text-slate-600 text-[11px]">
                                     @if($p->nama_spv)

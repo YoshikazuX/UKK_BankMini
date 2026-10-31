@@ -161,17 +161,11 @@
                             </td>
                             <td class="p-3 text-center">
                                 @if($p->status === 'disetujui')
-                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                        Disetujui
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-700">Disetujui</span>
                                 @elseif($p->status === 'ditolak')
-                                    <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                        Ditolak
-                                    </span>
+                                    <span class="text-xs font-semibold text-rose-700">Ditolak</span>
                                 @else
-                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded inline-block">
-                                        Menunggu
-                                    </span>
+                                    <span class="text-xs font-semibold text-amber-700">Menunggu</span>
                                 @endif
                             </td>
                             <td class="p-3 text-slate-600 text-[11px]">

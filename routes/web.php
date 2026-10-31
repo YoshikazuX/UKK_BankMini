@@ -52,6 +52,7 @@ Route::middleware(['auth', 'role:admin,customer_service'])->group(function () {
 // =========================================================================
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/data-pegawai', [AdminController::class, 'pegawaiIndex'])->name('admin.pegawai.index');
     Route::get('/admin/tambah-pegawai', [AdminController::class, 'create'])->name('admin.pegawai.create');
     Route::post('/admin/tambah-pegawai', [AdminController::class, 'store'])->name('admin.pegawai.store');
     Route::get('/admin/edit-pegawai/{id}', [AdminController::class, 'edit'])->name('admin.pegawai.edit');

@@ -27,7 +27,6 @@
             &larr; Kembali
         </a>
         <div class="flex items-center space-x-2">
-            <span class="text-xs text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-300">Format 2 Rangkap (Arsip Bank & Nasabah)</span>
             <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-5 py-2 rounded-lg transition flex items-center shadow-sm">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 Cetak Slip Setoran
@@ -100,8 +99,8 @@
                             <td class="py-1 text-slate-600">Status Validasi</td>
                             <td>:</td>
                             <td>
-                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase text-[10px]">
-                                    SUKSES TERCATAT
+                                <span class="font-bold uppercase text-xs text-emerald-700">
+                                    Sukses Tercatat
                                 </span>
                             </td>
                         </tr>
@@ -215,8 +214,8 @@
                             <td class="py-1 text-slate-600">Status Validasi</td>
                             <td>:</td>
                             <td>
-                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase text-[10px]">
-                                    SUKSES TERCATAT
+                                <span class="font-bold uppercase text-xs text-emerald-700">
+                                    Sukses Tercatat
                                 </span>
                             </td>
                         </tr>

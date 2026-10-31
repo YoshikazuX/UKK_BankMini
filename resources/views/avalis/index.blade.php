@@ -116,10 +116,6 @@
                 </nav>
                 <div class="flex items-center gap-2.5">
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Absensi Petugas Avalis</h1>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80" title="Tersinkronisasi otomatis dengan data akun pegawai / petugas asli di sistem">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Sinkron Otomatis
-                    </span>
                 </div>
                 <p class="text-sm text-slate-500 mt-1">Pencatatan dan pemantauan kehadiran serta jadwal jaga harian petugas loket operasional.</p>
             </div>
@@ -173,50 +169,35 @@
 
             <!-- 2. Hadir -->
             <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hadir</p>
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hadir</p>
                 <p class="text-2xl font-bold text-slate-900 tracking-tight mt-1">{{ number_format($totalHadir) }}</p>
                 <p class="text-[11px] text-emerald-700 font-medium mt-1">Bertugas di loket</p>
             </div>
 
             <!-- 3. Izin -->
             <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Izin</p>
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Izin</p>
                 <p class="text-2xl font-bold text-slate-900 tracking-tight mt-1">{{ number_format($totalIzin) }}</p>
                 <p class="text-[11px] text-amber-700 font-medium mt-1">Dispensasi resmi</p>
             </div>
 
             <!-- 4. Tidak Masuk -->
             <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tidak Masuk</p>
-                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tidak Masuk</p>
                 <p class="text-2xl font-bold text-slate-900 tracking-tight mt-1">{{ number_format($totalTidakMasuk) }}</p>
                 <p class="text-[11px] text-rose-700 font-medium mt-1">Tanpa keterangan</p>
             </div>
 
             <!-- 5. Shift Pagi -->
             <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Shift Pagi</p>
-                    <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Shift Pagi</p>
                 <p class="text-2xl font-bold text-slate-900 tracking-tight mt-1">{{ number_format($totalShiftPagi) }}</p>
                 <p class="text-[11px] text-slate-400 mt-1">07.30 - 11.30 WIB</p>
             </div>
 
             <!-- 6. Shift Siang -->
             <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Shift Siang</p>
-                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Shift Siang</p>
                 <p class="text-2xl font-bold text-slate-900 tracking-tight mt-1">{{ number_format($totalShiftSiang) }}</p>
                 <p class="text-[11px] text-slate-400 mt-1">11.30 - 15.30 WIB</p>
             </div>
@@ -326,9 +307,8 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
                         <h2 class="text-base font-bold text-slate-900">Rekapitulasi Bulanan Petugas Avalis</h2>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <span class="text-xs text-slate-500 font-medium">
                             Periode: {{ $bulanArr[(int)($rekapBulan ?? date('n'))] ?? 'Bulan Berjalan' }} {{ $rekapTahun ?? date('Y') }}
                         </span>
                     </div>
@@ -336,7 +316,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-xs">
                     <span class="text-slate-500">Tingkat Kehadiran:</span>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full font-bold text-xs {{ ($rekapPersenHadir ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (($rekapPersenHadir ?? 0) >= 50 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200') }}">
+                    <span class="font-bold text-xs {{ ($rekapPersenHadir ?? 0) >= 80 ? 'text-emerald-700' : (($rekapPersenHadir ?? 0) >= 50 ? 'text-amber-700' : 'text-rose-700') }}">
                         {{ $rekapPersenHadir ?? 0 }}%
                     </span>
                 </div>
@@ -360,19 +340,16 @@
                     <div style="width: {{ $pctTidakMasuk }}%" class="bg-rose-500 transition-all duration-300" title="Tidak Masuk: {{ $rekapTidakMasuk ?? 0 }} ({{ $pctTidakMasuk }}%)"></div>
                 </div>
                 <div class="flex flex-wrap items-center gap-4 text-xs mt-2 text-slate-600">
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <span>Hadir: <strong>{{ $rekapHadir ?? 0 }}</strong> ({{ $pctHadir }}%)</span>
+                    <div>
+                        <span class="text-emerald-700 font-medium">Hadir:</span> <strong>{{ $rekapHadir ?? 0 }}</strong> ({{ $pctHadir }}%)
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                        <span>Izin: <strong>{{ $rekapIzin ?? 0 }}</strong> ({{ $pctIzin }}%)</span>
+                    <div>
+                        <span class="text-amber-700 font-medium">Izin:</span> <strong>{{ $rekapIzin ?? 0 }}</strong> ({{ $pctIzin }}%)
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                        <span>Tidak Masuk: <strong>{{ $rekapTidakMasuk ?? 0 }}</strong> ({{ $pctTidakMasuk }}%)</span>
+                    <div>
+                        <span class="text-rose-700 font-medium">Tidak Masuk:</span> <strong>{{ $rekapTidakMasuk ?? 0 }}</strong> ({{ $pctTidakMasuk }}%)
                     </div>
-                    <div class="flex items-center gap-1.5 ml-auto text-slate-500">
+                    <div class="ml-auto text-slate-500">
                         <span>Pagi: <strong>{{ $shiftPagiTotal ?? 0 }}</strong> | Siang: <strong>{{ $shiftSiangTotal ?? 0 }}</strong></span>
                     </div>
                 </div>
@@ -527,13 +504,11 @@
                                 @else
                                     <!-- SPV / Teller Read-Only Shift Badge -->
                                     @if(str_contains($item->shift_jaga, 'Pagi'))
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                        <span class="text-xs font-medium text-slate-700">
                                             Shift Pagi (07.30 - 11.30)
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                        <span class="text-xs font-medium text-slate-700">
                                             Shift Siang (11.30 - 15.30)
                                         </span>
                                     @endif
@@ -546,10 +521,10 @@
                                     <!-- Administrator Quick Status Selector -->
                                     <form action="{{ url('/absensi-avalis/ubah-status/'.$item->id) }}" method="POST" class="inline-block no-print">
                                         @csrf
-                                        <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-full px-3 py-1 border transition cursor-pointer shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-900 {{ $item->status === 'Hadir' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : ($item->status === 'Izin' ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-rose-50 text-rose-800 border-rose-300') }}" title="Ubah status kehadiran (Khusus Administrator)">
-                                            <option value="Hadir" {{ $item->status === 'Hadir' ? 'selected' : '' }}>● Hadir</option>
-                                            <option value="Izin" {{ $item->status === 'Izin' ? 'selected' : '' }}>● Izin</option>
-                                            <option value="Tidak Masuk" {{ $item->status === 'Tidak Masuk' ? 'selected' : '' }}>● Tidak Masuk</option>
+                                        <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg px-2.5 py-1 border border-slate-300 bg-white text-slate-800 transition cursor-pointer shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-900" title="Ubah status kehadiran (Khusus Administrator)">
+                                            <option value="Hadir" {{ $item->status === 'Hadir' ? 'selected' : '' }}>Hadir</option>
+                                            <option value="Izin" {{ $item->status === 'Izin' ? 'selected' : '' }}>Izin</option>
+                                            <option value="Tidak Masuk" {{ $item->status === 'Tidak Masuk' ? 'selected' : '' }}>Tidak Masuk</option>
                                         </select>
                                     </form>
                                     <!-- Print view for status -->
@@ -559,20 +534,11 @@
                                 @else
                                     <!-- SPV / Teller Read-Only Status Indicator -->
                                     @if($item->status === 'Hadir')
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                            Hadir
-                                        </span>
+                                        <span class="text-xs font-semibold text-emerald-700">Hadir</span>
                                     @elseif($item->status === 'Izin')
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/80">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                            Izin
-                                        </span>
+                                        <span class="text-xs font-semibold text-amber-700">Izin</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200/80">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                            Tidak Masuk
-                                        </span>
+                                        <span class="text-xs font-semibold text-rose-700">Tidak Masuk</span>
                                     @endif
                                 @endif
                             </td>
