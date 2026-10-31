@@ -67,22 +67,34 @@
             <form action="{{ url('/teller/profil/update') }}" method="POST" enctype="multipart/form-data" id="form-profil">
                 @csrf
 
-                <!-- Nama (Terkunci / Disabled) -->
+                <!-- Nama (Dapat Diubah) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Nama Lengkap <span class="text-xs font-normal text-rose-500">(Hanya Admin yang dapat mengubah)</span></label>
-                    <input type="text" value="{{ $user->nama_petugas }}" class="shadow-sm border border-slate-200 bg-slate-100 rounded w-full py-2.5 px-3 text-slate-500 cursor-not-allowed" disabled>
+                    <label class="block text-slate-700 text-sm font-bold mb-2" for="nama_petugas">Nama Lengkap <span class="text-rose-500">*</span></label>
+                    <input type="text" name="nama_petugas" id="nama_petugas" value="{{ old('nama_petugas', $user->nama_petugas) }}" required class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    @error('nama_petugas')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Jabatan / Role (Terkunci / Disabled) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Jabatan Sistem <span class="text-xs font-normal text-rose-500">(Hanya Admin yang dapat mengubah)</span></label>
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Jabatan Sistem <span class="text-xs font-normal text-slate-400">(Terkunci)</span></label>
                     <input type="text" value="{{ ucfirst($user->role) }}" class="shadow-sm border border-slate-200 bg-slate-100 rounded w-full py-2.5 px-3 text-slate-500 cursor-not-allowed" disabled>
                 </div>
 
                 <!-- Kelas (Terkunci / Disabled) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">Kelas / Jurusan <span class="text-xs font-normal text-rose-500">(Hanya Admin yang dapat mengubah)</span></label>
+                    <label class="block text-slate-700 text-sm font-bold mb-2">Kelas / Jurusan <span class="text-xs font-normal text-slate-400">(Terkunci)</span></label>
                     <input type="text" value="{{ $user->kelas ?? 'Belum diatur' }}" class="shadow-sm border border-slate-200 bg-slate-100 rounded w-full py-2.5 px-3 text-slate-500 cursor-not-allowed" disabled>
+                </div>
+
+                <!-- Alamat Email (Dapat Diubah) -->
+                <div class="mb-4">
+                    <label class="block text-slate-700 text-sm font-bold mb-2" for="email">Alamat Email</label>
+                    <input type="email" name="email" id="email" value="{{ old('email', $user->email ?? '') }}" placeholder="Contoh: teller@banksekolah.id" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    @error('email')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Nomor HP / Kontak (Bisa Diubah) -->

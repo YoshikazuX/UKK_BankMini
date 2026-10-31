@@ -64,10 +64,10 @@
                 <div class="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 overflow-x-auto py-1">
                     <a href="{{ url('/admin/dashboard') }}" class="{{ $navItemClass(request()->is('admin/dashboard*')) }}">Dashboard</a>
                     <a href="{{ url('/admin/data-nasabah') }}" class="{{ $navItemClass(request()->is('admin/data-nasabah*') || request()->is('admin/*-nasabah*')) }}">Manajemen Nasabah</a>
-                    <a href="{{ url('/avalis/petugas') }}" class="{{ $navItemClass(request()->is('avalis/petugas*')) }}">Petugas Avalis</a>
-                    <a href="{{ url('/laporan/jurnal') }}" class="{{ $navItemClass(request()->is('laporan/jurnal*')) }}">Jurnal</a>
+                    <a href="{{ url('/admin/reset-password-requests') }}" class="{{ $navItemClass(request()->is('admin/reset-password-requests*')) }}">Permohonan Reset</a>
                     <a href="{{ url('/admin/audit') }}" class="{{ $navItemClass(request()->is('admin/audit*')) }}">Jejak Audit</a>
                     <a href="{{ url('/admin/absensi-avalis') }}" class="{{ $navItemClass(request()->is('admin/absensi-avalis*') || request()->is('absensi-avalis*')) }}">Absensi</a>
+                    <a href="{{ url('/laporan/jurnal') }}" class="{{ $navItemClass(request()->is('laporan/jurnal*')) }}">Jurnal</a>
                     <a href="{{ url('/admin/konfigurasi') }}" class="{{ $navItemClass(request()->is('admin/konfigurasi*')) }}">Konfigurasi</a>
             @endif
 

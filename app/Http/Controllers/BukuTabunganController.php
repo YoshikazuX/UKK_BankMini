@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditHelper;
 use App\Helpers\TerbilangHelper;
 use App\Models\Nasabah;
 use App\Models\Transaksi;
@@ -143,8 +144,24 @@ class BukuTabunganController extends Controller
         ]);
 
         $nasabah = Nasabah::findOrFail($id);
+        $oldStatus = $nasabah->status;
         $nasabah->update(['status' => $validated['status']]);
 
-        return back()->with('success', 'Status nasabah berhasil diperbarui!');
+        AuditHelper::log(
+            jenisAktivitas: 'UBAH_STATUS_REKENING',
+            modul: 'Rekening',
+            objekId: $nasabah->no_rekening,
+            oldValues: ['status' => $oldStatus],
+            newValues: ['status' => $nasabah->status]
+        );
+
+        $statusLabel = match ($nasabah->status) {
+            'aktif' => 'diaktifkan',
+            'nonaktif' => 'dinonaktifkan',
+            'alumni' => 'diarsipkan sebagai alumni',
+            default => $nasabah->status,
+        };
+
+        return back()->with('success', "Status rekening nasabah {$nasabah->nama_siswa} berhasil {$statusLabel}!");
     }
 }

@@ -67,27 +67,39 @@
             <form action="{{ url('/supervisor/profil/update') }}" method="POST" enctype="multipart/form-data" id="form-profil">
                 @csrf
 
-                <!-- Nama Lengkap (Terkunci) -->
+                <!-- Nama Lengkap (Dapat Diubah) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-xs font-normal text-rose-500">(Diatur oleh Admin)</span></label>
-                    <input type="text" value="{{ $user->nama_petugas }}" class="border border-slate-200 bg-slate-50 rounded-lg w-full py-2 px-3 text-slate-500 cursor-not-allowed text-sm" disabled>
+                    <label class="block text-slate-700 text-sm font-semibold mb-2" for="nama_petugas">Nama Lengkap <span class="text-rose-500">*</span></label>
+                    <input type="text" name="nama_petugas" id="nama_petugas" value="{{ old('nama_petugas', $user->nama_petugas) }}" required class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-800 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    @error('nama_petugas')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Jabatan (Terkunci) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-semibold mb-2">Jabatan <span class="text-xs font-normal text-rose-500">(Diatur oleh Admin)</span></label>
+                    <label class="block text-slate-700 text-sm font-semibold mb-2">Jabatan Sistem <span class="text-xs font-normal text-slate-400">(Terkunci)</span></label>
                     <input type="text" value="{{ strtoupper($user->role) }}" class="border border-slate-200 bg-slate-50 rounded-lg w-full py-2 px-3 text-slate-500 cursor-not-allowed text-sm" disabled>
                 </div>
 
                 <!-- Kelas (Terkunci) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-semibold mb-2">Kelas <span class="text-xs font-normal text-rose-500">(Diatur oleh Admin)</span></label>
+                    <label class="block text-slate-700 text-sm font-semibold mb-2">Kelas / Unit <span class="text-xs font-normal text-slate-400">(Terkunci)</span></label>
                     <input type="text" value="{{ $user->kelas ?? 'Belum diatur' }}" class="border border-slate-200 bg-slate-50 rounded-lg w-full py-2 px-3 text-slate-500 cursor-not-allowed text-sm" disabled>
+                </div>
+
+                <!-- Email (Dapat Diubah) -->
+                <div class="mb-4">
+                    <label class="block text-slate-700 text-sm font-semibold mb-2" for="email">Alamat Email</label>
+                    <input type="email" name="email" id="email" value="{{ old('email', $user->email ?? '') }}" placeholder="Contoh: spv@banksekolah.id" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-800 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    @error('email')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Nomor HP / Kontak (Bisa Diubah) -->
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-sm font-semibold mb-2" for="no_hp">Nomor HP</label>
+                    <label class="block text-slate-700 text-sm font-semibold mb-2" for="no_hp">Nomor HP / WhatsApp Aktif</label>
                     <input type="text" name="no_hp" id="no_hp" value="{{ old('no_hp', $user->no_hp) }}" placeholder="Contoh: 081234567890" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm tabular-nums">
                     @error('no_hp')
                         <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>

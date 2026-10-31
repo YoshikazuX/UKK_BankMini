@@ -36,11 +36,13 @@ Route::get('/forgot-password/cancel-session', [AuthController::class, 'resetForg
 // =========================================================================
 Route::middleware(['auth', 'role:admin,customer_service'])->group(function () {
     Route::get('/admin/data-nasabah', [NasabahController::class, 'index'])->name('admin.nasabah.index');
+    Route::get('/admin/data-nasabah/{id}', [NasabahController::class, 'show'])->name('admin.nasabah.show');
     Route::get('/admin/tambah-nasabah', [NasabahController::class, 'create'])->name('admin.nasabah.create');
     Route::post('/admin/tambah-nasabah', [NasabahController::class, 'store'])->name('admin.nasabah.store');
     Route::get('/admin/edit-nasabah/{id}', [NasabahController::class, 'edit'])->name('admin.nasabah.edit');
     Route::post('/admin/edit-nasabah/{id}', [NasabahController::class, 'update'])->name('admin.nasabah.update');
     Route::get('/admin/hapus-nasabah/{id}', [NasabahController::class, 'destroy'])->name('admin.nasabah.destroy');
+    Route::post('/admin/hapus-nasabah/{id}', [NasabahController::class, 'destroy'])->name('admin.nasabah.destroy.post');
     Route::post('/admin/import-nasabah', [NasabahController::class, 'importCsv'])->name('admin.nasabah.import');
     Route::get('/admin/template-nasabah', [NasabahController::class, 'downloadTemplate'])->name('admin.nasabah.template');
 });
@@ -64,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/audit/export', [AdminController::class, 'exportAuditCsv'])->name('admin.audit.export');
 
     // FITUR: PERSETUJUAN RESET PASSWORD PEGAWAI
+    Route::get('/admin/reset-password-requests', [AdminController::class, 'resetPasswordRequests'])->name('admin.reset.index');
     Route::post('/admin/reset-password-request/{id}/approve', [AdminController::class, 'approveResetRequest'])->name('admin.reset.approve');
     Route::post('/admin/reset-password-request/{id}/reject', [AdminController::class, 'rejectResetRequest'])->name('admin.reset.reject');
 

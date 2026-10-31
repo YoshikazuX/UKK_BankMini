@@ -60,6 +60,7 @@ Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
 
     // Inquiry & Saldo
     Route::get('/saldo', [ProfilNasabahController::class, 'saldo'])->name('saldo');
+    Route::get('/cek-rekening', [ProfilNasabahController::class, 'cekRekening'])->name('cek-rekening');
     Route::get('/qris-payload', [ProfilNasabahController::class, 'qrisPayload'])->name('qris-payload');
 
     // Mutasi & Transaksi Mobile (Transfer antar siswa dinonaktifkan: tabungan dikelola loket teller)

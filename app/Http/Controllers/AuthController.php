@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -111,20 +112,29 @@ class AuthController extends Controller
             }
         }
 
-        // Generate 6 digit OTP acak
+        // Cegah spam OTP (Rate limiting 60 detik)
+        $recentRequest = PasswordResetRequest::where('username', $user->username)
+            ->where('created_at', '>=', now()->subSeconds(60))
+            ->first();
+        if ($recentRequest) {
+            return back()->with('error', 'Terlalu sering meminta kode verifikasi. Harap tunggu 60 detik sebelum meminta kode baru.');
+        }
+
+        // Generate 6 digit OTP acak dengan masa berlaku 15 menit
         $otp = (string) random_int(100000, 999999);
         $expiresAt = now()->addMinutes(15);
 
-        PasswordResetRequest::create([
+        // Lindungi OTP dengan penyimpanan HASH Bcrypt
+        $ticket = PasswordResetRequest::create([
             'user_id' => $user->id,
             'username' => $user->username,
             'nama_pemohon' => $user->nama_petugas,
             'metode' => $metode,
             'kontak' => $rawContact,
-            'otp_code' => $otp,
+            'otp_code' => Hash::make($otp),
             'otp_expires_at' => $expiresAt,
             'status' => 'pending',
-            'keterangan' => 'Kode OTP pemulihan kata sandi dibuat',
+            'keterangan' => 'Kode OTP keamanan 15 menit dibuat (Tersimpan Hash)',
             'ip_address' => $request->ip(),
         ]);
 
@@ -142,6 +152,7 @@ class AuthController extends Controller
         session([
             'pwd_reset_step' => 'verify',
             'pwd_reset_user_id' => $user->id,
+            'pwd_reset_ticket_id' => $ticket->id,
             'pwd_reset_username' => $user->username,
             'pwd_reset_nama' => $user->nama_petugas,
             'pwd_reset_metode' => $metode,
@@ -150,6 +161,7 @@ class AuthController extends Controller
             'pwd_reset_otp' => $otp,
             'pwd_reset_wa_link' => $waLink,
             'pwd_reset_expires_at' => $expiresAt->timestamp,
+            'pwd_reset_attempts' => 0,
         ]);
 
         return back()->with('success', 'Kode verifikasi keamanan berhasil dibuat!');
@@ -179,13 +191,46 @@ class AuthController extends Controller
             return redirect()->route('password.request')->with('error', 'Sesi pemulihan kata sandi telah berakhir. Silakan ulangi proses.');
         }
 
+        // Batasi percobaan verifikasi OTP (Maksimal 5 kali percobaan)
+        $attempts = (int) session('pwd_reset_attempts', 0) + 1;
+        session(['pwd_reset_attempts' => $attempts]);
+
+        if ($attempts > 5) {
+            session()->forget([
+                'pwd_reset_step',
+                'pwd_reset_user_id',
+                'pwd_reset_ticket_id',
+                'pwd_reset_username',
+                'pwd_reset_nama',
+                'pwd_reset_metode',
+                'pwd_reset_masked_contact',
+                'pwd_reset_raw_contact',
+                'pwd_reset_otp',
+                'pwd_reset_wa_link',
+                'pwd_reset_expires_at',
+                'pwd_reset_attempts',
+            ]);
+
+            return redirect()->route('password.request')->with('error', 'Batas percobaan OTP terlampaui (maksimal 5 kali). Sesi dibatalkan demi keamanan perbankan.');
+        }
+
         if (now()->timestamp > $expiresAt) {
             return back()->with('error', 'Kode OTP telah kadaluarsa (melebihi 15 menit). Silakan minta kode baru.');
         }
 
-        // Cek kecocokan OTP
-        if (trim((string) $request->otp_code) !== trim((string) $sessionOtp)) {
-            return back()->with('error', 'Kode verifikasi OTP yang Anda masukkan salah! Periksa kembali kode Anda.');
+        // Cek kecocokan OTP (baik plaintext session maupun hash DB)
+        $ticketId = session('pwd_reset_ticket_id');
+        $ticket = $ticketId ? PasswordResetRequest::find($ticketId) : null;
+
+        $isValidOtp = false;
+        if ($ticket && $ticket->otp_code && Hash::check($request->otp_code, $ticket->otp_code)) {
+            $isValidOtp = true;
+        } elseif (trim((string) $request->otp_code) === trim((string) $sessionOtp)) {
+            $isValidOtp = true;
+        }
+
+        if (! $isValidOtp) {
+            return back()->with('error', "Kode verifikasi OTP salah! (Percobaan {$attempts} dari 5)");
         }
 
         // Update password pengguna
@@ -197,18 +242,20 @@ class AuthController extends Controller
         $user->password = $request->password;
         $user->save();
 
-        // Perbarui status tiket di database
-        PasswordResetRequest::where('user_id', $user->id)
-            ->where('otp_code', $sessionOtp)
-            ->update([
+        // Perbarui status tiket di database menjadi completed dan hanguskan OTP (one-time use)
+        if ($ticket) {
+            $ticket->update([
                 'status' => 'completed',
                 'keterangan' => 'Password berhasil direset mandiri oleh user menggunakan OTP',
+                'handled_at' => now(),
             ]);
+        }
 
-        // Bersihkan session reset
+        // Bersihkan seluruh session reset
         session()->forget([
             'pwd_reset_step',
             'pwd_reset_user_id',
+            'pwd_reset_ticket_id',
             'pwd_reset_username',
             'pwd_reset_nama',
             'pwd_reset_metode',
@@ -217,6 +264,7 @@ class AuthController extends Controller
             'pwd_reset_otp',
             'pwd_reset_wa_link',
             'pwd_reset_expires_at',
+            'pwd_reset_attempts',
         ]);
 
         return redirect()->route('login')->with('success', 'Kata sandi akun "'.$sessionUsername.'" berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.');
@@ -238,6 +286,16 @@ class AuthController extends Controller
             'no_wa.required' => 'Nomor WhatsApp aktif wajib diisi.',
             'alasan.required' => 'Berikan keterangan alasan permohonan reset kata sandi.',
         ]);
+
+        // Cek permohonan berulang yang masih pending
+        $existingPending = PasswordResetRequest::where('username', $request->username)
+            ->where('status', 'pending')
+            ->where('metode', 'ticket')
+            ->first();
+
+        if ($existingPending) {
+            return back()->with('warning', 'Anda sudah memiliki permohonan reset password yang masih berstatus PENDING (No. Tiket: #RST-'.str_pad((string) $existingPending->id, 4, '0', STR_PAD_LEFT).'). Harap menunggu proses verifikasi Administrator.');
+        }
 
         $user = User::where('username', $request->username)->first();
 

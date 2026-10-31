@@ -146,7 +146,7 @@
                 </button>
 
                 <!-- Secondary Action: Ekspor Excel / CSV -->
-                <a href="{{ url('/absensi-avalis/export') }}?tanggal={{ request('tanggal') }}&shift={{ request('shift') }}" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1">
+                <a href="{{ url('/absensi-avalis/export') }}?{{ http_build_query(request()->query()) }}" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     <span>Ekspor Excel</span>
                 </a>
@@ -223,31 +223,36 @@
         </div>
 
         <!-- ========================================================================= -->
-        <!-- AREA FILTER & PENCARIAN -->
+        <!-- AREA FILTER & PENCARIAN KOMPREHENSIF -->
         <!-- ========================================================================= -->
         <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm mb-6 no-print">
-            <form method="GET" action="{{ url()->current() }}" class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2.5 flex-grow">
-                    <!-- Input Search -->
-                    <div class="relative w-full sm:w-64">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <form method="GET" action="{{ url()->current() }}" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                    <!-- 1. Input Search -->
+                    <div class="lg:col-span-2 relative">
+                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cari Kata Kunci</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama, kelas, WhatsApp..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
                         </div>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama, kelas, no WA..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
                     </div>
 
-                    <!-- Filter Shift -->
-                    <div class="w-full sm:w-48">
-                        <select name="shift" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
-                            <option value="">Semua Shift Jaga</option>
-                            <option value="Pagi" {{ request('shift') == 'Pagi' ? 'selected' : '' }}>Shift Pagi (07.30 - 11.30)</option>
-                            <option value="Siang" {{ request('shift') == 'Siang' ? 'selected' : '' }}>Shift Siang (11.30 - 15.30)</option>
+                    <!-- 2. Filter Shift -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Shift Jaga</label>
+                        <select name="shift" class="w-full py-2 px-3 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
+                            <option value="">Semua Shift</option>
+                            <option value="Pagi" {{ request('shift') == 'Pagi' ? 'selected' : '' }}>Pagi (07.30 - 11.30)</option>
+                            <option value="Siang" {{ request('shift') == 'Siang' ? 'selected' : '' }}>Siang (11.30 - 15.30)</option>
                         </select>
                     </div>
 
-                    <!-- Filter Status -->
-                    <div class="w-full sm:w-40">
-                        <select name="status" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
+                    <!-- 3. Filter Status -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Status Kehadiran</label>
+                        <select name="status" class="w-full py-2 px-3 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
                             <option value="">Semua Status</option>
                             <option value="Hadir" {{ request('status') == 'Hadir' ? 'selected' : '' }}>Hadir</option>
                             <option value="Izin" {{ request('status') == 'Izin' ? 'selected' : '' }}>Izin</option>
@@ -255,30 +260,165 @@
                         </select>
                     </div>
 
-                    <!-- Filter Tanggal -->
-                    <div class="w-full sm:w-44">
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
+                    <!-- 4. Filter Bulan Rekap -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Bulan</label>
+                        <select name="bulan" class="w-full py-2 px-3 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
+                            @php
+                                $bulanArr = [
+                                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                                ];
+                                $selectedBulan = request('bulan', $rekapBulan ?? date('n'));
+                            @endphp
+                            @foreach($bulanArr as $num => $namaBulan)
+                                <option value="{{ $num }}" {{ (int)$selectedBulan === (int)$num ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <!-- Tombol Terapkan Filter -->
-                    <button type="submit" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium rounded-lg transition shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                        <span>Filter</span>
-                    </button>
-
-                    <!-- Tombol Reset Filter -->
-                    @if(request()->hasAny(['q', 'shift', 'status', 'tanggal']))
-                        <a href="{{ url()->current() }}" class="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs sm:text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            <span>Reset</span>
-                        </a>
-                    @endif
+                    <!-- 5. Filter Tahun Rekap -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">Tahun</label>
+                        <select name="tahun" class="w-full py-2 px-3 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition">
+                            @php
+                                $curY = (int)date('Y');
+                                $selectedY = request('tahun', $rekapTahun ?? $curY);
+                            @endphp
+                            @for($y = $curY - 3; $y <= $curY + 1; $y++)
+                                <option value="{{ $y }}" {{ (int)$selectedY === (int)$y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
                 </div>
 
-                <div class="text-xs text-slate-500 whitespace-nowrap self-center">
-                    Total data: <strong class="font-semibold text-slate-800">{{ count($absensi) }}</strong> baris
+                <!-- Baris Kedua: Rentang Tanggal Spesifik & Tombol Aksi -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-slate-500 font-medium">Rentang Tanggal:</span>
+                        <input type="date" name="tgl_dari" value="{{ request('tgl_dari') }}" title="Tanggal Mulai" class="py-1.5 px-2.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900">
+                        <span class="text-xs text-slate-400">s/d</span>
+                        <input type="date" name="tgl_sampai" value="{{ request('tgl_sampai') }}" title="Tanggal Selesai" class="py-1.5 px-2.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900">
+                    </div>
+
+                    <div class="flex items-center gap-2 self-end sm:self-center">
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                            <span>Terapkan Filter</span>
+                        </button>
+
+                        @if(request()->hasAny(['q', 'shift', 'status', 'tanggal', 'tgl_dari', 'tgl_sampai', 'bulan', 'tahun']))
+                            <a href="{{ url()->current() }}" class="inline-flex items-center gap-1 px-3 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <span>Reset Filter</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </form>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- REKAPITULASI BULANAN & STATISTIK AKTUAL PETUGAS AVALIS -->
+        <!-- ========================================================================= -->
+        <div class="bg-white rounded-xl border border-slate-200/90 p-5 shadow-sm mb-6 no-print">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                        <h2 class="text-base font-bold text-slate-900">Rekapitulasi Bulanan Petugas Avalis</h2>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            Periode: {{ $bulanArr[(int)($rekapBulan ?? date('n'))] ?? 'Bulan Berjalan' }} {{ $rekapTahun ?? date('Y') }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Laporan kedisiplinan jaga shift dan persentase kehadiran riil petugas loket bank mini.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-slate-500">Tingkat Kehadiran:</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full font-bold text-xs {{ ($rekapPersenHadir ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (($rekapPersenHadir ?? 0) >= 50 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200') }}">
+                        {{ $rekapPersenHadir ?? 0 }}%
+                    </span>
+                </div>
+            </div>
+
+            <!-- Visualisasi Distribusi Kehadiran (Progress Bar) -->
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-xs font-medium text-slate-600 mb-1.5">
+                    <span>Visualisasi Distribusi Kehadiran Bulanan</span>
+                    <span class="text-slate-400">Total Terjadwal: {{ $rekapTotalJadwal ?? 0 }} sesi</span>
+                </div>
+                @php
+                    $totalJadwalVal = max(1, ($rekapTotalJadwal ?? 0));
+                    $pctHadir = round((($rekapHadir ?? 0) / $totalJadwalVal) * 100, 1);
+                    $pctIzin = round((($rekapIzin ?? 0) / $totalJadwalVal) * 100, 1);
+                    $pctTidakMasuk = round((($rekapTidakMasuk ?? 0) / $totalJadwalVal) * 100, 1);
+                @endphp
+                <div class="w-full h-3 rounded-full bg-slate-100 flex overflow-hidden shadow-inner">
+                    <div style="width: {{ $pctHadir }}%" class="bg-emerald-500 transition-all duration-300" title="Hadir: {{ $rekapHadir ?? 0 }} ({{ $pctHadir }}%)"></div>
+                    <div style="width: {{ $pctIzin }}%" class="bg-amber-500 transition-all duration-300" title="Izin: {{ $rekapIzin ?? 0 }} ({{ $pctIzin }}%)"></div>
+                    <div style="width: {{ $pctTidakMasuk }}%" class="bg-rose-500 transition-all duration-300" title="Tidak Masuk: {{ $rekapTidakMasuk ?? 0 }} ({{ $pctTidakMasuk }}%)"></div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-xs mt-2 text-slate-600">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <span>Hadir: <strong>{{ $rekapHadir ?? 0 }}</strong> ({{ $pctHadir }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                        <span>Izin: <strong>{{ $rekapIzin ?? 0 }}</strong> ({{ $pctIzin }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span>Tidak Masuk: <strong>{{ $rekapTidakMasuk ?? 0 }}</strong> ({{ $pctTidakMasuk }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 ml-auto text-slate-500">
+                        <span>Pagi: <strong>{{ $shiftPagiTotal ?? 0 }}</strong> | Siang: <strong>{{ $shiftSiangTotal ?? 0 }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Rincian Kehadiran Per-Petugas Avalis -->
+            @if(isset($rekapPetugas) && count($rekapPetugas) > 0)
+            <div class="mt-5 border border-slate-200/90 rounded-lg overflow-hidden">
+                <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Rekap Per-Nama Petugas Avalis</span>
+                    <span class="text-[11px] text-slate-500">{{ count($rekapPetugas) }} Petugas Terdata</span>
+                </div>
+                <div class="overflow-x-auto max-h-56 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-600 uppercase font-semibold text-[11px] sticky top-0">
+                            <tr>
+                                <th class="py-2 px-3">Petugas</th>
+                                <th class="py-2 px-3">Kelas</th>
+                                <th class="py-2 px-3 text-center">Jadwal</th>
+                                <th class="py-2 px-3 text-center text-emerald-700">Hadir</th>
+                                <th class="py-2 px-3 text-center text-amber-700">Izin</th>
+                                <th class="py-2 px-3 text-center text-rose-700">Tidak Masuk</th>
+                                <th class="py-2 px-3 text-center">% Hadir</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            @foreach($rekapPetugas as $rp)
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-2 px-3 font-semibold text-slate-900">{{ $rp['nama'] }}</td>
+                                <td class="py-2 px-3 text-slate-500">{{ $rp['kelas'] ?: '-' }}</td>
+                                <td class="py-2 px-3 text-center tabular-nums font-medium">{{ $rp['total'] }}</td>
+                                <td class="py-2 px-3 text-center tabular-nums font-semibold text-emerald-700">{{ $rp['hadir'] }}</td>
+                                <td class="py-2 px-3 text-center tabular-nums font-medium text-amber-700">{{ $rp['izin'] }}</td>
+                                <td class="py-2 px-3 text-center tabular-nums font-medium text-rose-700">{{ $rp['tidak_masuk'] }}</td>
+                                <td class="py-2 px-3 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold {{ $rp['persen'] >= 80 ? 'bg-emerald-50 text-emerald-700' : ($rp['persen'] >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700') }}">
+                                        {{ $rp['persen'] }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- ========================================================================= -->
@@ -307,7 +447,7 @@
                         <tr class="hover:bg-slate-50/70 transition-colors duration-150">
                             <!-- 1. No. -->
                             <td class="py-3.5 px-4 text-center tabular-nums text-slate-400 font-medium text-xs">
-                                {{ $index + 1 }}
+                                {{ $absensi->firstItem() ? ($absensi->firstItem() + $index) : ($index + 1) }}
                             </td>
 
                             <!-- 2. Tanggal -->
@@ -449,9 +589,9 @@
                                     <button type="button" onclick='openModalEdit(@json($item))' class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Edit data absensi lengkap">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </button>
-                                    <a href="{{ url('/absensi-avalis/hapus/'.$item->id) }}" onclick="return confirm('Apakah Anda yakin ingin menghapus catatan absensi {{ addslashes($item->nama) }}?')" class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus data absensi">
+                                    <button type="button" onclick="openModalHapusAbsensi('{{ $item->id }}', '{{ addslashes($item->nama) }}', '{{ date('d/m/Y', strtotime($item->tanggal)) }}', '{{ addslashes($item->shift_jaga) }}')" class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus data absensi">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                             @endif
@@ -465,7 +605,7 @@
                                     </div>
                                     <p class="text-sm font-semibold text-slate-800">Tidak ada data absensi</p>
                                     <p class="text-xs text-slate-500 mt-1">Belum ada catatan absensi yang sesuai dengan kriteria filter saat ini.</p>
-                                    @if(request()->hasAny(['q', 'shift', 'status', 'tanggal']))
+                                    @if(request()->hasAny(['q', 'shift', 'status', 'tanggal', 'tgl_dari', 'tgl_sampai', 'bulan', 'tahun']))
                                         <a href="{{ url()->current() }}" class="mt-3 text-xs font-semibold text-slate-800 hover:text-slate-900 underline">
                                             Reset filter pencarian
                                         </a>
@@ -478,10 +618,12 @@
                 </table>
             </div>
 
-            <!-- Table Footer Summary -->
-            <div class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 no-print">
-                <span>Menampilkan <strong>{{ count($absensi) }}</strong> catatan absensi petugas avalis</span>
-                <span>LKM Mitra Siswa Abadi &bull; Sistem Administrasi Operasional</span>
+            <!-- Table Footer Summary & Pagination -->
+            <div class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 no-print">
+                <span>Menampilkan <strong>{{ $absensi->firstItem() ?? 0 }} - {{ $absensi->lastItem() ?? 0 }}</strong> dari <strong>{{ $absensi->total() }}</strong> catatan absensi petugas avalis</span>
+                <div>
+                    {{ $absensi->links() }}
+                </div>
             </div>
         </div>
 
@@ -675,8 +817,77 @@
         </div>
     </div>
 
+    <!-- MODAL KONFIRMASI HAPUS ABSENSI (CUSTOM TAILWIND MODAL - FEATURE 7) -->
+    <div id="modalHapusAbsensi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden p-4 overflow-y-auto" onclick="handleBackdropClick(event, 'modalHapusAbsensi')">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden p-6 text-left transform transition-all" onclick="event.stopPropagation()">
+                <div class="flex items-center space-x-3 text-rose-600 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Konfirmasi Hapus Absensi</h3>
+                        <p class="text-xs text-slate-500">Tindakan ini memerlukan perhatian khusus</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-xs space-y-1.5">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Nama Petugas:</span>
+                        <strong class="text-slate-800" id="hapus_absensi_nama">-</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Tanggal:</span>
+                        <span class="text-slate-800 font-medium" id="hapus_absensi_tgl">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Shift Jaga:</span>
+                        <span class="text-slate-800 font-medium" id="hapus_absensi_shift">-</span>
+                    </div>
+                </div>
+
+                <p class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3 mb-5 leading-relaxed">
+                    <strong>Peringatan Konsekuensi:</strong> Data absensi ini akan dihapus permanen dari basis data dan dicatat dalam audit trail sistem. Tindakan ini tidak dapat dibatalkan.
+                </p>
+
+                <form id="formHapusAbsensi" method="GET" onsubmit="handleHapusAbsensiSubmit(this)">
+                    <div class="flex items-center justify-end gap-2.5">
+                        <button type="button" onclick="closeModalHapusAbsensi()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="btnSubmitHapusAbsensi" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs shadow-sm transition">
+                            <span id="btnHapusAbsensiText">Ya, Hapus Data</span>
+                            <svg id="btnHapusAbsensiSpinner" class="w-3.5 h-3.5 animate-spin hidden text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT HANYA UNTUK ADMINISTRATOR -->
     <script>
+        // Modal Hapus Absensi (Feature 7)
+        function openModalHapusAbsensi(id, nama, tanggal, shift) {
+            document.getElementById('formHapusAbsensi').action = "{{ url('/absensi-avalis/hapus') }}/" + id;
+            document.getElementById('hapus_absensi_nama').textContent = nama;
+            document.getElementById('hapus_absensi_tgl').textContent = tanggal;
+            document.getElementById('hapus_absensi_shift').textContent = shift;
+            document.getElementById('modalHapusAbsensi').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+        function closeModalHapusAbsensi() {
+            document.getElementById('modalHapusAbsensi').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+        function handleHapusAbsensiSubmit(form) {
+            const btn = document.getElementById('btnSubmitHapusAbsensi');
+            const spinner = document.getElementById('btnHapusAbsensiSpinner');
+            const text = document.getElementById('btnHapusAbsensiText');
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            text.textContent = 'Memproses...';
+        }
         // Auto-fill form saat memilih petugas terdaftar
         function autoFillPetugas(select) {
             const opt = select.options[select.selectedIndex];
@@ -735,6 +946,7 @@
             if (event.target.id === modalId) {
                 if (modalId === 'modalTambah') closeModalTambah();
                 if (modalId === 'modalEdit') closeModalEdit();
+                if (modalId === 'modalHapusAbsensi') closeModalHapusAbsensi();
             }
         }
 
@@ -743,6 +955,7 @@
             if (e.key === 'Escape') {
                 closeModalTambah();
                 closeModalEdit();
+                closeModalHapusAbsensi();
             }
         });
     </script>

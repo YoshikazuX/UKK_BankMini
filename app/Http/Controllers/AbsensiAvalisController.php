@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditHelper;
 use App\Helpers\AvalisSyncHelper;
 use App\Models\AbsensiAvalis;
 use App\Models\Avalis;
@@ -9,6 +10,7 @@ use App\Models\Nasabah;
 use App\Models\Transaksi;
 use App\Models\User;
 use App\Models\VerifikasiKunjunganSiswa;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,18 +20,21 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class AbsensiAvalisController extends Controller
 {
     /**
-     * Tampilkan Halaman Absensi Petugas Avalis
+     * Tampilkan Halaman Absensi Petugas Avalis dengan Filter Terpadu & Rekapitulasi Bulanan Aktual
      */
     public function index(Request $request): View
     {
         // Otomatis sinkronisasi data absensi dengan data petugas asli di tabel users / avalis
         AvalisSyncHelper::autoSync(true);
 
+        $selectedBulan = (int) $request->input('bulan', now()->month);
+        $selectedTahun = (int) $request->input('tahun', now()->year);
+
         $query = AbsensiAvalis::query();
 
-        // Filter Pencarian (Nama / Kelas / No WA / Keterangan)
+        // 1. Filter Pencarian Bebas (Nama / Kelas / No WA / Keterangan)
         if ($request->filled('q')) {
-            $q = $request->q;
+            $q = trim($request->q);
             $query->where(function ($sub) use ($q) {
                 $sub->where('nama', 'like', "%{$q}%")
                     ->orWhere('kelas', 'like', "%{$q}%")
@@ -38,27 +43,92 @@ class AbsensiAvalisController extends Controller
             });
         }
 
-        // Filter Tanggal
-        if ($request->filled('tanggal')) {
+        // 2. Filter Rentang Tanggal atau Tanggal Tunggal
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif ($request->filled('tgl_dari')) {
+            $query->where('tanggal', '>=', $request->tgl_dari);
+        } elseif ($request->filled('tgl_sampai')) {
+            $query->where('tanggal', '<=', $request->tgl_sampai);
+        } elseif ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
 
-        // Filter Shift
-        if ($request->filled('shift')) {
+        // 3. Filter Bulan dan Tahun
+        if ($request->filled('bulan') && $request->bulan !== 'all') {
+            $query->whereMonth('tanggal', $request->bulan);
+        }
+        if ($request->filled('tahun') && $request->tahun !== 'all') {
+            $query->whereYear('tanggal', $request->tahun);
+        }
+
+        // 4. Filter Shift
+        if ($request->filled('shift') && $request->shift !== 'all') {
             $query->where('shift_jaga', 'like', "%{$request->shift}%");
         }
 
-        // Filter Status
-        if ($request->filled('status')) {
+        // 5. Filter Status Kehadiran
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
+        $totalFiltered = (clone $query)->count();
         $absensi = $query->with(['user:id,nama_petugas,foto', 'avalis.user:id,nama_petugas,foto'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
-        // Ringkasan Statistik Berdasarkan Database
+        // =========================================================================
+        // REKAPITULASI BULANAN BERDASARKAN PERHITUNGAN AKTUAL DATABASE (FEATURE 6)
+        // =========================================================================
+        $rekapBulanQuery = AbsensiAvalis::whereMonth('tanggal', $selectedBulan)
+            ->whereYear('tanggal', $selectedTahun);
+
+        $rekapTotalJadwal = (clone $rekapBulanQuery)->count();
+        $rekapHadir = (clone $rekapBulanQuery)->where('status', 'Hadir')->count();
+        $rekapIzin = (clone $rekapBulanQuery)->where('status', 'Izin')->count();
+        $rekapTidakMasuk = (clone $rekapBulanQuery)->where('status', 'Tidak Masuk')->count();
+        $rekapPersenHadir = $rekapTotalJadwal > 0 ? round(($rekapHadir / $rekapTotalJadwal) * 100, 1) : 0;
+
+        // Rekap Shift Pagi (07.30 - 11.30)
+        $shiftPagiTotal = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Pagi%')->count();
+        $shiftPagiHadir = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Pagi%')->where('status', 'Hadir')->count();
+        $shiftPagiIzin = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Pagi%')->where('status', 'Izin')->count();
+        $shiftPagiTidakMasuk = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Pagi%')->where('status', 'Tidak Masuk')->count();
+
+        // Rekap Shift Siang (11.30 - 15.30)
+        $shiftSiangTotal = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Siang%')->count();
+        $shiftSiangHadir = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Siang%')->where('status', 'Hadir')->count();
+        $shiftSiangIzin = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Siang%')->where('status', 'Izin')->count();
+        $shiftSiangTidakMasuk = (clone $rekapBulanQuery)->where('shift_jaga', 'like', '%Siang%')->where('status', 'Tidak Masuk')->count();
+
+        // Rekapitulasi per Petugas & Riwayat Kehadiran (Grouped by nama)
+        $allBulanRecords = (clone $rekapBulanQuery)->orderBy('tanggal', 'desc')->get();
+        $rekapPetugas = $allBulanRecords->groupBy('nama')->map(function ($items, $nama) {
+            $total = $items->count();
+            $hadir = $items->where('status', 'Hadir')->count();
+            $izin = $items->where('status', 'Izin')->count();
+            $tidakMasuk = $items->where('status', 'Tidak Masuk')->count();
+            $persen = $total > 0 ? round(($hadir / $total) * 100, 1) : 0;
+            $first = $items->first();
+
+            return [
+                'nama' => $nama,
+                'kelas' => $first->kelas ?? '-',
+                'no_wa' => $first->no_wa ?? '-',
+                'total' => $total,
+                'total_jadwal' => $total,
+                'hadir' => $hadir,
+                'izin' => $izin,
+                'tidak_masuk' => $tidakMasuk,
+                'persen' => $persen,
+                'persen_hadir' => $persen,
+                'riwayat' => $items,
+            ];
+        })->sortByDesc('persen_hadir')->values();
+
+        // Ringkasan Keseluruhan
         $totalAvalis = AbsensiAvalis::count();
         $totalHadir = AbsensiAvalis::where('status', 'Hadir')->count();
         $totalIzin = AbsensiAvalis::where('status', 'Izin')->count();
@@ -69,7 +139,7 @@ class AbsensiAvalisController extends Controller
         // Daftar Petugas Avalis Terdaftar (untuk opsi auto-select di modal tambah khusus Admin)
         $petugasList = Avalis::where('status', 'aktif')->orderBy('nama', 'asc')->get();
         if ($petugasList->isEmpty()) {
-            $petugasList = User::where('role', 'teller')
+            $petugasList = User::whereIn('role', ['teller', 'avalis'])
                 ->select('nama_petugas as nama', 'kelas', 'no_hp as no_wa')
                 ->get();
         }
@@ -78,8 +148,30 @@ class AbsensiAvalisController extends Controller
         $role = strtolower($user->role ?? 'teller');
         $isAdmin = ($role === 'admin');
 
+        $rekapBulan = $selectedBulan;
+        $rekapTahun = $selectedTahun;
+
         return view('avalis.index', compact(
             'absensi',
+            'totalFiltered',
+            'selectedBulan',
+            'selectedTahun',
+            'rekapBulan',
+            'rekapTahun',
+            'rekapTotalJadwal',
+            'rekapHadir',
+            'rekapIzin',
+            'rekapTidakMasuk',
+            'rekapPersenHadir',
+            'shiftPagiTotal',
+            'shiftPagiHadir',
+            'shiftPagiIzin',
+            'shiftPagiTidakMasuk',
+            'shiftSiangTotal',
+            'shiftSiangHadir',
+            'shiftSiangIzin',
+            'shiftSiangTidakMasuk',
+            'rekapPetugas',
             'totalAvalis',
             'totalHadir',
             'totalIzin',
@@ -104,6 +196,14 @@ class AbsensiAvalisController extends Controller
 
         AvalisSyncHelper::autoSync(true);
 
+        AuditHelper::log(
+            jenisAktivitas: 'SYNC_AVALIS',
+            modul: 'Absensi',
+            objekId: 'AUTO_SYNC',
+            oldValues: null,
+            newValues: ['status' => 'success']
+        );
+
         return back()->with('success', 'Sinkronisasi berhasil! Data absensi petugas avalis telah disesuaikan dengan data petugas asli di sistem.');
     }
 
@@ -127,10 +227,18 @@ class AbsensiAvalisController extends Controller
             'keterangan' => 'nullable|string|max:255',
         ]);
 
-        AbsensiAvalis::create([
+        $item = AbsensiAvalis::create([
             ...$validated,
             'created_by' => Auth::user()->nama_petugas ?? 'Administrator Utama',
         ]);
+
+        AuditHelper::log(
+            jenisAktivitas: 'TAMBAH_ABSENSI',
+            modul: 'Absensi',
+            objekId: 'ABS-'.$item->id.' ('.$item->nama.')',
+            oldValues: null,
+            newValues: $validated
+        );
 
         return back()->with('success', 'Data absensi petugas Avalis berhasil disimpan oleh Administrator.');
     }
@@ -156,7 +264,22 @@ class AbsensiAvalisController extends Controller
         ]);
 
         $absensi = AbsensiAvalis::findOrFail($id);
+        $oldValues = [
+            'nama' => $absensi->nama,
+            'shift_jaga' => $absensi->shift_jaga,
+            'status' => $absensi->status,
+            'tanggal' => $absensi->tanggal,
+        ];
+
         $absensi->update($validated);
+
+        AuditHelper::log(
+            jenisAktivitas: 'UPDATE_ABSENSI',
+            modul: 'Absensi',
+            objekId: 'ABS-'.$absensi->id.' ('.$absensi->nama.')',
+            oldValues: $oldValues,
+            newValues: $validated
+        );
 
         return back()->with('success', 'Data absensi petugas Avalis berhasil diperbarui.');
     }
@@ -176,7 +299,16 @@ class AbsensiAvalisController extends Controller
         ]);
 
         $absensi = AbsensiAvalis::findOrFail($id);
+        $oldShift = $absensi->shift_jaga;
         $absensi->update($validated);
+
+        AuditHelper::log(
+            jenisAktivitas: 'UBAH_SHIFT_ABSENSI',
+            modul: 'Absensi',
+            objekId: 'ABS-'.$absensi->id.' ('.$absensi->nama.')',
+            oldValues: ['shift_jaga' => $oldShift],
+            newValues: ['shift_jaga' => $absensi->shift_jaga]
+        );
 
         return back()->with('success', 'Penugasan shift petugas berhasil diubah oleh Administrator.');
     }
@@ -196,7 +328,16 @@ class AbsensiAvalisController extends Controller
         ]);
 
         $absensi = AbsensiAvalis::findOrFail($id);
+        $oldStatus = $absensi->status;
         $absensi->update($validated);
+
+        AuditHelper::log(
+            jenisAktivitas: 'UBAH_STATUS_ABSENSI',
+            modul: 'Absensi',
+            objekId: 'ABS-'.$absensi->id.' ('.$absensi->nama.')',
+            oldValues: ['status' => $oldStatus],
+            newValues: ['status' => $absensi->status]
+        );
 
         return back()->with('success', "Status kehadiran petugas berhasil diubah menjadi '{$validated['status']}'.");
     }
@@ -212,6 +353,20 @@ class AbsensiAvalisController extends Controller
         }
 
         $absensi = AbsensiAvalis::findOrFail($id);
+
+        AuditHelper::log(
+            jenisAktivitas: 'HAPUS_ABSENSI',
+            modul: 'Absensi',
+            objekId: 'ABS-'.$absensi->id.' ('.$absensi->nama.')',
+            oldValues: [
+                'nama' => $absensi->nama,
+                'tanggal' => $absensi->tanggal,
+                'shift_jaga' => $absensi->shift_jaga,
+                'status' => $absensi->status,
+            ],
+            newValues: null
+        );
+
         $absensi->delete();
 
         return back()->with('success', 'Data absensi petugas Avalis berhasil dihapus.');
@@ -229,11 +384,23 @@ class AbsensiAvalisController extends Controller
 
         $query = AbsensiAvalis::query();
 
-        if ($request->filled('tanggal')) {
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
-        if ($request->filled('shift')) {
+
+        if ($request->filled('bulan') && $request->bulan !== 'all') {
+            $query->whereMonth('tanggal', $request->bulan);
+        }
+        if ($request->filled('tahun') && $request->tahun !== 'all') {
+            $query->whereYear('tanggal', $request->tahun);
+        }
+        if ($request->filled('shift') && $request->shift !== 'all') {
             $query->where('shift_jaga', 'like', "%{$request->shift}%");
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
         $data = $query->orderBy('tanggal', 'desc')->orderBy('id', 'desc')->get();

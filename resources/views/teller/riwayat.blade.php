@@ -100,15 +100,16 @@
                 </h3>
             </div>
 
-            <form id="form-void" method="POST" class="p-6">
+            <form id="form-void" method="POST" class="p-6" onsubmit="handleVoidSubmit(this)">
                 @csrf
                 <div class="mb-4 bg-rose-50 p-3 rounded-lg border border-rose-200 text-xs">
                     <p class="text-rose-800 font-semibold mb-1">Membatalkan Transaksi:</p>
                     <p id="void-info" class="text-rose-700 font-medium"></p>
+                    <p class="text-rose-600 text-[11px] mt-1.5 font-normal">Konsekuensi: Jurnal pembalik otomatis dibuat, saldo nasabah & kas brankas dikembalikan ke posisi semula. Tindakan dicatat di audit log.</p>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Pembatalan</label>
+                    <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Pembatalan <span class="text-rose-500">*</span></label>
                     <input type="text" name="alasan_batal" placeholder="Contoh: Salah input nominal uang..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-xs" required autocomplete="off">
                 </div>
 
@@ -120,8 +121,9 @@
 
                 <div class="flex space-x-3">
                     <button type="button" onclick="tutupModalVoid()" class="w-1/3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 rounded-lg transition text-xs">Batal</button>
-                    <button type="submit" onclick="return confirm('Tindakan ini tidak bisa dikembalikan. Yakin Void?')" class="w-2/3 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-lg shadow-sm transition text-xs">
-                        Proses Void
+                    <button type="submit" id="btn-submit-void" class="w-2/3 inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-lg shadow-sm transition text-xs">
+                        <span id="btn-void-text">Eksekusi Void Transaksi</span>
+                        <svg id="btn-void-spinner" class="w-3.5 h-3.5 animate-spin hidden text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                     </button>
                 </div>
             </form>
@@ -152,6 +154,17 @@
 
         function tutupModalVoid() {
             document.getElementById('modal-void').classList.add('hidden');
+        }
+
+        function handleVoidSubmit(form) {
+            const btn = document.getElementById('btn-submit-void');
+            const spinner = document.getElementById('btn-void-spinner');
+            const text = document.getElementById('btn-void-text');
+            if (btn && spinner && text) {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+                text.textContent = 'Memproses Void...';
+            }
         }
     </script>
 </body>

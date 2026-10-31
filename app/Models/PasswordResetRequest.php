@@ -21,6 +21,8 @@ class PasswordResetRequest extends Model
         'otp_code',
         'otp_expires_at',
         'status',
+        'handled_by',
+        'handled_at',
         'keterangan',
         'ip_address',
     ];
@@ -29,6 +31,7 @@ class PasswordResetRequest extends Model
     {
         return [
             'otp_expires_at' => 'datetime',
+            'handled_at' => 'datetime',
         ];
     }
 
@@ -38,5 +41,13 @@ class PasswordResetRequest extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Administrator yang menangani permohonan ini.
+     */
+    public function handler(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'handled_by');
     }
 }

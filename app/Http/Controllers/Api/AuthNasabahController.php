@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Nasabah;
 use Illuminate\Http\JsonResponse;
@@ -196,11 +197,31 @@ class AuthNasabahController extends Controller
         }
 
         $validated = $request->validate([
-            'email' => 'nullable|email|max:100',
-            'no_hp' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:100|unique:nasabah,email,'.$nasabah->id,
+            'no_hp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+\s\-()]+$/'],
+        ], [
+            'email.email' => 'Format alamat email tidak valid.',
+            'email.unique' => 'Alamat email ini sudah terdaftar pada rekening nasabah lain.',
+            'no_hp.regex' => 'Format nomor telepon tidak valid. Gunakan angka standar Indonesia.',
         ]);
 
+        $oldValues = [
+            'email' => $nasabah->email,
+            'no_hp' => $nasabah->no_hp,
+        ];
+
         $nasabah->update(array_filter($validated, fn ($val) => $val !== null));
+
+        AuditHelper::log(
+            jenisAktivitas: 'UPDATE_PROFIL_NASABAH',
+            modul: 'Nasabah',
+            objekId: $nasabah->no_rekening,
+            oldValues: $oldValues,
+            newValues: [
+                'email' => $nasabah->email,
+                'no_hp' => $nasabah->no_hp,
+            ]
+        );
 
         return response()->json([
             'success' => true,

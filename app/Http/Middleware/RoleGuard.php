@@ -89,12 +89,29 @@ class RoleGuard
         }
 
         if (! $hasAccess) {
-            // Jika mengakses endpoint pengelolaan absensi/avalis atau aksi mutasi, tolak dengan 403 Forbidden
-            if ($request->is('absensi-avalis/*') || $request->is('avalis/*') || $request->isMethod('POST') || $request->isMethod('DELETE') || $request->expectsJson()) {
-                abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses endpoint pengelolaan ini.');
+            // Jika request via API / JSON atau mencoba mutasi data secara langsung, tolak 403 Forbidden
+            if ($request->expectsJson() || $request->is('api/*') || $request->isMethod('POST') || $request->isMethod('PUT') || $request->isMethod('DELETE')) {
+                abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses endpoint ini.');
             }
 
-            // Arahkan ke dashboard yang sesuai peran tanpa logout paksa
+            // Jika role terdaftar mencoba mengakses modul admin/supervisor/teller yang bukan haknya
+            if ($request->is('admin/*') && ! in_array('admin', $userRoles, true) && ! (in_array('customer_service', $userRoles, true) && $request->is('admin/data-nasabah*', 'admin/tambah-nasabah*', 'admin/edit-nasabah*', 'admin/import-nasabah*', 'admin/template-nasabah*'))) {
+                abort(403, 'Akses Ditolak: Hak akses Administrator diperlukan.');
+            }
+
+            if ($request->is('supervisor/*') && ! in_array('supervisor', $userRoles, true) && ! in_array('accounting', $userRoles, true)) {
+                abort(403, 'Akses Ditolak: Hak akses Supervisor / Accounting diperlukan.');
+            }
+
+            if ($request->is('teller/*') && ! in_array('teller', $userRoles, true)) {
+                abort(403, 'Akses Ditolak: Hak akses Teller Loket diperlukan.');
+            }
+
+            if ($request->is('laporan/*') && ! array_intersect($userRoles, ['admin', 'supervisor', 'accounting'])) {
+                abort(403, 'Akses Ditolak: Hak akses Laporan Keuangan diperlukan.');
+            }
+
+            // Arahkan ke dashboard yang sesuai peran
             if (in_array('teller', $userRoles, true)) {
                 return redirect('/teller/dashboard')->with('error', 'Akses ditolak: Menu ini di luar wewenang tugas Teller.');
             }
@@ -107,7 +124,15 @@ class RoleGuard
                 return redirect('/admin/data-nasabah')->with('error', 'Akses terbatas untuk Customer Service.');
             }
 
-            return redirect('/login')->with('error', 'Akses Ilegal! Anda tidak memiliki wewenang untuk membuka halaman tersebut.');
+            if (in_array('avalis', $userRoles, true)) {
+                return redirect('/absensi-avalis')->with('error', 'Akses terbatas untuk Petugas Avalis.');
+            }
+
+            if (in_array('nasabah', $userRoles, true)) {
+                return redirect('/nasabah/dashboard')->with('error', 'Akses terbatas untuk Nasabah.');
+            }
+
+            abort(403, 'Akses Ilegal! Anda tidak memiliki wewenang untuk membuka halaman tersebut.');
         }
 
         return $next($request);

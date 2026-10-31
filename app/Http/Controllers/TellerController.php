@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditHelper;
 use App\Helpers\AvalisSyncHelper;
 use App\Helpers\SettingHelper;
 use App\Models\Brankas;
@@ -333,10 +334,17 @@ class TellerController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $request->validate([
-            'no_hp' => 'nullable|string|max:20',
+        $validated = $request->validate([
+            'nama_petugas' => 'required|string|max:150',
+            'no_hp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+\s\-()]+$/'],
+            'email' => 'nullable|email|max:150|unique:users,email,'.$user->id,
             'foto' => 'nullable|file|image|mimes:jpeg,png,jpg|mimetypes:image/jpeg,image/png|max:2048',
         ], [
+            'nama_petugas.required' => 'Nama lengkap wajib diisi.',
+            'nama_petugas.max' => 'Nama lengkap maksimal 150 karakter.',
+            'no_hp.regex' => 'Format nomor telepon tidak valid. Gunakan angka, contoh: 081234567890.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'email.unique' => 'Alamat email ini sudah digunakan oleh akun lain.',
             'foto.file' => 'File foto yang dipilih tidak valid.',
             'foto.image' => 'File harus berupa gambar.',
             'foto.mimes' => 'Format gambar ditolak! Hanya format PNG dan JPG yang diizinkan.',
@@ -344,7 +352,15 @@ class TellerController extends Controller
             'foto.max' => 'Ukuran file foto maksimal adalah 2 MB.',
         ]);
 
-        $user->no_hp = $request->no_hp;
+        $oldValues = [
+            'nama_petugas' => $user->nama_petugas,
+            'email' => $user->email,
+            'no_hp' => $user->no_hp,
+        ];
+
+        $user->nama_petugas = $validated['nama_petugas'];
+        $user->no_hp = $validated['no_hp'] ?? null;
+        $user->email = $validated['email'] ?? null;
 
         if ($request->hasFile('foto')) {
             $user->foto = $imageService->validateAndStore($request->file('foto'), $user->foto);
@@ -352,6 +368,18 @@ class TellerController extends Controller
 
         $user->save();
         AvalisSyncHelper::autoSync(true);
+
+        AuditHelper::log(
+            jenisAktivitas: 'UPDATE_PROFIL',
+            modul: 'Profil',
+            objekId: $user->username,
+            oldValues: $oldValues,
+            newValues: [
+                'nama_petugas' => $user->nama_petugas,
+                'email' => $user->email,
+                'no_hp' => $user->no_hp,
+            ]
+        );
 
         return back()->with('success', 'Profil dan foto profil Anda berhasil diperbarui!');
     }

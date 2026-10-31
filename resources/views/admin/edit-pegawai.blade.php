@@ -33,11 +33,14 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-slate-700 text-xs font-medium mb-2">Jabatan</label>
-                    <select name="role" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm" required>
-                        <option value="teller" {{ $pegawai->role == 'teller' ? 'selected' : '' }}>Teller</option>
-                        <option value="supervisor" {{ $pegawai->role == 'supervisor' ? 'selected' : '' }}>Supervisor</option>
-                        <option value="admin" {{ $pegawai->role == 'admin' ? 'selected' : '' }}>Administrator</option>
+                    <label class="block text-slate-700 text-xs font-semibold mb-2">Peran & Hak Akses (Role RBAC)</label>
+                    <select name="role" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm bg-white" required>
+                        <option value="teller" {{ $pegawai->role == 'teller' ? 'selected' : '' }}>Teller (Pelayanan Loket & Transaksi)</option>
+                        <option value="supervisor" {{ $pegawai->role == 'supervisor' ? 'selected' : '' }}>Supervisor (Approval & Monitoring Kas)</option>
+                        <option value="customer_service" {{ in_array($pegawai->role, ['customer_service', 'cs']) ? 'selected' : '' }}>Customer Service (Registrasi & Data Nasabah)</option>
+                        <option value="avalis" {{ $pegawai->role == 'avalis' ? 'selected' : '' }}>Avalis (Piket Shift & Kunjungan Siswa)</option>
+                        <option value="accounting" {{ $pegawai->role == 'accounting' ? 'selected' : '' }}>Accounting (Jurnal & Laporan Keuangan)</option>
+                        <option value="admin" {{ $pegawai->role == 'admin' ? 'selected' : '' }}>Administrator (Tata Kelola Akun & Sistem)</option>
                     </select>
                 </div>
 

@@ -208,7 +208,9 @@
                     <h2 class="text-lg font-bold text-slate-800">Permohonan Reset Password Masuk</h2>
                     <span class="bg-amber-200 text-amber-900 text-xs font-black px-2 py-0.5 rounded-full">{{ count($resetRequests) }} Tiket</span>
                 </div>
-                <p class="text-xs text-slate-500">Pengguna lupa kata sandi dan meminta reset akun</p>
+                <a href="{{ route('admin.reset.index') }}" class="text-xs font-bold text-slate-800 hover:text-slate-900 underline flex items-center gap-1">
+                    <span>Buka Kelola Tiket Lengkap &rarr;</span>
+                </a>
             </div>
 
             <div class="overflow-x-auto bg-white rounded-lg border border-amber-200">
@@ -300,7 +302,7 @@
                         <td class="py-3 px-4 text-right space-x-2">
                             <a href="{{ url('/admin/edit-pegawai/'.$p->id) }}" class="inline-block border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-medium py-1 px-3 rounded text-xs transition">Edit Akses</a>
                             @if(Auth::user()->id != $p->id)
-                                <a href="{{ url('/admin/hapus-pegawai/'.$p->id) }}" onclick="return confirm('Peringatan: Anda akan menghapus atau memblokir pegawai ini. Lanjutkan?')" class="inline-block border border-red-200 bg-white text-red-600 hover:bg-red-50 font-medium py-1 px-3 rounded text-xs transition">Blokir / Hapus</a>
+                                <button type="button" onclick="openModalHapusPegawai('{{ $p->id }}', '{{ addslashes($p->nama_petugas) }}', '{{ addslashes($p->username) }}', '{{ ucfirst($p->role) }}')" class="inline-block border border-red-200 bg-white text-red-600 hover:bg-red-50 font-medium py-1 px-3 rounded text-xs transition">Blokir / Hapus</button>
                             @endif
                         </td>
                     </tr>
@@ -310,11 +312,93 @@
         </div>
     </main>
 
+    <!-- MODAL KONFIRMASI HAPUS / BLOKIR PEGAWAI (CUSTOM TAILWIND MODAL - FEATURE 7) -->
+    <div id="modalHapusPegawai" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden p-4 overflow-y-auto" onclick="handlePegawaiBackdropClick(event)">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden p-6 text-left transform transition-all" onclick="event.stopPropagation()">
+                <div class="flex items-center space-x-3 text-rose-600 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Konfirmasi Hapus / Blokir Pegawai</h3>
+                        <p class="text-xs text-slate-500">Tindakan ini memerlukan perhatian khusus</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-xs space-y-1.5">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Nama Petugas:</span>
+                        <strong class="text-slate-800" id="hapus_pegawai_nama">-</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Username:</span>
+                        <span class="text-slate-800 font-mono font-medium" id="hapus_pegawai_user">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Hak Akses:</span>
+                        <span class="text-slate-800 font-medium" id="hapus_pegawai_role">-</span>
+                    </div>
+                </div>
+
+                <p class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3 mb-5 leading-relaxed">
+                    <strong>Peringatan Konsekuensi:</strong> Akun pegawai ini akan dihapus dari sistem dan seluruh sesi login akan ditutup. Pegawai tidak akan dapat mengakses sistem kembali. Tindakan ini dicatat dalam audit trail.
+                </p>
+
+                <form id="formHapusPegawai" method="GET" onsubmit="handleHapusPegawaiSubmit(this)">
+                    <div class="flex items-center justify-end gap-2.5">
+                        <button type="button" onclick="closeModalHapusPegawai()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="btnSubmitHapusPegawai" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs shadow-sm transition">
+                            <span id="btnHapusPegawaiText">Ya, Hapus Pegawai</span>
+                            <svg id="btnHapusPegawaiSpinner" class="w-3.5 h-3.5 animate-spin hidden text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleDropdown() { document.getElementById('profile-dropdown').classList.toggle('hidden'); }
         window.addEventListener('click', function(e) {
-            if (!document.getElementById('profile-btn').contains(e.target) && !document.getElementById('profile-dropdown').contains(e.target)) {
-                document.getElementById('profile-dropdown').classList.add('hidden');
+            const btn = document.getElementById('profile-btn');
+            const drop = document.getElementById('profile-dropdown');
+            if (btn && drop && !btn.contains(e.target) && !drop.contains(e.target)) {
+                drop.classList.add('hidden');
+            }
+        });
+
+        // Modal Hapus Pegawai (Feature 7)
+        function openModalHapusPegawai(id, nama, username, role) {
+            document.getElementById('formHapusPegawai').action = "{{ url('/admin/hapus-pegawai') }}/" + id;
+            document.getElementById('hapus_pegawai_nama').textContent = nama;
+            document.getElementById('hapus_pegawai_user').textContent = username;
+            document.getElementById('hapus_pegawai_role').textContent = role;
+            document.getElementById('modalHapusPegawai').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+        function closeModalHapusPegawai() {
+            document.getElementById('modalHapusPegawai').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+        function handlePegawaiBackdropClick(event) {
+            if (event.target.id === 'modalHapusPegawai') {
+                closeModalHapusPegawai();
+            }
+        }
+        function handleHapusPegawaiSubmit(form) {
+            const btn = document.getElementById('btnSubmitHapusPegawai');
+            const spinner = document.getElementById('btnHapusPegawaiSpinner');
+            const text = document.getElementById('btnHapusPegawaiText');
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            text.textContent = 'Memproses...';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModalHapusPegawai();
             }
         });
     </script>

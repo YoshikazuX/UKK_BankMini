@@ -6,7 +6,6 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class NasabahApiTest extends TestCase
@@ -113,6 +112,7 @@ class NasabahApiTest extends TestCase
             'nama_siswa' => 'Budi Santoso',
             'kelas' => 'XI RPL 2',
             'jurusan' => 'RPL',
+            'no_rekening' => '10017799',
             'username' => 'budisantoso',
             'password' => 'secret123',
         ]);

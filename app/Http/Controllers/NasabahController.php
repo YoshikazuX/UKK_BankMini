@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditHelper;
 use App\Helpers\SettingHelper;
 use App\Helpers\TerbilangHelper;
 use App\Models\Nasabah;
@@ -17,93 +18,107 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class NasabahController extends Controller
 {
     /**
-     * Tampilkan Daftar Nasabah dengan Filter Alumni & Kategori
+     * Tampilkan Daftar Nasabah dengan Pencarian & Multi-Filter Terpadu
      */
     public function index(Request $request): View
     {
         $query = Nasabah::query();
 
-        // Filter Status Siswa (Aktif / Alumni)
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        } else {
-            if (! $request->has('status')) {
-                $query->where('status', 'aktif');
-            }
-        }
-
-        // Filter Kategori (Siswa vs Guru/Karyawan)
-        if ($request->filled('kategori') && $request->kategori !== 'all') {
-            $query->where('kategori', $request->kategori);
-        }
-
-        // Filter Pencarian
+        // 1. Pencarian Bebas (Nama Nasabah, No Rekening, NIS/NIP)
         if ($request->filled('cari')) {
-            $cari = $request->cari;
+            $cari = trim($request->cari);
             $query->where(function ($sub) use ($cari) {
-                $sub->where('nis', 'LIKE', "%{$cari}%")
-                    ->orWhere('nama_siswa', 'LIKE', "%{$cari}%")
-                    ->orWhere('no_rekening', 'LIKE', "%{$cari}%");
+                $sub->where('nama_siswa', 'like', "%{$cari}%")
+                    ->orWhere('no_rekening', 'like', "%{$cari}%")
+                    ->orWhere('nis', 'like', "%{$cari}%");
             });
         }
 
-        $nasabah = $query->get();
+        // 2. Filter Kelas / Rombongan Belajar
+        if ($request->filled('kelas') && $request->kelas !== 'all') {
+            $query->where('kelas', $request->kelas);
+        }
 
-        // ALGORITMA SORTING PINTAR UNTUK ADMIN (Tingkat -> Jurusan -> SubKelas -> NIS)
-        $nasabah = $nasabah->sortBy(function ($item) {
-            $k = strtoupper($item->kelas);
+        // 3. Filter Status Rekening: Aktif, Nonaktif, Alumni
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
 
-            // 1. Deteksi Tingkat (Grade)
-            $grade = 99;
-            if (preg_match('/\bXII\b/', $k)) {
-                $grade = 3;
-            } elseif (preg_match('/\bXI\b/', $k)) {
-                $grade = 2;
-            } elseif (preg_match('/\bX\b/', $k)) {
-                $grade = 1;
+        // 4. Filter Kategori Nasabah: Siswa, Guru, Alumni
+        if ($request->filled('kategori') && $request->kategori !== 'all') {
+            $kat = strtolower($request->kategori);
+            if ($kat === 'guru') {
+                $query->where(function ($sub) {
+                    $sub->where('kategori', 'guru')
+                        ->orWhere('kategori', 'guru_karyawan');
+                });
+            } elseif ($kat === 'alumni') {
+                $query->where(function ($sub) {
+                    $sub->where('kategori', 'alumni')
+                        ->orWhere('status', 'alumni');
+                });
+            } else {
+                $query->where('kategori', $kat);
             }
+        }
 
-            // 2. Deteksi Jurusan
-            $jurusan = 99;
-            if (preg_match('/\bRPL\b/', $k)) {
-                $jurusan = 1;
-            } elseif (preg_match('/\bTKJ\b/', $k)) {
-                $jurusan = 2;
-            } elseif (preg_match('/\bDKV\b/', $k)) {
-                $jurusan = 3;
-            } elseif (preg_match('/\bAK\b/', $k)) {
-                $jurusan = 4;
-            } elseif (preg_match('/\bLPS\b/', $k)) {
-                $jurusan = 5;
-            } elseif (preg_match('/\bMP\b/', $k)) {
-                $jurusan = 6;
-            } elseif (preg_match('/\bBR\b/', $k)) {
-                $jurusan = 7;
-            } elseif (preg_match('/\bBD\b/', $k)) {
-                $jurusan = 8;
-            }
+        // Hitung total hasil pencarian
+        $totalHasil = (clone $query)->count();
 
-            // 3. Deteksi Sub-kelas
-            $sub = 99;
-            if (preg_match('/\b(?:4|IV)\b/', $k)) {
-                $sub = 4;
-            } elseif (preg_match('/\b(?:3|III)\b/', $k)) {
-                $sub = 3;
-            } elseif (preg_match('/\b(?:2|II)\b/', $k)) {
-                $sub = 2;
-            } elseif (preg_match('/\b(?:1|I)\b/', $k)) {
-                $sub = 1;
-            }
+        // Pagination 15 per halaman dengan parameter filter tetap terjaga
+        $nasabah = $query->orderBy('nama_siswa', 'asc')->paginate(15)->withQueryString();
 
-            return sprintf('%02d-%02d-%02d-%010s', $grade, $jurusan, $sub, $item->nis);
-        })->values();
+        // Daftar kelas unik dari database untuk pilihan dropdown filter
+        $daftarKelas = Nasabah::whereNotNull('kelas')
+            ->where('kelas', '!=', '')
+            ->distinct()
+            ->orderBy('kelas', 'asc')
+            ->pluck('kelas');
 
-        // Rekap Statistik Status Nasabah
+        // Statistik Ringkasan Nasabah
+        $totalSemua = Nasabah::count();
         $totalAktif = Nasabah::where('status', 'aktif')->count();
+        $totalNonaktif = Nasabah::where('status', 'nonaktif')->count();
         $totalAlumni = Nasabah::where('status', 'alumni')->count();
-        $totalGuru = Nasabah::where('kategori', 'guru_karyawan')->count();
+        $totalGuru = Nasabah::whereIn('kategori', ['guru', 'guru_karyawan'])->count();
 
-        return view('admin.data-nasabah', compact('nasabah', 'totalAktif', 'totalAlumni', 'totalGuru'));
+        return view('admin.data-nasabah', compact(
+            'nasabah',
+            'daftarKelas',
+            'totalHasil',
+            'totalSemua',
+            'totalAktif',
+            'totalNonaktif',
+            'totalAlumni',
+            'totalGuru'
+        ));
+    }
+
+    /**
+     * Halaman Detail Nasabah Komprehensif
+     */
+    public function show(int|string $id): View
+    {
+        $nasabah = Nasabah::findOrFail($id);
+
+        $minMengendap = (float) SettingHelper::getSaldoMengendapMin();
+        $saldoSaatIni = (float) $nasabah->saldo;
+        $saldoDapatDitarik = max(0, $saldoSaatIni - $minMengendap);
+
+        // Riwayat transaksi resmi dari tabel transaksi dengan pagination bertahap
+        $transaksi = Transaksi::with('petugas')
+            ->where('nasabah_id', $nasabah->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.nasabah.show', compact(
+            'nasabah',
+            'minMengendap',
+            'saldoSaatIni',
+            'saldoDapatDitarik',
+            'transaksi'
+        ));
     }
 
     public function create(): View
@@ -112,36 +127,62 @@ class NasabahController extends Controller
     }
 
     /**
-     * Simpan Nasabah Baru dengan Perumusan Otomatis ID Rekening Armadillo
+     * Simpan Nasabah Baru dengan Perumusan Otomatis ID Rekening
      */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'nis' => 'required|unique:nasabah,nis',
-            'nama_siswa' => 'required|string|max:100',
+            'nis' => 'required|string|max:50|unique:nasabah,nis',
+            'nama_siswa' => 'required|string|max:150',
             'kelas' => 'required|string|max:50',
             'jurusan' => 'required|string|max:100',
-            'kategori' => 'nullable|string',
+            'kategori' => 'nullable|string|max:50',
+            'username' => 'nullable|string|max:100|unique:nasabah,username',
+            'password' => 'nullable|string|min:6',
+            'email' => 'nullable|email|max:150',
+            'no_hp' => 'nullable|string|max:25',
         ]);
 
         $kategori = $validated['kategori'] ?? 'siswa';
-        $no_rekening = self::generateNoRekening($validated['jurusan'], $kategori);
+        $no_rekening = $request->filled('no_rekening') ? $request->no_rekening : self::generateNoRekening($validated['jurusan'], $kategori);
+        $username = $validated['username'] ?? $validated['nis'];
+        $password = $validated['password'] ?? '123456';
 
-        Nasabah::create([
+        $nasabah = Nasabah::create([
             'no_rekening' => $no_rekening,
             'nis' => $validated['nis'],
             'nama_siswa' => $validated['nama_siswa'],
             'kelas' => $validated['kelas'],
             'jurusan' => $validated['jurusan'],
-            'username' => $validated['nis'],
-            'password' => '123456',
+            'username' => $username,
+            'email' => $validated['email'] ?? null,
+            'no_hp' => $validated['no_hp'] ?? null,
+            'password' => $password,
             'pin_keamanan' => '123456',
             'saldo' => 0,
             'status' => 'aktif',
             'kategori' => $kategori,
         ]);
 
-        return redirect('/admin/data-nasabah')->with('success', "Nasabah baru berhasil didaftarkan dengan No. Rekening Armadillo: {$no_rekening}!");
+        AuditHelper::log(
+            jenisAktivitas: 'TAMBAH_NASABAH',
+            modul: 'Nasabah',
+            objekId: $nasabah->no_rekening,
+            oldValues: null,
+            newValues: [
+                'no_rekening' => $nasabah->no_rekening,
+                'nis' => $nasabah->nis,
+                'nama_siswa' => $nasabah->nama_siswa,
+                'kelas' => $nasabah->kelas,
+                'jurusan' => $nasabah->jurusan,
+                'kategori' => $nasabah->kategori,
+                'status' => $nasabah->status,
+                'email' => $nasabah->email,
+                'no_hp' => $nasabah->no_hp,
+            ]
+        );
+
+        return redirect('/admin/data-nasabah')->with('success', "Nasabah baru berhasil didaftarkan dengan No. Rekening: {$no_rekening}!");
     }
 
     public function edit(int|string $id): View
@@ -156,14 +197,67 @@ class NasabahController extends Controller
         $nasabah = Nasabah::findOrFail($id);
 
         $validated = $request->validate([
-            'nama_siswa' => 'required|string|max:100',
+            'nama_siswa' => 'required|string|max:150',
             'kelas' => 'required|string|max:50',
             'jurusan' => 'required|string|max:100',
             'status' => 'nullable|in:aktif,alumni,nonaktif',
-            'kategori' => 'nullable|in:siswa,guru_karyawan',
+            'kategori' => 'nullable|in:siswa,guru,guru_karyawan,alumni',
+            'email' => 'nullable|email|max:150',
+            'no_hp' => 'nullable|string|max:25',
+            'username' => 'nullable|string|max:100|unique:nasabah,username,'.$id,
+            'password' => 'nullable|string|min:6',
         ]);
 
-        $nasabah->update($validated);
+        $oldValues = [
+            'nama_siswa' => $nasabah->nama_siswa,
+            'kelas' => $nasabah->kelas,
+            'jurusan' => $nasabah->jurusan,
+            'status' => $nasabah->status,
+            'kategori' => $nasabah->kategori,
+            'email' => $nasabah->email,
+            'no_hp' => $nasabah->no_hp,
+            'username' => $nasabah->username,
+        ];
+
+        $nasabah->nama_siswa = $validated['nama_siswa'];
+        $nasabah->kelas = $validated['kelas'];
+        $nasabah->jurusan = $validated['jurusan'];
+        if (isset($validated['status'])) {
+            $nasabah->status = $validated['status'];
+        }
+        if (isset($validated['kategori'])) {
+            $nasabah->kategori = $validated['kategori'];
+        }
+        if (array_key_exists('email', $validated)) {
+            $nasabah->email = $validated['email'];
+        }
+        if (array_key_exists('no_hp', $validated)) {
+            $nasabah->no_hp = $validated['no_hp'];
+        }
+        if (! empty($validated['username'])) {
+            $nasabah->username = $validated['username'];
+        }
+        if (! empty($validated['password'])) {
+            $nasabah->password = $validated['password'];
+        }
+        $nasabah->save();
+
+        AuditHelper::log(
+            jenisAktivitas: 'UPDATE_NASABAH',
+            modul: 'Nasabah',
+            objekId: $nasabah->no_rekening,
+            oldValues: $oldValues,
+            newValues: [
+                'nama_siswa' => $nasabah->nama_siswa,
+                'kelas' => $nasabah->kelas,
+                'jurusan' => $nasabah->jurusan,
+                'status' => $nasabah->status,
+                'kategori' => $nasabah->kategori,
+                'email' => $nasabah->email,
+                'no_hp' => $nasabah->no_hp,
+                'username' => $nasabah->username,
+            ]
+        );
 
         return redirect('/admin/data-nasabah')->with('success', 'Data nasabah berhasil diperbarui!');
     }
@@ -171,6 +265,21 @@ class NasabahController extends Controller
     public function destroy(int|string $id): RedirectResponse
     {
         $nasabah = Nasabah::findOrFail($id);
+
+        AuditHelper::log(
+            jenisAktivitas: 'HAPUS_NASABAH',
+            modul: 'Nasabah',
+            objekId: $nasabah->no_rekening,
+            oldValues: [
+                'no_rekening' => $nasabah->no_rekening,
+                'nis' => $nasabah->nis,
+                'nama_siswa' => $nasabah->nama_siswa,
+                'saldo' => $nasabah->saldo,
+                'status' => $nasabah->status,
+            ],
+            newValues: null
+        );
+
         $nasabah->delete();
 
         return redirect('/admin/data-nasabah')->with('success', 'Nasabah berhasil dihapus!');
@@ -291,7 +400,15 @@ class NasabahController extends Controller
             fclose($handle);
             DB::commit();
 
-            return back()->with('success', "Import Selesai! {$sukses} data masuk dengan Nomor Rekening Armadillo otomatis, {$gagal} data diabaikan (NIS kembar/kosong).");
+            AuditHelper::log(
+                jenisAktivitas: 'IMPORT_NASABAH',
+                modul: 'Nasabah',
+                objekId: null,
+                oldValues: null,
+                newValues: ['sukses' => $sukses, 'gagal' => $gagal]
+            );
+
+            return back()->with('success', "Import Selesai! {$sukses} data masuk dengan Nomor Rekening otomatis, {$gagal} data diabaikan (NIS kembar/kosong).");
         } catch (Exception $e) {
             DB::rollBack();
 
