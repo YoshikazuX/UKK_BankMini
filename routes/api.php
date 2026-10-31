@@ -87,6 +87,7 @@ Route::prefix('petugas')->name('api.petugas.')->group(function () {
         // Transaksi Finansial Loket
         Route::post('/transaksi/setor', [TellerApiController::class, 'setor'])->name('transaksi.setor');
         Route::post('/transaksi/tarik', [TellerApiController::class, 'tarik'])->name('transaksi.tarik');
+        Route::get('/transaksi/status-idempotency/{key}', [TellerApiController::class, 'statusIdempotency'])->name('transaksi.status-idempotency');
         Route::get('/transaksi/hari-ini', [TellerApiController::class, 'transaksiHariIni'])->name('transaksi.hari-ini');
 
         // Posisi Kas Teller

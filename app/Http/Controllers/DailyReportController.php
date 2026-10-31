@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brankas;
 use App\Models\DailyReport;
 use App\Models\Jurnal;
+use App\Models\PengajuanKas;
 use App\Models\Transaksi;
 use App\Models\User;
 use Carbon\Carbon;
@@ -54,13 +55,19 @@ class DailyReportController extends Controller
             ->where('status', '!=', 'dibatalkan')
             ->get();
 
-        $totalDeposit = $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
-        $totalWithdrawal = $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
+        $totalDeposit = (int) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
+        $totalWithdrawal = (int) $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
+
+        // Droping kas yang telah disetujui untuk teller ini hari ini
+        $totalCashDrop = (int) PengajuanKas::where('user_id', $user_id)
+            ->whereDate('tanggal', $today)
+            ->where('status', 'disetujui')
+            ->sum('nominal');
 
         // Saldo Awal Brankas / Laci Kas
-        $brankasToday = Brankas::where('tanggal', $today)->first();
-        $openingBalance = $brankasToday ? $brankasToday->saldo_awal : 0;
-        $systemBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
+        $brankasToday = Brankas::getOrCreateToday($today);
+        $openingBalance = $brankasToday ? (int) $brankasToday->saldo_awal : 0;
+        $systemBalance = $openingBalance + $totalDeposit + $totalCashDrop - $totalWithdrawal;
 
         // Cek apakah teller sudah submit daily report hari ini
         $myReportToday = DailyReport::where('user_id', $user_id)
@@ -81,6 +88,7 @@ class DailyReportController extends Controller
             'openingBalance',
             'totalDeposit',
             'totalWithdrawal',
+            'totalCashDrop',
             'systemBalance',
             'myReportToday',
             'myReports',
@@ -107,15 +115,29 @@ class DailyReportController extends Controller
             ->where('status', '!=', 'dibatalkan')
             ->get();
 
-        $totalDeposit = $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
-        $totalWithdrawal = $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
+        $totalDeposit = (int) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
+        $totalWithdrawal = (int) $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
 
-        $brankasToday = Brankas::where('tanggal', $today)->first();
-        $openingBalance = $brankasToday ? $brankasToday->saldo_awal : 0;
-        $systemBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
+        // Droping kas yang telah disetujui untuk teller ini hari ini
+        $totalCashDrop = (int) PengajuanKas::where('user_id', $user_id)
+            ->whereDate('tanggal', $today)
+            ->where('status', 'disetujui')
+            ->sum('nominal');
+
+        $brankasToday = Brankas::getOrCreateToday($today);
+        $openingBalance = $brankasToday ? (int) $brankasToday->saldo_awal : 0;
+        $systemBalance = $openingBalance + $totalDeposit + $totalCashDrop - $totalWithdrawal;
 
         $physicalBalance = (int) $request->physical_balance;
         $difference = $physicalBalance - $systemBalance;
+
+        // Aturan SOP Rekonsiliasi: Jika ada selisih, keterangan/alasan wajib diisi
+        if ($difference !== 0 && empty(trim($request->notes ?? ''))) {
+            $formattedDiff = number_format(abs($difference), 0, ',', '.');
+            $tipeSelisih = $difference > 0 ? 'Surplus' : 'Defisit';
+
+            return back()->withInput()->with('error', "Rekonsiliasi Kas: Terdeteksi selisih kas fisik sebesar Rp {$formattedDiff} ({$tipeSelisih}). Teller wajib memberikan penjelasan alasan selisih pada kolom catatan sebelum laporan dapat dikirimkan!");
+        }
 
         DB::beginTransaction();
         try {
@@ -132,6 +154,7 @@ class DailyReportController extends Controller
                 $existing->update([
                     'opening_balance' => $openingBalance,
                     'total_deposit' => $totalDeposit,
+                    'total_cash_drop' => $totalCashDrop,
                     'total_withdrawal' => $totalWithdrawal,
                     'system_balance' => $systemBalance,
                     'physical_balance' => $physicalBalance,
@@ -146,6 +169,7 @@ class DailyReportController extends Controller
                     'report_date' => $today,
                     'opening_balance' => $openingBalance,
                     'total_deposit' => $totalDeposit,
+                    'total_cash_drop' => $totalCashDrop,
                     'total_withdrawal' => $totalWithdrawal,
                     'system_balance' => $systemBalance,
                     'physical_balance' => $physicalBalance,

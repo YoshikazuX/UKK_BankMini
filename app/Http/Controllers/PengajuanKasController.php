@@ -128,28 +128,14 @@ class PengajuanKasController extends Controller
             ]);
 
             // 2. Tambahkan dana masuk ke kas brankas hari ini
-            $brankasHariIni = Brankas::where('tanggal', $today)->lockForUpdate()->first();
-            if ($brankasHariIni) {
-                $masuk = $brankasHariIni->masuk + $pengajuan->nominal;
-                $total = $brankasHariIni->saldo_awal + $masuk - $brankasHariIni->keluar;
+            $brankasHariIni = Brankas::getOrCreateToday($today, true);
+            $masuk = $brankasHariIni->masuk + $pengajuan->nominal;
+            $total = $brankasHariIni->saldo_awal + $masuk - $brankasHariIni->keluar;
 
-                $brankasHariIni->update([
-                    'masuk' => $masuk,
-                    'total' => $total,
-                ]);
-            } else {
-                $kemarin = Brankas::orderBy('tanggal', 'desc')->first();
-                $saldo_awal = $kemarin ? $kemarin->total : 0;
-                $total = $saldo_awal + $pengajuan->nominal;
-
-                Brankas::create([
-                    'tanggal' => $today,
-                    'saldo_awal' => $saldo_awal,
-                    'masuk' => $pengajuan->nominal,
-                    'keluar' => 0,
-                    'total' => $total,
-                ]);
-            }
+            $brankasHariIni->update([
+                'masuk' => $masuk,
+                'total' => $total,
+            ]);
 
             // 3. Catat di Jurnal Akuntansi sebagai Droping Dana Kas Operasional
             $teller = User::find($pengajuan->user_id);

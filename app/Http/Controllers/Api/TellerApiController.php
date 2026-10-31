@@ -9,6 +9,8 @@ use App\Models\Jurnal;
 use App\Models\Nasabah;
 use App\Models\Transaksi;
 use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +53,7 @@ class TellerApiController extends Controller
             'nama_siswa' => $n->nama_siswa,
             'kelas' => $n->kelas,
             'jurusan' => $n->jurusan,
+            'kategori' => $n->kategori ?? 'siswa',
             'no_rekening' => $n->no_rekening,
             'saldo' => (float) $n->saldo,
             'formatted_saldo' => 'Rp '.number_format($n->saldo, 0, ',', '.'),
@@ -107,6 +110,8 @@ class TellerApiController extends Controller
                 'nama_siswa' => $nasabah->nama_siswa,
                 'kelas' => $nasabah->kelas,
                 'jurusan' => $nasabah->jurusan,
+                'kategori' => $nasabah->kategori ?? 'siswa',
+                'tanggal_buka' => $nasabah->created_at ? $nasabah->created_at->format('d/m/Y') : '-',
                 'no_rekening' => $nasabah->no_rekening,
                 'saldo' => (float) $nasabah->saldo,
                 'formatted_saldo' => 'Rp '.number_format($nasabah->saldo, 0, ',', '.'),
@@ -119,6 +124,47 @@ class TellerApiController extends Controller
     }
 
     /**
+     * Cek status idempotency transaksi loket
+     */
+    public function statusIdempotency(Request $request, string $key): JsonResponse
+    {
+        $trx = Transaksi::with('nasabah')
+            ->where('idempotency_key', $key)
+            ->first();
+
+        if (! $trx) {
+            return response()->json([
+                'success' => false,
+                'status' => 'not_found',
+                'message' => 'Transaksi belum diproses atau belum tersimpan di server.',
+            ], 404);
+        }
+
+        $slipUrl = in_array($trx->jenis_transaksi, ['setor', 'koreksi_tarik'], true)
+            ? url('/teller/slip-setor/'.$trx->id)
+            : url('/teller/slip-tarik/'.$trx->id);
+
+        return response()->json([
+            'success' => true,
+            'status' => $trx->status,
+            'message' => 'Transaksi telah berhasil diproses sebelumnya (Proteksi Idempotensi Aktif).',
+            'data' => [
+                'id_transaksi' => $trx->id,
+                'kode_referensi' => '#TRX-'.str_pad($trx->id, 5, '0', STR_PAD_LEFT),
+                'kode_sandi' => $trx->kode_sandi,
+                'no_rekening' => $trx->nasabah?->no_rekening,
+                'nama_siswa' => $trx->nasabah?->nama_siswa,
+                'jenis_transaksi' => $trx->jenis_transaksi,
+                'nominal' => (float) $trx->nominal,
+                'formatted_nominal' => 'Rp '.number_format($trx->nominal, 0, ',', '.'),
+                'status' => $trx->status,
+                'slip_url' => $slipUrl,
+                'waktu' => $trx->created_at->format('Y-m-d H:i:s'),
+            ],
+        ], 200);
+    }
+
+    /**
      * Proses Setoran Tunai Loket Teller
      */
     public function setor(Request $request): JsonResponse
@@ -126,8 +172,33 @@ class TellerApiController extends Controller
         $request->validate([
             'no_rekening' => 'required|string',
             'nominal' => 'required|numeric|min:1000',
+            'idempotency_key' => 'nullable|string|max:64',
             'keterangan' => 'nullable|string|max:150',
         ]);
+
+        // Cek Idempotency Key
+        if ($request->filled('idempotency_key')) {
+            $existing = Transaksi::with('nasabah')->where('idempotency_key', $request->idempotency_key)->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi telah berhasil diproses sebelumnya (Proteksi Idempotensi Aktif). Dana tidak dipotong ganda.',
+                    'data' => [
+                        'id_transaksi' => $existing->id,
+                        'kode_sandi' => $existing->kode_sandi,
+                        'no_rekening' => $existing->nasabah?->no_rekening,
+                        'nama_siswa' => $existing->nasabah?->nama_siswa,
+                        'nominal' => (float) $existing->nominal,
+                        'formatted_nominal' => 'Rp '.number_format($existing->nominal, 0, ',', '.'),
+                        'saldo_akhir' => (float) ($existing->nasabah?->saldo ?? 0),
+                        'formatted_saldo_akhir' => 'Rp '.number_format($existing->nasabah?->saldo ?? 0, 0, ',', '.'),
+                        'petugas' => $existing->nama_petugas,
+                        'slip_url' => url('/teller/slip-setor/'.$existing->id),
+                        'waktu' => $existing->created_at->format('Y-m-d H:i:s'),
+                    ],
+                ], 200);
+            }
+        }
 
         $petugas = $request->user();
         $petugasId = $petugas ? $petugas->id : 1;
@@ -140,6 +211,8 @@ class TellerApiController extends Controller
             $nasabah = Nasabah::where('no_rekening', $request->no_rekening)->lockForUpdate()->first();
 
             if (! $nasabah) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Nomor rekening nasabah tidak ditemukan!',
@@ -147,6 +220,8 @@ class TellerApiController extends Controller
             }
 
             if ($nasabah->status !== 'aktif') {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Rekening nasabah sedang non-aktif / ditangguhkan!',
@@ -165,6 +240,8 @@ class TellerApiController extends Controller
                 'jenis_layanan' => 'Tabungan',
                 'nominal' => $nominal,
                 'status' => 'sukses',
+                'idempotency_key' => $request->idempotency_key,
+                'keterangan' => $request->keterangan,
             ]);
 
             Jurnal::create([
@@ -176,25 +253,13 @@ class TellerApiController extends Controller
             ]);
 
             // Mutasi Kas Brankas Fisik
-            $brankasHariIni = Brankas::where('tanggal', now()->toDateString())->lockForUpdate()->first();
-            if ($brankasHariIni) {
-                $masuk = $brankasHariIni->masuk + $nominal;
-                $total = $brankasHariIni->saldo_awal + $masuk - $brankasHariIni->keluar;
-                $brankasHariIni->update([
-                    'masuk' => $masuk,
-                    'total' => $total,
-                ]);
-            } else {
-                $kemarin = Brankas::orderBy('tanggal', 'desc')->first();
-                $saldoAwal = $kemarin ? $kemarin->total : 0;
-                Brankas::create([
-                    'tanggal' => now()->toDateString(),
-                    'saldo_awal' => $saldoAwal,
-                    'masuk' => $nominal,
-                    'keluar' => 0,
-                    'total' => $saldoAwal + $nominal,
-                ]);
-            }
+            $brankasHariIni = Brankas::getOrCreateToday(now()->toDateString(), true);
+            $masuk = $brankasHariIni->masuk + $nominal;
+            $total = $brankasHariIni->saldo_awal + $masuk - $brankasHariIni->keluar;
+            $brankasHariIni->update([
+                'masuk' => $masuk,
+                'total' => $total,
+            ]);
 
             DB::commit();
 
@@ -216,6 +281,35 @@ class TellerApiController extends Controller
                 ],
             ], 200);
 
+        } catch (UniqueConstraintViolationException|QueryException $e) {
+            DB::rollBack();
+            if ($request->filled('idempotency_key')) {
+                $existing = Transaksi::with('nasabah')->where('idempotency_key', $request->idempotency_key)->first();
+                if ($existing) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Transaksi telah berhasil diproses sebelumnya (Proteksi Idempotensi Aktif).',
+                        'data' => [
+                            'id_transaksi' => $existing->id,
+                            'kode_sandi' => $existing->kode_sandi,
+                            'no_rekening' => $existing->nasabah?->no_rekening,
+                            'nama_siswa' => $existing->nasabah?->nama_siswa,
+                            'nominal' => (float) $existing->nominal,
+                            'formatted_nominal' => 'Rp '.number_format($existing->nominal, 0, ',', '.'),
+                            'saldo_akhir' => (float) ($existing->nasabah?->saldo ?? 0),
+                            'formatted_saldo_akhir' => 'Rp '.number_format($existing->nasabah?->saldo ?? 0, 0, ',', '.'),
+                            'petugas' => $existing->nama_petugas,
+                            'slip_url' => url('/teller/slip-setor/'.$existing->id),
+                            'waktu' => $existing->created_at->format('Y-m-d H:i:s'),
+                        ],
+                    ], 200);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses setoran: Duplikasi permintaan terdeteksi.',
+            ], 409);
         } catch (Exception $e) {
             DB::rollBack();
 
@@ -235,8 +329,33 @@ class TellerApiController extends Controller
             'no_rekening' => 'required|string',
             'nominal' => 'required|numeric|min:1000',
             'pin' => 'nullable|string',
+            'idempotency_key' => 'nullable|string|max:64',
             'keterangan' => 'nullable|string|max:150',
         ]);
+
+        // Cek Idempotency Key
+        if ($request->filled('idempotency_key')) {
+            $existing = Transaksi::with('nasabah')->where('idempotency_key', $request->idempotency_key)->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi telah berhasil diproses sebelumnya (Proteksi Idempotensi Aktif). Dana tidak dipotong ganda.',
+                    'data' => [
+                        'id_transaksi' => $existing->id,
+                        'kode_sandi' => $existing->kode_sandi,
+                        'no_rekening' => $existing->nasabah?->no_rekening,
+                        'nama_siswa' => $existing->nasabah?->nama_siswa,
+                        'nominal' => (float) $existing->nominal,
+                        'formatted_nominal' => 'Rp '.number_format($existing->nominal, 0, ',', '.'),
+                        'saldo_akhir' => (float) ($existing->nasabah?->saldo ?? 0),
+                        'formatted_saldo_akhir' => 'Rp '.number_format($existing->nasabah?->saldo ?? 0, 0, ',', '.'),
+                        'petugas' => $existing->nama_petugas,
+                        'slip_url' => url('/teller/slip-tarik/'.$existing->id),
+                        'waktu' => $existing->created_at->format('Y-m-d H:i:s'),
+                    ],
+                ], 200);
+            }
+        }
 
         $petugas = $request->user();
         $petugasId = $petugas ? $petugas->id : 1;
@@ -249,6 +368,8 @@ class TellerApiController extends Controller
             $nasabah = Nasabah::where('no_rekening', $request->no_rekening)->lockForUpdate()->first();
 
             if (! $nasabah) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Nomor rekening nasabah tidak ditemukan!',
@@ -256,6 +377,8 @@ class TellerApiController extends Controller
             }
 
             if ($nasabah->status !== 'aktif') {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Rekening nasabah sedang non-aktif / ditangguhkan!',
@@ -263,10 +386,14 @@ class TellerApiController extends Controller
             }
 
             $minMengendap = SettingHelper::getSaldoMengendapMin();
-            if (($nasabah->saldo - $nominal) < $minMengendap) {
+            $saldoTersedia = max(0, $nasabah->saldo - $minMengendap);
+
+            if ($nominal > $saldoTersedia) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Penarikan ditolak: Saldo minimal mengendap Rp '.number_format($minMengendap, 0, ',', '.').' harus tersisa di rekening!',
+                    'message' => 'Penarikan ditolak. Saldo tersedia nasabah hanya Rp '.number_format($saldoTersedia, 0, ',', '.').'.',
                 ], 422);
             }
 
@@ -280,6 +407,8 @@ class TellerApiController extends Controller
                 }
 
                 if (! $pinValid) {
+                    DB::rollBack();
+
                     return response()->json([
                         'success' => false,
                         'message' => 'Penarikan ditolak: PIN Keamanan nasabah tidak valid!',
@@ -288,15 +417,15 @@ class TellerApiController extends Controller
             }
 
             // Proteksi Kas Fisik Loket / Brankas
-            $brankasHariIni = Brankas::where('tanggal', now()->toDateString())->lockForUpdate()->first();
-            $kasTersedia = $brankasHariIni ? $brankasHariIni->total : 0;
+            $brankasHariIni = Brankas::getOrCreateToday(now()->toDateString(), true);
+            $kasTersedia = (int) $brankasHariIni->total;
 
             if ($nominal > $kasTersedia) {
                 DB::rollBack();
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Penarikan ditolak: Kas fisik di loket tidak mencukupi (Tersedia: Rp '.number_format($kasTersedia, 0, ',', '.').'). Harap ajukan droping kas ke Supervisor.',
+                    'message' => 'Penarikan tidak dapat diproses. Kas operasional teller tidak mencukupi. Silakan lakukan pengajuan droping kas kepada Supervisor.',
                 ], 422);
             }
 
@@ -312,6 +441,8 @@ class TellerApiController extends Controller
                 'jenis_layanan' => 'Tabungan',
                 'nominal' => $nominal,
                 'status' => 'sukses',
+                'idempotency_key' => $request->idempotency_key,
+                'keterangan' => $request->keterangan,
             ]);
 
             Jurnal::create([
@@ -350,6 +481,35 @@ class TellerApiController extends Controller
                 ],
             ], 200);
 
+        } catch (UniqueConstraintViolationException|QueryException $e) {
+            DB::rollBack();
+            if ($request->filled('idempotency_key')) {
+                $existing = Transaksi::with('nasabah')->where('idempotency_key', $request->idempotency_key)->first();
+                if ($existing) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Transaksi telah berhasil diproses sebelumnya (Proteksi Idempotensi Aktif).',
+                        'data' => [
+                            'id_transaksi' => $existing->id,
+                            'kode_sandi' => $existing->kode_sandi,
+                            'no_rekening' => $existing->nasabah?->no_rekening,
+                            'nama_siswa' => $existing->nasabah?->nama_siswa,
+                            'nominal' => (float) $existing->nominal,
+                            'formatted_nominal' => 'Rp '.number_format($existing->nominal, 0, ',', '.'),
+                            'saldo_akhir' => (float) ($existing->nasabah?->saldo ?? 0),
+                            'formatted_saldo_akhir' => 'Rp '.number_format($existing->nasabah?->saldo ?? 0, 0, ',', '.'),
+                            'petugas' => $existing->nama_petugas,
+                            'slip_url' => url('/teller/slip-tarik/'.$existing->id),
+                            'waktu' => $existing->created_at->format('Y-m-d H:i:s'),
+                        ],
+                    ], 200);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses penarikan: Duplikasi permintaan terdeteksi.',
+            ], 409);
         } catch (Exception $e) {
             DB::rollBack();
 
@@ -377,8 +537,8 @@ class TellerApiController extends Controller
 
         $list = $query->orderBy('created_at', 'desc')->get();
 
-        $totalSetor = $list->where('jenis_transaksi', 'setor')->sum('nominal');
-        $totalTarik = $list->where('jenis_transaksi', 'tarik')->sum('nominal');
+        $totalSetor = $list->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
+        $totalTarik = $list->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
 
         return response()->json([
             'success' => true,
@@ -412,30 +572,17 @@ class TellerApiController extends Controller
      */
     public function statusKas(Request $request): JsonResponse
     {
-        $brankasHariIni = Brankas::where('tanggal', now()->toDateString())->first();
-
-        if (! $brankasHariIni) {
-            $kemarin = Brankas::orderBy('tanggal', 'desc')->first();
-            $saldoAwal = $kemarin ? $kemarin->total : 0;
-            $total = $saldoAwal;
-            $masuk = 0;
-            $keluar = 0;
-        } else {
-            $saldoAwal = $brankasHariIni->saldo_awal;
-            $masuk = $brankasHariIni->masuk;
-            $keluar = $brankasHariIni->keluar;
-            $total = $brankasHariIni->total;
-        }
+        $brankasHariIni = Brankas::getOrCreateToday(now()->toDateString());
 
         return response()->json([
             'success' => true,
             'data' => [
                 'tanggal' => now()->toDateString(),
-                'saldo_awal' => (float) $saldoAwal,
-                'kas_masuk' => (float) $masuk,
-                'kas_keluar' => (float) $keluar,
-                'kas_tersedia' => (float) $total,
-                'formatted_kas_tersedia' => 'Rp '.number_format($total, 0, ',', '.'),
+                'saldo_awal' => (float) $brankasHariIni->saldo_awal,
+                'kas_masuk' => (float) $brankasHariIni->masuk,
+                'kas_keluar' => (float) $brankasHariIni->keluar,
+                'kas_tersedia' => (float) $brankasHariIni->total,
+                'formatted_kas_tersedia' => 'Rp '.number_format($brankasHariIni->total, 0, ',', '.'),
             ],
         ], 200);
     }

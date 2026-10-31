@@ -107,11 +107,15 @@
                         <td class="p-2.5 pr-4 text-right font-bold text-emerald-700 tabular-nums">(+) Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td class="p-2.5 pl-4 text-slate-600">3. Total Penarikan Tunai & Biaya Admin (Withdrawal)</td>
+                        <td class="p-2.5 pl-4 text-slate-600">3. Droping Kas Operasional Disetujui (Cash Drop)</td>
+                        <td class="p-2.5 pr-4 text-right font-bold text-indigo-700 tabular-nums">(+) Rp {{ number_format($report->total_cash_drop ?? 0, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="p-2.5 pl-4 text-slate-600">4. Total Penarikan Tunai & Biaya Admin (Withdrawal)</td>
                         <td class="p-2.5 pr-4 text-right font-bold text-rose-700 tabular-nums">(-) Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="bg-blue-50 font-bold">
-                        <td class="p-2.5 pl-4 text-blue-950">4. Saldo Buku Komputer / Sistem (System Balance) [1 + 2 - 3]</td>
+                        <td class="p-2.5 pl-4 text-blue-950">5. Saldo Buku Komputer / Sistem (System Balance) [1 + 2 + 3 - 4]</td>
                         <td class="p-2.5 pr-4 text-right text-sm text-blue-950 font-bold tabular-nums">Rp {{ number_format($report->system_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="bg-slate-50 font-bold">

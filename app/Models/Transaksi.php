@@ -17,6 +17,8 @@ class Transaksi extends Model
         'nasabah_id',
         'petugas_id',
         'daily_report_id',
+        'nama_petugas',
+        'jenis_layanan',
         'jenis_transaksi',
         'kode_sandi',
         'nominal',
@@ -24,12 +26,16 @@ class Transaksi extends Model
         'status',
         'idempotency_key',
         'alasan_batal',
+        'ref_transaksi_id',
+        'dibatalkan_oleh',
+        'dibatalkan_at',
     ];
 
     protected function casts(): array
     {
         return [
             'nominal' => 'integer',
+            'dibatalkan_at' => 'datetime',
         ];
     }
 
@@ -47,6 +53,30 @@ class Transaksi extends Model
     public function petugas(): BelongsTo
     {
         return $this->belongsTo(User::class, 'petugas_id');
+    }
+
+    /**
+     * Petugas (Teller / Supervisor) yang membatalkan transaksi.
+     */
+    public function petugasPembatal(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dibatalkan_oleh');
+    }
+
+    /**
+     * Transaksi asli yang dibatalkan / direferensikan.
+     */
+    public function originalTransaksi(): BelongsTo
+    {
+        return $this->belongsTo(Transaksi::class, 'ref_transaksi_id');
+    }
+
+    /**
+     * Transaksi pembalik / koreksi dari transaksi ini.
+     */
+    public function reversalTransaksi(): HasMany
+    {
+        return $this->hasMany(Transaksi::class, 'ref_transaksi_id');
     }
 
     /**

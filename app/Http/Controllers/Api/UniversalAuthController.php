@@ -179,4 +179,3 @@ class UniversalAuthController extends Controller
         ], 200);
     }
 }
-

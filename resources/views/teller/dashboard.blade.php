@@ -246,9 +246,10 @@
                 <table class="min-w-full bg-white text-left text-xs border-collapse">
                     <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
                         <tr>
-                            <th class="py-3 px-4">NIS</th>
+                            <th class="py-3 px-4">Rekening / NIS</th>
                             <th class="py-3 px-4">Nama Lengkap</th>
                             <th class="py-3 px-4">Kelas & Jurusan</th>
+                            <th class="py-3 px-4 text-center">Status</th>
                             <th class="py-3 px-4">Saldo</th>
                             <th class="py-3 px-4 text-center">Aksi Kasir</th>
                         </tr>
@@ -256,14 +257,32 @@
                     <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse ($nasabah as $n)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="py-3 px-4 font-semibold text-slate-900 tabular-nums">{{ $n->nis }}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-900 tabular-nums">
+                                {{ $n->no_rekening }}
+                                <span class="text-slate-400 block text-[11px] font-normal">NIS: {{ $n->nis }}</span>
+                            </td>
                             <td class="py-3 px-4 font-medium text-slate-800">{{ $n->nama_siswa }}</td>
                             <td class="py-3 px-4 text-slate-600">{{ $n->kelas }} - {{ $n->jurusan }}</td>
+                            <td class="py-3 px-4 text-center">
+                                @if($n->status === 'aktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                        Aktif
+                                    </span>
+                                @elseif($n->status === 'nonaktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800">
+                                        Nonaktif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 capitalize">
+                                        {{ $n->status ?? 'Aktif' }}
+                                    </span>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 font-bold text-slate-900 tabular-nums">Rp {{ number_format($n->saldo, 0, ',', '.') }}</td>
                             <td class="py-3 px-4 text-center">
                                 <div class="flex items-center justify-center space-x-2">
                                     <a href="{{ url('/teller/transaksi/'.$n->id) }}" class="inline-block bg-slate-900 hover:bg-slate-800 text-white font-medium py-1.5 px-3 rounded-lg transition text-xs shadow-sm">
-                                        Transaksi &rarr;
+                                        Detail Rekening &rarr;
                                     </a>
                                     <a href="{{ url('/buku-tabungan/'.$n->id) }}" class="inline-block bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-1.5 px-3 rounded-lg transition text-xs shadow-sm" title="Buku Tabungan / Rekening">
                                         Buku Tabungan
@@ -273,11 +292,11 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="py-10 text-center text-slate-400">
+                            <td colspan="6" class="py-10 text-center text-slate-400">
                                 @if(request('cari'))
                                     Nasabah dengan kata kunci <strong class="text-rose-500">"{{ request('cari') }}"</strong> tidak ditemukan.
                                 @else
-                                    Ketik NIS atau Scan QR Code untuk menampilkan data nasabah.
+                                    Ketik NIS, Nomor Rekening, atau Scan QR Code untuk menampilkan data nasabah.
                                 @endif
                             </td>
                         </tr>

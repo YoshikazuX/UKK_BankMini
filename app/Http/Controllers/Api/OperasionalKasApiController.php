@@ -122,10 +122,14 @@ class OperasionalKasApiController extends Controller
 
         $totalDeposit = (float) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
         $totalWithdrawal = (float) $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
+        $totalCashDrop = (float) PengajuanKas::where('user_id', $userId)
+            ->whereDate('tanggal', $today)
+            ->where('status', 'disetujui')
+            ->sum('nominal');
 
-        $brankasToday = Brankas::where('tanggal', $today)->first();
+        $brankasToday = Brankas::getOrCreateToday($today);
         $openingBalance = $brankasToday ? (float) $brankasToday->saldo_awal : 0;
-        $systemBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
+        $systemBalance = $openingBalance + $totalDeposit + $totalCashDrop - $totalWithdrawal;
 
         $myReportToday = DailyReport::with('approver')
             ->where('user_id', $userId)
@@ -140,6 +144,8 @@ class OperasionalKasApiController extends Controller
                 'formatted_opening' => 'Rp '.number_format($openingBalance, 0, ',', '.'),
                 'total_deposit' => $totalDeposit,
                 'formatted_deposit' => 'Rp '.number_format($totalDeposit, 0, ',', '.'),
+                'total_cash_drop' => $totalCashDrop,
+                'formatted_cash_drop' => 'Rp '.number_format($totalCashDrop, 0, ',', '.'),
                 'total_withdrawal' => $totalWithdrawal,
                 'formatted_withdrawal' => 'Rp '.number_format($totalWithdrawal, 0, ',', '.'),
                 'system_balance' => $systemBalance,
@@ -178,12 +184,26 @@ class OperasionalKasApiController extends Controller
 
         $totalDeposit = (int) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
         $totalWithdrawal = (int) $trxHariIni->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->sum('nominal');
+        $totalCashDrop = (int) PengajuanKas::where('user_id', $userId)
+            ->whereDate('tanggal', $today)
+            ->where('status', 'disetujui')
+            ->sum('nominal');
 
-        $brankasToday = Brankas::where('tanggal', $today)->first();
+        $brankasToday = Brankas::getOrCreateToday($today);
         $openingBalance = $brankasToday ? (int) $brankasToday->saldo_awal : 0;
-        $systemBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
+        $systemBalance = $openingBalance + $totalDeposit + $totalCashDrop - $totalWithdrawal;
         $physicalBalance = (int) $validated['physical_balance'];
         $difference = $physicalBalance - $systemBalance;
+
+        if ($difference !== 0 && empty(trim($validated['notes'] ?? ''))) {
+            $formattedDiff = number_format(abs($difference), 0, ',', '.');
+            $tipeSelisih = $difference > 0 ? 'Surplus' : 'Defisit';
+
+            return response()->json([
+                'success' => false,
+                'message' => "Rekonsiliasi Kas: Terdeteksi selisih kas fisik sebesar Rp {$formattedDiff} ({$tipeSelisih}). Teller wajib mengisi catatan penjelasan alasan selisih!",
+            ], 422);
+        }
 
         $report = DailyReport::updateOrCreate(
             [
@@ -193,6 +213,7 @@ class OperasionalKasApiController extends Controller
             [
                 'opening_balance' => $openingBalance,
                 'total_deposit' => $totalDeposit,
+                'total_cash_drop' => $totalCashDrop,
                 'total_withdrawal' => $totalWithdrawal,
                 'system_balance' => $systemBalance,
                 'physical_balance' => $physicalBalance,

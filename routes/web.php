@@ -90,6 +90,7 @@ Route::middleware(['auth', 'role:admin,supervisor,accounting'])->group(function 
 Route::middleware(['auth', 'role:teller'])->group(function () {
     Route::get('/teller/dashboard', [TellerController::class, 'index'])->name('teller.dashboard');
     Route::get('/teller/transaksi/{id}', [TellerController::class, 'formTransaksi'])->name('teller.transaksi.form');
+    Route::get('/teller/transaksi/status-idempotency/{key}', [TellerController::class, 'statusIdempotency'])->name('teller.transaksi.status-idempotency');
     Route::post('/teller/transaksi/proses', [TellerController::class, 'prosesTransaksi'])->name('teller.transaksi.proses');
     Route::get('/teller/riwayat', [TellerController::class, 'riwayat'])->name('teller.riwayat');
     Route::get('/teller/scan', [TellerController::class, 'scanQr'])->name('teller.scan');
