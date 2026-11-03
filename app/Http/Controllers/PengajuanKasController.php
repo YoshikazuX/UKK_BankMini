@@ -258,13 +258,14 @@ class PengajuanKasController extends Controller
                 return back()->with('error', 'Data pengajuan kas tidak ditemukan!');
             }
 
-            if ($pengajuan->status !== 'pending') {
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
                 DB::rollBack();
                 $spvName = $pengajuan->approver?->nama_petugas ?? 'Supervisor lain';
 
                 return back()->with('error', "Pencegahan Dobel Persetujuan: Pengajuan kas #{$pengajuan->nomor_pengajuan} sudah diproses sebelumnya dengan status [{$pengajuan->status}] oleh {$spvName}.");
             }
 
+            $statusSebelum = $pengajuan->status;
             $namaTeller = $pengajuan->user?->nama_petugas ?? 'Teller Loket';
             $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
 
@@ -305,7 +306,7 @@ class PengajuanKasController extends Controller
                 tellerId: $pengajuan->user_id,
                 namaTeller: $namaTeller,
                 jenisKeputusan: 'disetujui',
-                statusSebelum: 'pending',
+                statusSebelum: $statusSebelum,
                 statusSesudah: 'disetujui',
                 nominal: $pengajuan->nominal,
                 catatan: $catatan
@@ -316,7 +317,7 @@ class PengajuanKasController extends Controller
                 jenisAktivitas: 'SETUJUI_PENGAJUAN_KAS',
                 modul: 'Pusat Persetujuan',
                 objekId: $pengajuan->nomor_pengajuan,
-                oldValues: ['status' => 'pending'],
+                oldValues: ['status' => $statusSebelum],
                 newValues: [
                     'status' => 'disetujui',
                     'disetujui_oleh' => Auth::id(),
@@ -376,13 +377,14 @@ class PengajuanKasController extends Controller
                 return back()->with('error', 'Data pengajuan kas tidak ditemukan!');
             }
 
-            if ($pengajuan->status !== 'pending') {
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
                 DB::rollBack();
                 $spvName = $pengajuan->approver?->nama_petugas ?? 'Supervisor lain';
 
                 return back()->with('error', "Pencegahan Dobel Penolakan: Pengajuan kas #{$pengajuan->nomor_pengajuan} sudah diproses sebelumnya dengan status [{$pengajuan->status}] oleh {$spvName}.");
             }
 
+            $statusSebelum = $pengajuan->status;
             $namaTeller = $pengajuan->user?->nama_petugas ?? 'Teller Loket';
             $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
 
@@ -401,7 +403,7 @@ class PengajuanKasController extends Controller
                 tellerId: $pengajuan->user_id,
                 namaTeller: $namaTeller,
                 jenisKeputusan: 'ditolak',
-                statusSebelum: 'pending',
+                statusSebelum: $statusSebelum,
                 statusSesudah: 'ditolak',
                 nominal: $pengajuan->nominal,
                 catatan: $alasan,
@@ -413,7 +415,7 @@ class PengajuanKasController extends Controller
                 jenisAktivitas: 'TOLAK_PENGAJUAN_KAS',
                 modul: 'Pusat Persetujuan',
                 objekId: $pengajuan->nomor_pengajuan,
-                oldValues: ['status' => 'pending'],
+                oldValues: ['status' => $statusSebelum],
                 newValues: [
                     'status' => 'ditolak',
                     'disetujui_oleh' => Auth::id(),
@@ -444,6 +446,99 @@ class PengajuanKasController extends Controller
             DB::rollBack();
 
             return back()->with('error', 'Gagal memproses penolakan pengajuan kas: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Supervisor Menahan / Meminta Klarifikasi Pengajuan Kas (Hold)
+     */
+    public function hold(Request $request, int|string $id): RedirectResponse
+    {
+        $catatan = trim($request->catatan_spv ?? $request->catatan ?? $request->notes ?? '');
+
+        if (empty($catatan) || strlen($catatan) < 5) {
+            return back()->withInput()
+                ->withErrors(['catatan_spv' => 'Catatan klarifikasi pengajuan kas wajib diisi minimal 5 karakter agar dapat dipahami oleh Teller!'])
+                ->with('error', 'Catatan klarifikasi pengajuan kas wajib diisi minimal 5 karakter agar dapat dipahami oleh Teller!');
+        }
+
+        DB::beginTransaction();
+        try {
+            $pengajuan = PengajuanKas::where('id', $id)->lockForUpdate()->first();
+
+            if (! $pengajuan) {
+                DB::rollBack();
+
+                return back()->with('error', 'Data pengajuan kas tidak ditemukan!');
+            }
+
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
+                DB::rollBack();
+                $spvName = $pengajuan->approver?->nama_petugas ?? 'Supervisor lain';
+
+                return back()->with('error', "Pencegahan Dobel Status: Pengajuan kas #{$pengajuan->nomor_pengajuan} sudah diproses sebelumnya dengan status [{$pengajuan->status}] oleh {$spvName}.");
+            }
+
+            $statusSebelum = $pengajuan->status;
+            $namaTeller = $pengajuan->user?->nama_petugas ?? 'Teller Loket';
+            $spvName = Auth::user()->nama_petugas ?? 'Supervisor';
+
+            $pengajuan->update([
+                'status' => 'hold',
+                'disetujui_oleh' => Auth::id(),
+                'catatan_spv' => $catatan,
+            ]);
+
+            // Catat jejak keputusan ke approval_histories
+            ApprovalHistory::record(
+                pekerjaanType: 'pengajuan_kas',
+                pekerjaanId: $pengajuan->id,
+                nomorReferensi: $pengajuan->nomor_pengajuan,
+                tellerId: $pengajuan->user_id,
+                namaTeller: $namaTeller,
+                jenisKeputusan: 'klarifikasi_hold',
+                statusSebelum: $statusSebelum,
+                statusSesudah: 'hold',
+                nominal: $pengajuan->nominal,
+                catatan: $catatan
+            );
+
+            // Log audit
+            AuditHelper::log(
+                jenisAktivitas: 'HOLD_PENGAJUAN_KAS',
+                modul: 'Pusat Persetujuan',
+                objekId: $pengajuan->nomor_pengajuan,
+                oldValues: ['status' => $statusSebelum],
+                newValues: [
+                    'status' => 'hold',
+                    'disetujui_oleh' => Auth::id(),
+                    'catatan_spv' => $catatan,
+                ]
+            );
+
+            // Kirim notifikasi hold ke Teller pemohon
+            NotificationHelper::notifyUser($pengajuan->user_id, [
+                'task_type' => 'pengajuan_kas',
+                'task_id' => $pengajuan->id,
+                'nomor_referensi' => $pengajuan->nomor_pengajuan,
+                'nama_teller' => $namaTeller,
+                'title' => 'Pengajuan Kas Ditangguhkan (Hold)',
+                'message' => "Pengajuan kas #{$pengajuan->nomor_pengajuan} ditangguhkan (Hold) oleh {$spvName}: {$catatan}",
+                'nominal' => $pengajuan->nominal,
+                'status' => 'hold',
+                'action_url' => url('/teller/pengajuan-kas'),
+            ]);
+
+            NotificationHelper::markTaskAsRead(Auth::user(), 'pengajuan_kas', $pengajuan->id);
+
+            DB::commit();
+
+            return redirect()->route('supervisor.pengajuan-kas.detail', $pengajuan->id)
+                ->with('success', "Pengajuan kas #{$pengajuan->nomor_pengajuan} berhasil ditangguhkan (Hold). Teller telah menerima arahan klarifikasi.");
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Gagal memproses penahanan pengajuan kas: '.$e->getMessage());
         }
     }
 

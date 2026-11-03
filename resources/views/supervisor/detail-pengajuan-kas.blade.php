@@ -50,8 +50,8 @@
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                         Detail Pengajuan Droping Kas
                     </h1>
-                    <span class="text-xs font-semibold {{ $pengajuan->status === 'disetujui' ? 'text-emerald-700' : ($pengajuan->status === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
-                        {{ ucfirst($pengajuan->status) }}
+                    <span class="text-xs font-semibold {{ $pengajuan->status === 'disetujui' ? 'text-emerald-700' : ($pengajuan->status === 'ditolak' ? 'text-rose-700' : ($pengajuan->status === 'hold' ? 'text-amber-700 font-bold' : 'text-blue-700')) }}">
+                        {{ $pengajuan->status === 'disetujui' ? 'Disetujui' : ($pengajuan->status === 'ditolak' ? 'Ditolak' : ($pengajuan->status === 'hold' ? 'Perlu Klarifikasi (Hold)' : 'Menunggu Persetujuan')) }}
                     </span>
                 </div>
                 <p class="text-slate-500 text-xs mt-1">
@@ -61,12 +61,16 @@
 
             <!-- TOMBOL AKSI ATAS -->
             <div class="flex items-center space-x-2">
-                @if($pengajuan->status === 'pending')
-                    <button type="button" onclick="openModalSetujui()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                @if($pengajuan->status === 'pending' || $pengajuan->status === 'hold')
+                    <button type="button" onclick="openModalSetujui()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         Setujui Pengajuan Kas
                     </button>
-                    <button type="button" onclick="openModalTolak()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                    <button type="button" onclick="openModalHold()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Minta Klarifikasi (Hold)
+                    </button>
+                    <button type="button" onclick="openModalTolak()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         Tolak Pengajuan Kas
                     </button>
@@ -77,6 +81,19 @@
                 @endif
             </div>
         </div>
+
+        @if($pengajuan->status === 'hold')
+        <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 shadow-sm flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-800">Tiket Sedang Ditahan (Hold / Perlu Klarifikasi)</h3>
+                <p class="text-xs mt-1 font-medium italic">"{{ $pengajuan->catatan_spv }}"</p>
+                <p class="text-[11px] text-amber-700 mt-1.5">Teller telah diinstruksikan untuk memberikan klarifikasi atau menunggu kepastian ketersediaan kas fisik brankas utama.</p>
+            </div>
+        </div>
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <!-- KOLOM KIRI (2 KOLOM): INFORMASI DETAIL PENGAJUAN & KONDISI KAS TELLER -->
@@ -392,12 +409,74 @@
         </div>
     </div>
 
+    <!-- MODAL POPUP MINTA KLARIFIKASI / HOLD PENGAJUAN KAS -->
+    <div id="modal-hold" class="hidden fixed inset-0 bg-slate-900 bg-opacity-75 z-50 p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+                <div class="bg-amber-900 text-white px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-base font-bold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Tahan / Minta Klarifikasi Pengajuan Kas (Hold)
+                    </h3>
+                    <button type="button" onclick="closeModalHold()" class="text-amber-200 hover:text-white text-lg font-bold">&times;</button>
+                </div>
+
+                <form action="{{ route('supervisor.pengajuan-kas.hold', $pengajuan->id) }}" method="POST">
+                    @csrf
+                    <div class="p-6 space-y-4 text-xs">
+                        <div class="bg-amber-50 p-3.5 rounded-lg border border-amber-200 text-amber-950">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-amber-700">Teller Pemohon:</span>
+                                <span class="font-bold">{{ $teller->nama_petugas ?? 'Teller' }}</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-amber-700">Nominal Diajukan:</span>
+                                <span class="font-black tabular-nums">Rp {{ number_format($pengajuan->nominal, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="mt-1 pt-1 border-t border-amber-200">
+                                <span class="text-amber-700 block mb-0.5">Alasan Pemohon:</span>
+                                <p class="italic text-amber-900">"{{ $pengajuan->alasan }}"</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-800 mb-1">
+                                Catatan Klarifikasi / Arahan Supervisor * <span class="text-amber-600 font-normal">(Wajib Diisi)</span>
+                            </label>
+                            <textarea name="catatan_spv" rows="3" required minlength="5" placeholder="Contoh: Mohon jelaskan perkiraan antrean penarikan sebelum penambahan kas disetujui..."
+                                      class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600">{{ old('catatan_spv', $pengajuan->catatan_spv) }}</textarea>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Arahan ini akan langsung dikirimkan sebagai notifikasi ke loket Teller yang bersangkutan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
+                        <button type="button" onclick="closeModalHold()" class="text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 px-4 py-2 rounded-lg border border-slate-300 transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded-lg shadow-sm transition">
+                            Tahan Pengajuan (Hold)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function openModalSetujui() {
             document.getElementById('modal-setujui').classList.remove('hidden');
         }
         function closeModalSetujui() {
             document.getElementById('modal-setujui').classList.add('hidden');
+        }
+
+        function openModalHold() {
+            document.getElementById('modal-hold').classList.remove('hidden');
+        }
+        function closeModalHold() {
+            document.getElementById('modal-hold').classList.add('hidden');
         }
 
         function openModalTolak() {
@@ -410,6 +489,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModalSetujui();
+                closeModalHold();
                 closeModalTolak();
             }
         });

@@ -271,12 +271,14 @@ class DashboardWidgetService
             $color = match ($pk->status) {
                 'disetujui' => 'emerald',
                 'ditolak' => 'rose',
-                default => 'amber',
+                'hold' => 'amber',
+                default => 'blue',
             };
 
             $statusText = match ($pk->status) {
                 'disetujui' => 'Disetujui',
                 'ditolak' => 'Ditolak',
+                'hold' => 'Perlu Klarifikasi (Hold)',
                 default => 'Menunggu Approval',
             };
 
@@ -301,14 +303,14 @@ class DashboardWidgetService
 
         foreach ($dailyReports as $dr) {
             $color = match ($dr->status) {
-                'verified' => 'emerald',
+                'verified', 'approved' => 'emerald',
                 'rejected' => 'rose',
                 'hold' => 'amber',
                 default => 'blue',
             };
 
             $statusText = match ($dr->status) {
-                'verified' => 'Terverifikasi',
+                'verified', 'approved' => 'Terverifikasi',
                 'rejected' => 'Ditolak',
                 'hold' => 'Perlu Revisi (Hold)',
                 default => 'Menunggu Verifikasi',
@@ -386,17 +388,17 @@ class DashboardWidgetService
                 $closingAlert = [
                     'level' => 'warning',
                     'message' => 'Laporan Butuh Revisi (Hold)',
-                    'detail' => 'Supervisor meminta perbaikan pada laporan: '.($reportHariIni->supervisor_notes ?? 'Cek fisik kas.'),
+                    'detail' => 'Supervisor meminta perbaikan pada laporan: '.($reportHariIni->catatan_spv ?? $reportHariIni->notes ?? 'Cek fisik kas.'),
                     'url' => url('/teller/daily-report'),
                 ];
             } elseif ($reportHariIni->status === 'rejected') {
                 $closingAlert = [
                     'level' => 'critical',
                     'message' => 'Laporan Tutup Kas Ditolak',
-                    'detail' => 'Laporan ditolak oleh Supervisor: '.($reportHariIni->supervisor_notes ?? 'Silakan buat ulang.'),
+                    'detail' => 'Laporan ditolak oleh Supervisor: '.($reportHariIni->alasan_penolakan ?? $reportHariIni->catatan_spv ?? $reportHariIni->notes ?? 'Silakan buat ulang.'),
                     'url' => url('/teller/daily-report'),
                 ];
-            } elseif ($reportHariIni->status === 'verified') {
+            } elseif (in_array($reportHariIni->status, ['verified', 'approved'], true)) {
                 $closingAlert = [
                     'level' => 'normal',
                     'message' => 'Tutup Kas Terverifikasi',
@@ -429,15 +431,24 @@ class DashboardWidgetService
             }
         }
 
-        // 3. Status Pengajuan Kas Loket Pending
+        // 3. Status Pengajuan Kas Loket Pending & Hold
+        $holdKasCount = PengajuanKas::where('user_id', $teller->id)
+            ->where('status', 'hold')
+            ->count();
         $pendingKasCount = PengajuanKas::where('user_id', $teller->id)
             ->where('status', 'pending')
             ->count();
 
+        $totalKasAlertCount = $pendingKasCount + $holdKasCount;
         $pendingKasAlert = [
-            'level' => $pendingKasCount > 0 ? 'info' : 'normal',
-            'message' => $pendingKasCount > 0 ? "{$pendingKasCount} Pengajuan Kas Pending" : 'Tidak Ada Pengajuan Pending',
-            'count' => $pendingKasCount,
+            'level' => $holdKasCount > 0 ? 'warning' : ($pendingKasCount > 0 ? 'info' : 'normal'),
+            'message' => $holdKasCount > 0
+                ? "{$holdKasCount} Pengajuan Kas Butuh Klarifikasi (Hold)"
+                : ($pendingKasCount > 0 ? "{$pendingKasCount} Pengajuan Kas Pending" : 'Tidak Ada Pengajuan Pending'),
+            'detail' => $holdKasCount > 0
+                ? "Terdapat {$holdKasCount} pengajuan droping kas loket ditangguhkan (Hold) oleh Supervisor. Silakan periksa catatan klarifikasi."
+                : ($pendingKasCount > 0 ? "Terdapat {$pendingKasCount} pengajuan droping kas loket sedang menunggu otorisasi Supervisor." : ''),
+            'count' => $totalKasAlertCount,
             'url' => url('/teller/pengajuan-kas'),
         ];
 
@@ -510,18 +521,20 @@ class DashboardWidgetService
 
         foreach ($pengajuans as $pk) {
             $petugasNama = $pk->user->nama_petugas ?? 'Teller';
-            $isPending = $pk->status === 'pending';
+            $isPending = in_array($pk->status, ['pending', 'hold']);
 
             $statusBadge = match ($pk->status) {
                 'disetujui' => 'Disetujui',
                 'ditolak' => 'Ditolak',
+                'hold' => 'Klarifikasi (Hold)',
                 default => 'Butuh Persetujuan',
             };
 
             $color = match ($pk->status) {
                 'disetujui' => 'emerald',
                 'ditolak' => 'rose',
-                default => 'amber',
+                'hold' => 'amber',
+                default => 'blue',
             };
 
             $activities->push([
@@ -549,14 +562,14 @@ class DashboardWidgetService
             $isNeedAction = in_array($dr->status, ['pending', 'hold']);
 
             $statusBadge = match ($dr->status) {
-                'verified' => 'Terverifikasi',
+                'verified', 'approved' => 'Terverifikasi',
                 'rejected' => 'Ditolak',
                 'hold' => 'Revisi (Hold)',
                 default => 'Butuh Verifikasi',
             };
 
             $color = match ($dr->status) {
-                'verified' => 'emerald',
+                'verified', 'approved' => 'emerald',
                 'rejected' => 'rose',
                 'hold' => 'amber',
                 default => 'blue',
@@ -597,8 +610,8 @@ class DashboardWidgetService
         $today = Carbon::today()->toDateString();
         $alerts = [];
 
-        // 1. Pengajuan kas pending
-        $pendingDropingCount = PengajuanKas::where('status', 'pending')->count();
+        // 1. Pengajuan kas pending & hold
+        $pendingDropingCount = PengajuanKas::whereIn('status', ['pending', 'hold'])->count();
         if ($pendingDropingCount > 0) {
             $alerts[] = [
                 'type' => 'pengajuan_kas',

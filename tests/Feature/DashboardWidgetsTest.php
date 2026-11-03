@@ -342,4 +342,34 @@ class DashboardWidgetsTest extends TestCase
         // Teller diarahkan atau ditolak karena pembatasan middleware role
         $this->assertTrue(in_array($response->getStatusCode(), [302, 403]));
     }
+
+    public function test_teller_dashboard_does_not_show_ada_antrean_when_daily_report_is_approved(): void
+    {
+        $today = Carbon::today()->toDateString();
+        Brankas::getOrCreateToday($today, false);
+
+        DailyReport::create([
+            'user_id' => $this->teller1->id,
+            'report_date' => $today,
+            'opening_balance' => 1000000,
+            'total_cash_in' => 100000,
+            'total_cash_out' => 50000,
+            'system_balance' => 1050000,
+            'physical_balance' => 1050000,
+            'difference' => 0,
+            'status' => 'approved',
+            'approved_by' => $this->supervisor->id,
+        ]);
+
+        $service = app(DashboardWidgetService::class);
+        $alerts = $service->getTellerOperationalAlerts($this->teller1);
+
+        $this->assertEquals('normal', $alerts['closing_alert']['level']);
+        $this->assertEquals('Tutup Kas Terverifikasi', $alerts['closing_alert']['message']);
+
+        $response = $this->actingAs($this->teller1)->get('/teller/dashboard');
+        $response->assertStatus(200);
+        $response->assertDontSee('ADA ANTREAN');
+        $response->assertDontSee('Laporan telah dikirimkan ke Supervisor dan sedang dalam antrean review.');
+    }
 }

@@ -80,7 +80,7 @@
                         @elseif($tellerAlerts['closing_alert']['level'] !== 'normal')
                             {{ $tellerAlerts['closing_alert']['detail'] }}
                         @elseif($tellerAlerts['pending_kas_alert']['count'] > 0)
-                            Terdapat {{ $tellerAlerts['pending_kas_alert']['count'] }} pengajuan droping kas loket sedang menunggu otorisasi Supervisor.
+                            {{ $tellerAlerts['pending_kas_alert']['detail'] ?? "Terdapat {$tellerAlerts['pending_kas_alert']['count']} pengajuan droping kas loket sedang diproses Supervisor." }}
                         @endif
                     </p>
                 </div>
@@ -93,6 +93,10 @@
                 @elseif($tellerAlerts['closing_alert']['level'] !== 'normal')
                     <a href="{{ url('/teller/daily-report') }}" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition whitespace-nowrap shadow-sm">
                         Proses Tutup Kas
+                    </a>
+                @elseif($tellerAlerts['pending_kas_alert']['count'] > 0)
+                    <a href="{{ url('/teller/pengajuan-kas') }}" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition whitespace-nowrap shadow-sm">
+                        Lihat Pengajuan Kas
                     </a>
                 @endif
             </div>

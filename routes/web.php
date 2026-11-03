@@ -148,8 +148,17 @@ Route::middleware(['auth', 'role:supervisor,accounting'])->group(function () {
     Route::get('/supervisor/pengajuan-kas/{id}', [PengajuanKasController::class, 'show'])->name('supervisor.pengajuan-kas.detail');
     Route::post('/supervisor/pengajuan-kas/setujui/{id}', [PengajuanKasController::class, 'setujui'])->name('supervisor.pengajuan-kas.setujui');
     Route::post('/supervisor/pengajuan-kas/{id}/setujui', [PengajuanKasController::class, 'setujui']);
+    Route::post('/supervisor/pengajuan-kas/hold/{id}', [PengajuanKasController::class, 'hold'])->name('supervisor.pengajuan-kas.hold');
+    Route::post('/supervisor/pengajuan-kas/{id}/hold', [PengajuanKasController::class, 'hold']);
     Route::post('/supervisor/pengajuan-kas/tolak/{id}', [PengajuanKasController::class, 'tolak'])->name('supervisor.pengajuan-kas.tolak');
     Route::post('/supervisor/pengajuan-kas/{id}/tolak', [PengajuanKasController::class, 'tolak']);
+});
+
+// RUTE NOTIFIKASI UNIVERSAL (SUPERVISOR & TELLER)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifikasi/baca/{id}', [SupervisorController::class, 'bacaNotifikasi'])->name('notifikasi.baca');
+    Route::post('/notifikasi/baca-semua', [SupervisorController::class, 'bacaSemuaNotifikasi'])->name('notifikasi.baca-semua');
+    Route::get('/teller/notifikasi', [SupervisorController::class, 'notifikasi'])->name('teller.notifikasi');
 });
 
 // PENGATURAN KAS AWAL HARI INI (DISET OLEH PETUGAS)

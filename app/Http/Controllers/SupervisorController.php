@@ -209,7 +209,7 @@ class SupervisorController extends Controller
         } elseif ($kategori === 'ditolak') {
             $queryPengajuan->where('status', 'ditolak');
         } elseif ($kategori === 'memerlukan_klarifikasi') {
-            $queryPengajuan->whereRaw('1 = 0');
+            $queryPengajuan->where('status', 'hold');
         }
 
         if ($tellerId) {
@@ -236,6 +236,7 @@ class SupervisorController extends Controller
             $statusNormalized = match ($p->status) {
                 'disetujui' => 'disetujui',
                 'ditolak' => 'ditolak',
+                'hold' => 'memerlukan_klarifikasi',
                 default => 'menunggu_persetujuan'
             };
 
@@ -258,11 +259,13 @@ class SupervisorController extends Controller
                 'status_badge' => match ($p->status) {
                     'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                     'ditolak' => 'bg-rose-100 text-rose-800 border-rose-200',
-                    default => 'bg-amber-100 text-amber-800 border-amber-200'
+                    'hold' => 'bg-amber-100 text-amber-800 border-amber-200',
+                    default => 'bg-blue-100 text-blue-800 border-blue-200'
                 },
                 'status_text' => match ($p->status) {
                     'disetujui' => 'Disetujui',
                     'ditolak' => 'Ditolak',
+                    'hold' => 'Perlu Klarifikasi (Hold)',
                     default => 'Menunggu Persetujuan'
                 },
                 'detail_url' => route('supervisor.pengajuan-kas.detail', $p->id),
@@ -353,6 +356,7 @@ class SupervisorController extends Controller
         // 4. Hitung Metrik Ringkasan Terpusat
         $totalPengajuanPending = PengajuanKas::where('status', 'pending')->count();
         $totalDailyReportPending = DailyReport::whereIn('status', ['pending', 'hold'])->count();
+        $totalMemerlukanKlarifikasi = PengajuanKas::where('status', 'hold')->count() + DailyReport::where('status', 'hold')->count();
         $totalPekerjaanPending = $totalPengajuanPending + $totalDailyReportPending;
         $totalSelesai = PengajuanKas::whereIn('status', ['disetujui', 'ditolak'])->count() +
             DailyReport::whereIn('status', ['approved', 'rejected'])->count();
@@ -376,6 +380,7 @@ class SupervisorController extends Controller
             'totalPekerjaanPending',
             'totalPengajuanPending',
             'totalDailyReportPending',
+            'totalMemerlukanKlarifikasi',
             'totalSelesai',
             'tellers',
             'kategori',

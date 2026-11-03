@@ -134,6 +134,7 @@ Route::prefix('supervisor')->name('api.supervisor.')->middleware('auth:sanctum')
     Route::get('/pengajuan-kas', [OperasionalKasApiController::class, 'listPengajuanKasSupervisor'])->name('pengajuan-kas');
     Route::get('/pengajuan-kas/{id}', [OperasionalKasApiController::class, 'detailPengajuanKasSupervisor'])->name('pengajuan-kas.detail');
     Route::post('/pengajuan-kas/{id}/setujui', [OperasionalKasApiController::class, 'setujuiPengajuanKas'])->name('pengajuan-kas.setujui');
+    Route::post('/pengajuan-kas/{id}/hold', [OperasionalKasApiController::class, 'holdPengajuanKas'])->name('pengajuan-kas.hold');
     Route::post('/pengajuan-kas/{id}/tolak', [OperasionalKasApiController::class, 'tolakPengajuanKas'])->name('pengajuan-kas.tolak');
     Route::get('/daily-report', [OperasionalKasApiController::class, 'listDailyReportSupervisor'])->name('daily-report');
     Route::get('/daily-report/{id}', [OperasionalKasApiController::class, 'detailDailyReportSupervisor'])->name('daily-report.detail');

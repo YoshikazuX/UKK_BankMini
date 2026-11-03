@@ -518,4 +518,54 @@ class SupervisorPenyempurnaanTest extends TestCase
         // Jumlah jurnal tidak boleh bertambah (mencegah double booking)
         $this->assertEquals($jurnalCountBefore, Jurnal::count());
     }
+
+    /**
+     * Skenario 10: Pengajuan Kas dapat di-Hold (Minta Klarifikasi) dan kemudian Disetujui
+     */
+    public function test_skenario_10_pengajuan_kas_dapat_di_hold_dan_kemudian_disetujui(): void
+    {
+        $today = Carbon::today()->toDateString();
+        Brankas::getOrCreateToday($today, false);
+
+        $pengajuan = PengajuanKas::create([
+            'user_id' => $this->teller1->id,
+            'nominal' => 350000,
+            'alasan' => 'Permintaan likuiditas loket',
+            'status' => 'pending',
+            'tanggal' => $today,
+        ]);
+
+        // 1. Coba hold tanpa catatan -> Gagal validasi
+        $responseFail = $this->actingAs($this->supervisor)->post('/supervisor/pengajuan-kas/hold/'.$pengajuan->id, [
+            'catatan_spv' => '',
+        ]);
+        $responseFail->assertSessionHasErrors(['catatan_spv']);
+
+        // 2. Hold dengan catatan klarifikasi yang sah
+        $catatanHold = 'Mohon periksa perkiraan antrean penarikan siswa sebelum kas diserahkan.';
+        $responseHold = $this->actingAs($this->supervisor)->post('/supervisor/pengajuan-kas/hold/'.$pengajuan->id, [
+            'catatan_spv' => $catatanHold,
+        ]);
+        $responseHold->assertRedirect(route('supervisor.pengajuan-kas.detail', $pengajuan->id));
+        $responseHold->assertSessionHas('success');
+
+        $pengajuan->refresh();
+        $this->assertEquals('hold', $pengajuan->status);
+        $this->assertEquals($catatanHold, $pengajuan->catatan_spv);
+
+        // 3. Teller menerima notifikasi hold
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $this->teller1->id,
+            'notifiable_type' => User::class,
+        ]);
+
+        // 4. Pengajuan yang di-Hold dapat disetujui (Approved) setelah klarifikasi
+        $responseApprove = $this->actingAs($this->supervisor)->post('/supervisor/pengajuan-kas/setujui/'.$pengajuan->id, [
+            'catatan' => 'Klarifikasi diterima, droping kas disetujui.',
+        ]);
+        $responseApprove->assertRedirect(route('supervisor.pengajuan-kas.detail', $pengajuan->id));
+
+        $pengajuan->refresh();
+        $this->assertEquals('disetujui', $pengajuan->status);
+    }
 }

@@ -162,8 +162,8 @@
                                     {{ $p->alasan }}
                                 </td>
                                 <td class="p-3 text-center">
-                                    <span class="text-xs font-semibold {{ $p->status === 'disetujui' ? 'text-emerald-700' : ($p->status === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
-                                        {{ $p->status === 'disetujui' ? 'Disetujui' : ($p->status === 'ditolak' ? 'Ditolak' : 'Menunggu') }}
+                                    <span class="text-xs font-semibold {{ $p->status === 'disetujui' ? 'text-emerald-700' : ($p->status === 'ditolak' ? 'text-rose-700' : ($p->status === 'hold' ? 'text-amber-700 font-bold' : 'text-blue-700')) }}">
+                                        {{ $p->status === 'disetujui' ? 'Disetujui' : ($p->status === 'ditolak' ? 'Ditolak' : ($p->status === 'hold' ? 'Perlu Klarifikasi (Hold)' : 'Menunggu Review')) }}
                                     </span>
                                 </td>
                                 <td class="p-3 text-slate-600 text-[11px]">
@@ -173,6 +173,9 @@
                                     @if($p->status === 'ditolak')
                                         <span class="text-rose-700 font-semibold block">Alasan Penolakan:</span>
                                         <span class="text-rose-600 block">{{ $p->alasan_penolakan ?: ($p->catatan_spv ?: 'Tidak ada alasan rinci.') }}</span>
+                                    @elseif($p->status === 'hold')
+                                        <span class="text-amber-800 font-bold block">Catatan Klarifikasi SPV:</span>
+                                        <span class="text-amber-900 font-medium block italic">"{{ $p->catatan_spv }}"</span>
                                     @else
                                         {{ $p->catatan_spv ?? ($p->status === 'pending' ? 'Belum ditinjau' : '-') }}
                                     @endif

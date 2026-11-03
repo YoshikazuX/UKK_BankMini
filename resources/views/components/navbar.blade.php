@@ -31,6 +31,8 @@
         $unreadNotifications = $user->unreadNotifications()->take(5)->get();
     } elseif ($user && $role === 'teller') {
         $pendingPengajuan = \App\Models\PengajuanKas::where('user_id', $user->id)->where('status', 'pending')->count();
+        $unreadNotificationCount = $user->unreadNotifications()->count();
+        $unreadNotifications = $user->unreadNotifications()->take(5)->get();
     } elseif ($user && $role === 'admin') {
         $pendingResetTotal = \App\Models\PasswordResetRequest::where('status', 'pending')->count();
     }
@@ -143,7 +145,7 @@
             <!-- Right Controls: Notification, User Profile, and Mobile Hamburger -->
             <div class="flex items-center space-x-2 shrink-0">
                 <!-- NOTIFIKASI LONCENG KHUSUS SUPERVISOR / TELLER -->
-                @if(in_array($role, ['supervisor', 'accounting']))
+                @if(in_array($role, ['supervisor', 'accounting', 'teller']))
                 <div class="relative">
                     <button onclick="toggleNavbarNotificationDropdown(event)" id="unified-notif-btn" 
                             class="relative p-1.5 rounded-full text-slate-300 hover:text-white hover:bg-slate-700 transition focus:outline-none" 
@@ -170,7 +172,7 @@
                                 @endif
                             </div>
                             @if($unreadNotificationCount > 0)
-                            <form action="{{ route('supervisor.notifikasi.baca-semua') }}" method="POST" class="inline">
+                            <form action="{{ route('notifikasi.baca-semua') }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">Tandai Baca</button>
                             </form>
@@ -179,7 +181,7 @@
 
                         <div class="max-h-80 overflow-y-auto divide-y divide-slate-100">
                             @forelse($unreadNotifications as $notif)
-                                <a href="{{ route('supervisor.notifikasi.baca', $notif->id) }}" class="block px-4 py-3 hover:bg-slate-50 transition">
+                                <a href="{{ route('notifikasi.baca', $notif->id) }}" class="block px-4 py-3 hover:bg-slate-50 transition">
                                     <div class="flex items-start justify-between">
                                         <p class="text-xs font-bold text-slate-900">{{ $notif->data['title'] ?? 'Tugas Baru' }}</p>
                                         <span class="text-[10px] text-slate-400 whitespace-nowrap ml-2">{{ $notif->created_at->diffForHumans() }}</span>
@@ -189,7 +191,9 @@
                                         <span class="inline-block text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
                                             {{ $notif->data['nomor_referensi'] ?? '' }}
                                         </span>
-                                        <span class="text-[10px] text-slate-500">Oleh: {{ $notif->data['nama_teller'] ?? 'Teller' }}</span>
+                                        @if(!empty($notif->data['nama_teller']))
+                                            <span class="text-[10px] text-slate-500">Ref: {{ $notif->data['nama_teller'] }}</span>
+                                        @endif
                                     </div>
                                 </a>
                             @empty
@@ -200,7 +204,7 @@
                         </div>
 
                         <div class="p-2 border-t border-slate-100 bg-slate-50 text-center">
-                            <a href="{{ route('supervisor.notifikasi') }}" class="text-xs font-semibold text-slate-700 hover:text-slate-900 block py-1">
+                            <a href="{{ $role === 'teller' ? route('teller.notifikasi') : route('supervisor.notifikasi') }}" class="text-xs font-semibold text-slate-700 hover:text-slate-900 block py-1">
                                 Lihat Seluruh Notifikasi &rarr;
                             </a>
                         </div>

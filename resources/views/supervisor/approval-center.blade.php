@@ -122,6 +122,8 @@
                         <span class="ml-1.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-900 text-[10px] font-black">{{ $totalPengajuanPending }}</span>
                     @elseif($key === 'menunggu_verifikasi' && $totalDailyReportPending > 0)
                         <span class="ml-1.5 px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[10px] font-black">{{ $totalDailyReportPending }}</span>
+                    @elseif($key === 'memerlukan_klarifikasi' && ($totalMemerlukanKlarifikasi ?? 0) > 0)
+                        <span class="ml-1.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-black">{{ $totalMemerlukanKlarifikasi }}</span>
                     @endif
                 </a>
             @endforeach

@@ -515,7 +515,7 @@ class OperasionalKasApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Data pengajuan kas tidak ditemukan!'], 404);
             }
 
-            if ($pengajuan->status !== 'pending') {
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
                 DB::rollBack();
 
                 return response()->json([
@@ -524,6 +524,7 @@ class OperasionalKasApiController extends Controller
                 ], 422);
             }
 
+            $statusSebelum = $pengajuan->status;
             $catatan = $request->catatan_spv ?? 'Disetujui untuk pemenuhan likuiditas loket';
             $pengajuan->update([
                 'status' => 'disetujui',
@@ -573,7 +574,7 @@ class OperasionalKasApiController extends Controller
                 tellerId: $pengajuan->user_id,
                 namaTeller: $namaTeller,
                 jenisKeputusan: 'disetujui',
-                statusSebelum: 'pending',
+                statusSebelum: $statusSebelum,
                 statusSesudah: 'disetujui',
                 nominal: $pengajuan->nominal,
                 catatan: $catatan,
@@ -635,12 +636,13 @@ class OperasionalKasApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Data pengajuan kas tidak ditemukan!'], 404);
             }
 
-            if ($pengajuan->status !== 'pending') {
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
                 DB::rollBack();
 
                 return response()->json(['success' => false, 'message' => "Pengajuan kas ini sudah diproses sebelumnya ({$pengajuan->status})."], 422);
             }
 
+            $statusSebelum = $pengajuan->status;
             $pengajuan->update([
                 'status' => 'ditolak',
                 'disetujui_oleh' => $spvId,
@@ -658,7 +660,7 @@ class OperasionalKasApiController extends Controller
                 tellerId: $pengajuan->user_id,
                 namaTeller: $namaTeller,
                 jenisKeputusan: 'ditolak',
-                statusSebelum: 'pending',
+                statusSebelum: $statusSebelum,
                 statusSesudah: 'ditolak',
                 nominal: $pengajuan->nominal,
                 catatan: $alasan,
@@ -694,6 +696,90 @@ class OperasionalKasApiController extends Controller
             DB::rollBack();
 
             return response()->json(['success' => false, 'message' => 'Gagal menolak pengajuan kas: '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Supervisor: Tahan / Minta Klarifikasi Tiket Droping Kas (Hold)
+     */
+    public function holdPengajuanKas(Request $request, int|string $id): JsonResponse
+    {
+        $catatan = trim($request->catatan_spv ?? $request->catatan ?? $request->notes ?? '');
+        if (empty($catatan) || strlen($catatan) < 5) {
+            return response()->json(['success' => false, 'message' => 'Catatan klarifikasi wajib diisi minimal 5 karakter!'], 422);
+        }
+
+        $spvUser = $request->user();
+        $spvId = $spvUser?->id ?: 1;
+        $spvName = $spvUser?->nama_petugas ?? 'Supervisor';
+
+        DB::beginTransaction();
+        try {
+            $pengajuan = PengajuanKas::where('id', $id)->lockForUpdate()->first();
+            if (! $pengajuan) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => 'Data pengajuan kas tidak ditemukan!'], 404);
+            }
+
+            if (! in_array($pengajuan->status, ['pending', 'hold'], true)) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => "Pengajuan kas ini sudah diproses sebelumnya ({$pengajuan->status})."], 422);
+            }
+
+            $statusSebelum = $pengajuan->status;
+            $pengajuan->update([
+                'status' => 'hold',
+                'disetujui_oleh' => $spvId,
+                'catatan_spv' => $catatan,
+            ]);
+
+            $namaTeller = $pengajuan->user?->nama_petugas ?? 'Teller';
+
+            // Catat ke approval_histories
+            ApprovalHistory::record(
+                pekerjaanType: 'pengajuan_kas',
+                pekerjaanId: $pengajuan->id,
+                nomorReferensi: $pengajuan->nomor_pengajuan,
+                tellerId: $pengajuan->user_id,
+                namaTeller: $namaTeller,
+                jenisKeputusan: 'klarifikasi_hold',
+                statusSebelum: $statusSebelum,
+                statusSesudah: 'hold',
+                nominal: $pengajuan->nominal,
+                catatan: $catatan,
+                supervisor: $spvUser
+            );
+
+            NotificationHelper::notifyUser($pengajuan->user_id, [
+                'task_type' => 'pengajuan_kas',
+                'task_id' => $pengajuan->id,
+                'nomor_referensi' => $pengajuan->nomor_pengajuan,
+                'nama_teller' => $namaTeller,
+                'title' => 'Pengajuan Kas Ditangguhkan (Hold)',
+                'message' => "Pengajuan kas #{$pengajuan->nomor_pengajuan} ditangguhkan (Hold) oleh {$spvName}: {$catatan}",
+                'nominal' => $pengajuan->nominal,
+                'status' => 'hold',
+                'action_url' => url('/teller/pengajuan-kas'),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pengajuan kas #{$pengajuan->nomor_pengajuan} berhasil ditangguhkan (Hold)!",
+                'data' => [
+                    'id' => $pengajuan->id,
+                    'nomor_pengajuan' => $pengajuan->nomor_pengajuan,
+                    'status' => 'hold',
+                    'catatan_spv' => $catatan,
+                ],
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => 'Gagal menahan pengajuan kas: '.$e->getMessage()], 500);
         }
     }
 

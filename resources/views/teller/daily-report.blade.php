@@ -195,7 +195,7 @@
                         <div class="mt-3 p-3 bg-white/80 rounded-lg border {{ $myReportToday->status === 'hold' ? 'border-amber-300' : 'border-rose-300' }}">
                             <p class="text-[11px] font-bold uppercase tracking-wider {{ $myReportToday->status === 'hold' ? 'text-amber-800' : 'text-rose-800' }}">Catatan Supervisor:</p>
                             <p class="text-xs mt-1 italic text-slate-800 font-medium">"{{ $myReportToday->catatan_spv ?: $myReportToday->alasan_penolakan }}"</p>
-                            <p class="text-[11px] text-slate-600 mt-2 font-medium">⚠️ Silakan hitung ulang kas fisik di laci Anda, sesuaikan input nominal di bawah, lalu klik <strong>"Perbarui Laporan Tutup Kas"</strong>.</p>
+                            <p class="text-[11px] text-slate-600 mt-2 font-medium">Silakan hitung ulang kas fisik di laci Anda, sesuaikan input nominal di bawah, lalu klik <strong>"Perbarui Laporan Tutup Kas"</strong>.</p>
                         </div>
                         @endif
 
