@@ -18,15 +18,15 @@ class BukuTabunganController extends Controller
      */
     public function show(int|string $id): View|RedirectResponse
     {
-        $nasabah = Nasabah::find($id);
+        $nasabah = Nasabah::withTrashed()->find($id);
         if (! $nasabah) {
             return back()->with('error', 'Data nasabah tidak ditemukan!');
         }
 
-        // Ambil seluruh riwayat mutasi transaksi nasabah
+        // Ambil seluruh riwayat mutasi transaksi nasabah yang sukses
         $transaksi = Transaksi::with('petugas')
             ->where('nasabah_id', $id)
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -63,14 +63,14 @@ class BukuTabunganController extends Controller
      */
     public function cetakBuku(int|string $id): View|RedirectResponse
     {
-        $nasabah = Nasabah::find($id);
+        $nasabah = Nasabah::withTrashed()->find($id);
         if (! $nasabah) {
             return back()->with('error', 'Data nasabah tidak ditemukan!');
         }
 
         $transaksi = Transaksi::with('petugas')
             ->where('nasabah_id', $id)
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->orderBy('created_at', 'asc')
             ->get();
 

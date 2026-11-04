@@ -138,6 +138,15 @@
                             <span>(-) Total Penarikan Tunai & Biaya:</span>
                             <span class="font-bold tabular-nums">Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
                         </div>
+                        @php
+                            $perubahanKas = $report->system_balance - $report->opening_balance;
+                        @endphp
+                        <div class="flex justify-between items-center py-1 text-slate-700 font-semibold border-t border-slate-200">
+                            <span>Perubahan Kas (Arus Bersih Hari Ini):</span>
+                            <span class="tabular-nums {{ $perubahanKas >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                                {{ $perubahanKas >= 0 ? '+' : '' }}Rp {{ number_format($perubahanKas, 0, ',', '.') }}
+                            </span>
+                        </div>
                         <div class="flex justify-between items-center pt-2.5 border-t-2 border-slate-300 font-bold text-slate-900 text-sm">
                             <span>Total Saldo Menurut Sistem:</span>
                             <span class="text-indigo-900 tabular-nums font-black">Rp {{ number_format($report->system_balance, 0, ',', '.') }}</span>

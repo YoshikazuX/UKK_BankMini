@@ -44,7 +44,7 @@ class Transaksi extends Model
      */
     public function nasabah(): BelongsTo
     {
-        return $this->belongsTo(Nasabah::class, 'nasabah_id');
+        return $this->belongsTo(Nasabah::class, 'nasabah_id')->withTrashed();
     }
 
     /**

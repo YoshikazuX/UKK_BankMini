@@ -108,6 +108,65 @@
         </div>
 
         <!-- ========================================================================= -->
+        <!-- DAFTAR PERMOHONAN RESET PIN NASABAH (ADMIN APPROVE, NASABAH SET PIN MANDIRI) -->
+        <!-- ========================================================================= -->
+        @if(isset($pinResetRequests) && $pinResetRequests->count() > 0)
+        <div class="bg-amber-50/80 border border-amber-300 rounded-2xl p-5 mb-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-amber-200">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        {{ $pinResetRequests->count() }}
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-amber-950">Permohonan Reset PIN Nasabah (Menunggu Persetujuan Admin)</h2>
+                        <p class="text-xs text-amber-800">Setujui permohonan setelah memverifikasi siswa. PIN baru tetap akan dibuat oleh nasabah secara mandiri.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-xl border border-amber-200">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-amber-100/60 text-amber-950 font-semibold border-b border-amber-200">
+                        <tr>
+                            <th class="py-2.5 px-4">Waktu Ajuan</th>
+                            <th class="py-2.5 px-4">Nasabah</th>
+                            <th class="py-2.5 px-4">Rekening / NIS</th>
+                            <th class="py-2.5 px-4">Alasan Lupa PIN</th>
+                            <th class="py-2.5 px-4 text-center">Tindakan Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-amber-100 text-slate-700">
+                        @foreach($pinResetRequests as $reqPin)
+                        <tr>
+                            <td class="py-2.5 px-4 tabular-nums text-slate-500">{{ $reqPin->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="py-2.5 px-4 font-bold text-slate-900">{{ $reqPin->nama_siswa }}</td>
+                            <td class="py-2.5 px-4 font-mono text-slate-700">{{ $reqPin->no_rekening }} (NIS: {{ $reqPin->nis }})</td>
+                            <td class="py-2.5 px-4 italic text-slate-600">"{{ $reqPin->alasan }}"</td>
+                            <td class="py-2.5 px-4 text-center whitespace-nowrap">
+                                <div class="inline-flex items-center space-x-1.5">
+                                    <form action="{{ route('admin.pin-reset.approve', $reqPin->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-lg text-[11px] transition shadow-sm">
+                                            Setujui Reset PIN
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.pin-reset.reject', $reqPin->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold py-1 px-2.5 rounded-lg text-[11px] transition">
+                                            Tolak
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <!-- ========================================================================= -->
         <!-- FORM FILTER & PENCARIAN TERPADU (FEATURE 1) -->
         <!-- ========================================================================= -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
@@ -149,8 +208,9 @@
                         <select name="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-xs bg-white">
                             <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Semua Status</option>
                             <option value="aktif" {{ request('status', 'aktif') === 'aktif' ? 'selected' : '' }}>Aktif</option>
-                            <option value="nonaktif" {{ request('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-                            <option value="alumni" {{ request('status') === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                            <option value="nonaktif" {{ request('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif / Siswa Baru Kelas 10</option>
+                            <option value="alumni" {{ request('status') === 'alumni' ? 'selected' : '' }}>Alumni (Lulus Kelas 12)</option>
+                            <option value="terhapus" {{ request('status') === 'terhapus' ? 'selected' : '' }}>Arsip Alumni Dihapus ({{ $totalTerhapus ?? 0 }})</option>
                         </select>
                     </div>
 
@@ -270,35 +330,44 @@
                                     Buku
                                 </a>
 
-                                <!-- Tombol Ubah Status (Modal Konfirmasi Feature 7) -->
-                                @if(($n->status ?? 'aktif') === 'aktif')
-                                    <button
-                                        type="button"
-                                        onclick="konfirmasiUbahStatus({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', 'nonaktif')"
-                                        class="inline-block bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium py-1 px-2 rounded text-[11px] transition border border-amber-300"
-                                        title="Nonaktifkan Rekening">
-                                        Nonaktifkan
-                                    </button>
+                                @if(method_exists($n, 'trashed') && $n->trashed())
+                                    <form action="{{ route('admin.nasabah.restore', $n->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1 px-2.5 rounded text-[11px] transition shadow-sm">
+                                            Pulihkan Akun
+                                        </button>
+                                    </form>
                                 @else
+                                    <!-- Tombol Ubah Status (Modal Konfirmasi Feature 7) -->
+                                    @if(($n->status ?? 'aktif') === 'aktif')
+                                        <button
+                                            type="button"
+                                            onclick="konfirmasiUbahStatus({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', 'nonaktif')"
+                                            class="inline-block bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium py-1 px-2 rounded text-[11px] transition border border-amber-300"
+                                            title="Nonaktifkan Rekening">
+                                            Nonaktifkan
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            onclick="konfirmasiUbahStatus({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', 'aktif')"
+                                            class="inline-block bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-medium py-1 px-2 rounded text-[11px] transition border border-emerald-300"
+                                            title="Aktifkan Rekening">
+                                            Aktifkan
+                                        </button>
+                                    @endif
+
+                                    <!-- Edit -->
+                                    <a href="{{ url('/admin/edit-nasabah/'.$n->id) }}" class="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1 px-2 rounded text-[11px] transition">Edit</a>
+
+                                    <!-- Hapus (Modal Konfirmasi Feature 7) -->
                                     <button
                                         type="button"
-                                        onclick="konfirmasiUbahStatus({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', 'aktif')"
-                                        class="inline-block bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-medium py-1 px-2 rounded text-[11px] transition border border-emerald-300"
-                                        title="Aktifkan Rekening">
-                                        Aktifkan
+                                        onclick="konfirmasiHapusNasabah({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', {{ $n->saldo }})"
+                                        class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-1 px-2 rounded text-[11px] transition border border-rose-200">
+                                        Hapus
                                     </button>
                                 @endif
-
-                                <!-- Edit -->
-                                <a href="{{ url('/admin/edit-nasabah/'.$n->id) }}" class="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1 px-2 rounded text-[11px] transition">Edit</a>
-
-                                <!-- Hapus (Modal Konfirmasi Feature 7) -->
-                                <button
-                                    type="button"
-                                    onclick="konfirmasiHapusNasabah({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', {{ $n->saldo }})"
-                                    class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-1 px-2 rounded text-[11px] transition border border-rose-200">
-                                    Hapus
-                                </button>
                             </td>
                         </tr>
                         @empty
@@ -397,6 +466,15 @@
                             &darr; Unduh Template CSV Resmi
                         </a>
                     </div>
+                    <div class="mb-4">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1.5">Status Akun Siswa yang Diimpor:</label>
+                        <select name="status_default" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
+                            <option value="auto">Otomatis (Murid Baru Kelas 10 / X = Belum Aktif, Kelas 11 & 12 = Aktif)</option>
+                            <option value="nonaktif">Belum Aktif / Nonaktif (Khusus Import Siswa Baru Kelas 10)</option>
+                            <option value="aktif">Langsung Aktif</option>
+                        </select>
+                        <p class="text-[11px] text-slate-500 mt-1">Pilih <strong>Belum Aktif</strong> atau <strong>Otomatis</strong> untuk mengimpor data murid baru kelas 10 agar akun tidak langsung aktif sebelum diverifikasi.</p>
+                    </div>
                     <div class="mb-6">
                         <label class="block text-slate-700 text-xs font-semibold mb-2">Pilih File CSV (.csv / .txt):</label>
                         <input type="file" name="file_csv" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
@@ -481,10 +559,10 @@
                 extraEl.innerHTML = '<span class="text-slate-500">Saldo Rekening: Rp 0</span>';
             }
 
-            title.textContent = 'Hapus Data Nasabah?';
-            message.textContent = 'Tindakan ini akan menghapus data nasabah secara permanen. Pastikan tidak ada transaksi aktif yang bergantung pada data nasabah ini.';
+            title.textContent = 'Hapus / Arsipkan Data Nasabah Alumni?';
+            message.textContent = 'Data nasabah akan dihapus dari daftar aktif (Soft Delete), namun seluruh riwayat mutasi transaksi di buku tabungan dan kas TETAP AMAN tersimpan utuh di sistem.';
             btn.className = 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2';
-            btnText.textContent = 'Ya, Hapus Nasabah';
+            btnText.textContent = 'Ya, Hapus & Simpan Riwayat';
             iconContainer.className = 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4';
 
             modal.classList.remove('hidden');

@@ -6,6 +6,7 @@ use App\Helpers\AuditHelper;
 use App\Helpers\SettingHelper;
 use App\Helpers\TerbilangHelper;
 use App\Models\Nasabah;
+use App\Models\PinResetRequest;
 use App\Models\Transaksi;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,11 @@ class NasabahController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Nasabah::query();
+        if ($request->status === 'terhapus') {
+            $query = Nasabah::onlyTrashed();
+        } else {
+            $query = Nasabah::query();
+        }
 
         // 1. Pencarian Bebas (Nama Nasabah, No Rekening, NIS/NIP)
         if ($request->filled('cari')) {
@@ -40,7 +45,7 @@ class NasabahController extends Controller
         }
 
         // 3. Filter Status Rekening: Aktif, Nonaktif, Alumni
-        if ($request->filled('status') && $request->status !== 'all') {
+        if ($request->filled('status') && ! in_array($request->status, ['all', 'terhapus'], true)) {
             $query->where('status', $request->status);
         }
 
@@ -81,6 +86,13 @@ class NasabahController extends Controller
         $totalNonaktif = Nasabah::where('status', 'nonaktif')->count();
         $totalAlumni = Nasabah::where('status', 'alumni')->count();
         $totalGuru = Nasabah::whereIn('kategori', ['guru', 'guru_karyawan'])->count();
+        $totalTerhapus = Nasabah::onlyTrashed()->count();
+
+        // Daftar Permohonan Reset PIN Nasabah yang Menunggu Persetujuan Admin
+        $pinResetRequests = PinResetRequest::with('nasabah')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('admin.data-nasabah', compact(
             'nasabah',
@@ -90,16 +102,18 @@ class NasabahController extends Controller
             'totalAktif',
             'totalNonaktif',
             'totalAlumni',
-            'totalGuru'
+            'totalGuru',
+            'totalTerhapus',
+            'pinResetRequests'
         ));
     }
 
     /**
-     * Halaman Detail Nasabah Komprehensif
+     * Halaman Detail Nasabah Komprehensif (Termasuk Alumni yang Terhapus agar Riwayat Tetap Terjaga)
      */
     public function show(int|string $id): View
     {
-        $nasabah = Nasabah::findOrFail($id);
+        $nasabah = Nasabah::withTrashed()->findOrFail($id);
 
         $minMengendap = (float) SettingHelper::getSaldoMengendapMin();
         $saldoSaatIni = (float) $nasabah->saldo;
@@ -282,7 +296,23 @@ class NasabahController extends Controller
 
         $nasabah->delete();
 
-        return redirect('/admin/data-nasabah')->with('success', 'Nasabah berhasil dihapus!');
+        return redirect('/admin/data-nasabah')->with('success', 'Data nasabah berhasil diarsipkan/dihapus dengan aman. Seluruh riwayat transaksi nasabah tetap tersimpan utuh di sistem!');
+    }
+
+    public function restore(int|string $id): RedirectResponse
+    {
+        $nasabah = Nasabah::onlyTrashed()->findOrFail($id);
+        $nasabah->restore();
+
+        AuditHelper::log(
+            jenisAktivitas: 'PULIHKAN_NASABAH',
+            modul: 'Nasabah',
+            objekId: $nasabah->no_rekening,
+            oldValues: ['deleted_at' => 'trashed'],
+            newValues: ['status' => $nasabah->status]
+        );
+
+        return redirect('/admin/data-nasabah')->with('success', "Data nasabah {$nasabah->nama_siswa} berhasil dipulihkan!");
     }
 
     /**
@@ -309,7 +339,8 @@ class NasabahController extends Controller
         };
 
         // Ambil nasabah terakhir dengan format ini
-        $lastRecord = Nasabah::where('no_rekening', 'LIKE', $prefixPola.'%')
+        $lastRecord = Nasabah::withTrashed()
+            ->where('no_rekening', 'LIKE', $prefixPola.'%')
             ->orderBy('id', 'desc')
             ->first();
 
@@ -318,11 +349,11 @@ class NasabahController extends Controller
             $nextNum = (int) $matches[1] + 1;
         } else {
             // Kompatibilitas mundur dengan format lama (contoh: RPL-001)
-            $lastOld = Nasabah::where('no_rekening', 'LIKE', $kode.'-%')->orderBy('id', 'desc')->first();
+            $lastOld = Nasabah::withTrashed()->where('no_rekening', 'LIKE', $kode.'-%')->orderBy('id', 'desc')->first();
             if ($lastOld && preg_match('/-(\d+)$/', $lastOld->no_rekening, $mOld)) {
                 $nextNum = (int) $mOld[1] + 1;
             } else {
-                $count = Nasabah::where('jurusan', 'LIKE', "%{$jurusan}%")->count();
+                $count = Nasabah::withTrashed()->where('jurusan', 'LIKE', "%{$jurusan}%")->count();
                 $nextNum = max(1, $count + 1);
             }
         }
@@ -330,7 +361,7 @@ class NasabahController extends Controller
         // Pastikan tidak duplikat
         do {
             $candidate = $prefixPola.sprintf('%03d', $nextNum);
-            $exists = Nasabah::where('no_rekening', $candidate)->exists();
+            $exists = Nasabah::withTrashed()->where('no_rekening', $candidate)->exists();
             if ($exists) {
                 $nextNum++;
             }
@@ -344,8 +375,10 @@ class NasabahController extends Controller
     {
         $request->validate([
             'file_csv' => 'required|mimes:csv,txt|max:2048',
+            'status_default' => 'nullable|in:auto,nonaktif,aktif',
         ]);
 
+        $statusDefault = $request->input('status_default', 'auto');
         $file = $request->file('file_csv');
         $handle = fopen($file->getPathname(), 'r');
         $header = true;
@@ -374,8 +407,24 @@ class NasabahController extends Controller
                 $nama = trim($row[1]);
                 $kelas = isset($row[2]) ? trim($row[2]) : '-';
                 $jurusan = isset($row[3]) ? trim($row[3]) : 'Rekayasa Perangkat Lunak';
+                $statusKolom = isset($row[4]) ? strtolower(trim($row[4])) : '';
 
-                $exists = Nasabah::where('nis', $nis)->first();
+                // Tentukan status akun (Siswa Baru Kelas 10 default Belum Aktif / nonaktif)
+                if (in_array($statusKolom, ['aktif', 'nonaktif', 'alumni'], true)) {
+                    $statusNasabah = $statusKolom;
+                } elseif ($statusDefault === 'nonaktif') {
+                    $statusNasabah = 'nonaktif';
+                } elseif ($statusDefault === 'aktif') {
+                    $statusNasabah = 'aktif';
+                } else {
+                    if (preg_match('/\b(?:X|10)\b/i', $kelas) && ! preg_match('/\b(?:XI|XII|11|12)\b/i', $kelas)) {
+                        $statusNasabah = 'nonaktif';
+                    } else {
+                        $statusNasabah = 'aktif';
+                    }
+                }
+
+                $exists = Nasabah::withTrashed()->where('nis', $nis)->first();
                 if (! $exists && ! empty($nis)) {
                     $no_rekening = self::generateNoRekening($jurusan, 'siswa');
 
@@ -389,7 +438,7 @@ class NasabahController extends Controller
                         'password' => '123456',
                         'pin_keamanan' => '123456',
                         'saldo' => 0,
-                        'status' => 'aktif',
+                        'status' => $statusNasabah,
                         'kategori' => 'siswa',
                     ]);
                     $sukses++;
@@ -405,7 +454,7 @@ class NasabahController extends Controller
                 modul: 'Nasabah',
                 objekId: null,
                 oldValues: null,
-                newValues: ['sukses' => $sukses, 'gagal' => $gagal]
+                newValues: ['sukses' => $sukses, 'gagal' => $gagal, 'status_default' => $statusDefault]
             );
 
             return back()->with('success', "Import Selesai! {$sukses} data masuk dengan Nomor Rekening otomatis, {$gagal} data diabaikan (NIS kembar/kosong).");
@@ -427,14 +476,15 @@ class NasabahController extends Controller
             'Expires' => '0',
         ];
 
-        $columns = ['NIS', 'Nama Lengkap', 'Kelas (Contoh: XII RPL 1)', 'Jurusan (Contoh: Rekayasa Perangkat Lunak)'];
+        $columns = ['NIS', 'Nama Lengkap', 'Kelas (Contoh: X RPL 1 / XII RPL 1)', 'Jurusan (Contoh: Rekayasa Perangkat Lunak)', 'Status Opsional (aktif/nonaktif)'];
 
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fwrite($file, "\xEF\xBB\xBF");
             fputcsv($file, $columns, ';');
-            fputcsv($file, ['17763', 'Dewi Handayani Nur Halimah', 'XI RPL 1', 'Rekayasa Perangkat Lunak'], ';');
-            fputcsv($file, ['17764', 'Bima Revan Saputra', 'XII RPL 2', 'Rekayasa Perangkat Lunak'], ';');
+            fputcsv($file, ['18001', 'Siswa Baru Kelas 10', 'X RPL 1', 'Rekayasa Perangkat Lunak', 'nonaktif'], ';');
+            fputcsv($file, ['17763', 'Dewi Handayani Nur Halimah', 'XI RPL 1', 'Rekayasa Perangkat Lunak', 'aktif'], ';');
+            fputcsv($file, ['17764', 'Bima Revan Saputra', 'XII RPL 2', 'Rekayasa Perangkat Lunak', 'aktif'], ';');
             fclose($file);
         };
 
@@ -458,13 +508,19 @@ class NasabahController extends Controller
         }
 
         $transaksi = [];
+        $pinResetRequest = null;
+
         if ($nasabah) {
             $transaksi = Transaksi::where('nasabah_id', $nasabah->id)
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get();
+
+            $pinResetRequest = PinResetRequest::where('nasabah_id', $nasabah->id)
+                ->latest()
+                ->first();
         }
 
-        return view('nasabah.dashboard', compact('nasabah', 'transaksi'));
+        return view('nasabah.dashboard', compact('nasabah', 'transaksi', 'pinResetRequest'));
     }
 }

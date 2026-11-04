@@ -78,7 +78,7 @@ class DailyReportController extends Controller
         // Tampilan Teller: Buat Laporan Harian Hari Ini & Riwayat Laporan Sendiri
         $trxHariIni = Transaksi::where('petugas_id', $user_id)
             ->whereDate('created_at', $today)
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->get();
 
         $totalDeposit = (int) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
@@ -135,10 +135,15 @@ class DailyReportController extends Controller
         $today = Carbon::today()->toDateString();
         $user_id = Auth::id();
 
-        // Cek transaksi teller hari ini
+        // Validasi SOP: Tutup kas harus di hari yang sama (hari ini), tidak boleh disetting ke tanggal kemarin/lampau
+        if ($request->filled('report_date') && $request->report_date !== $today) {
+            return back()->withInput()->with('error', 'Tutup kas wajib dilakukan pada hari operasional berjalan ('.Carbon::parse($today)->translatedFormat('d F Y').'). Penutupan kas untuk hari kemarin atau tanggal lampau tidak diperbolehkan!');
+        }
+
+        // Cek transaksi teller hari ini (Hanya transaksi yang sukses, transaksi gagal/batal tidak dihitung)
         $trxHariIni = Transaksi::where('petugas_id', $user_id)
             ->whereDate('created_at', $today)
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->get();
 
         $totalDeposit = (int) $trxHariIni->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->sum('nominal');
@@ -289,11 +294,11 @@ class DailyReportController extends Controller
 
         $transaksi = $trxQuery->orderBy('created_at', 'asc')->get();
 
-        // Statistik transaksi pendukung
-        $transaksiSuksesCount = $transaksi->where('status', '!=', 'dibatalkan')->count();
-        $transaksiBatalCount = $transaksi->where('status', 'dibatalkan')->count();
-        $totalSetoranTrx = $transaksi->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->where('status', '!=', 'dibatalkan')->sum('nominal');
-        $totalPenarikanTrx = $transaksi->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->where('status', '!=', 'dibatalkan')->sum('nominal');
+        // Statistik transaksi pendukung (Hanya transaksi berstatus sukses yang dihitung nominalnya)
+        $transaksiSuksesCount = $transaksi->where('status', 'sukses')->count();
+        $transaksiBatalCount = $transaksi->where('status', '!=', 'sukses')->count();
+        $totalSetoranTrx = $transaksi->whereIn('jenis_transaksi', ['setor', 'koreksi_tarik'])->where('status', 'sukses')->sum('nominal');
+        $totalPenarikanTrx = $transaksi->whereIn('jenis_transaksi', ['tarik', 'admin', 'koreksi_setor'])->where('status', 'sukses')->sum('nominal');
 
         // Droping kas terkait teller ini pada tanggal tersebut
         $dropingKasList = PengajuanKas::where('user_id', $report->user_id)

@@ -114,16 +114,25 @@
                         <td class="p-2.5 pl-4 text-slate-600">4. Total Penarikan Tunai & Biaya Admin (Withdrawal)</td>
                         <td class="p-2.5 pr-4 text-right font-bold text-rose-700 tabular-nums">(-) Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</td>
                     </tr>
+                    <tr class="bg-slate-50 font-semibold text-slate-700">
+                        <td class="p-2.5 pl-4">5. Perubahan Kas Harian (Arus Bersih: Kas Akhir - Kas Awal)</td>
+                        @php
+                            $netMovement = $report->system_balance - $report->opening_balance;
+                        @endphp
+                        <td class="p-2.5 pr-4 text-right font-bold tabular-nums {{ $netMovement >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                            {{ $netMovement >= 0 ? '+' : '' }}Rp {{ number_format($netMovement, 0, ',', '.') }}
+                        </td>
+                    </tr>
                     <tr class="bg-blue-50 font-bold">
-                        <td class="p-2.5 pl-4 text-blue-950">5. Saldo Buku Komputer / Sistem (System Balance) [1 + 2 + 3 - 4]</td>
+                        <td class="p-2.5 pl-4 text-blue-950">6. Saldo Buku Komputer / Sistem (System Balance) [1 + 2 + 3 - 4]</td>
                         <td class="p-2.5 pr-4 text-right text-sm text-blue-950 font-bold tabular-nums">Rp {{ number_format($report->system_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="bg-slate-50 font-bold">
-                        <td class="p-2.5 pl-4 text-slate-900">5. Saldo Fisik Riil di Laci Kas (Physical Balance)</td>
+                        <td class="p-2.5 pl-4 text-slate-900">7. Saldo Fisik Riil di Laci Kas (Physical Balance)</td>
                         <td class="p-2.5 pr-4 text-right text-sm text-slate-900 font-bold tabular-nums">Rp {{ number_format($report->physical_balance, 0, ',', '.') }}</td>
                     </tr>
                     <tr class="{{ $report->difference == 0 ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900' }} font-bold">
-                        <td class="p-2.5 pl-4">6. Selisih Kas Fisik vs Komputer (Difference) [5 - 4]</td>
+                        <td class="p-2.5 pl-4">8. Selisih Kas Fisik vs Komputer (Difference) [7 - 6]</td>
                         <td class="p-2.5 pr-4 text-right text-sm font-bold tabular-nums">
                             {{ $report->difference >= 0 ? '+' : '' }}Rp {{ number_format($report->difference, 0, ',', '.') }}
                             ({{ $report->difference == 0 ? 'Seimbang / Nihil' : ($report->difference > 0 ? 'Surplus / Lebih' : 'Defisit / Kurang') }})

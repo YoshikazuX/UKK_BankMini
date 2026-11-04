@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\SystemApiController;
 use App\Http\Controllers\Api\TellerApiController;
 use App\Http\Controllers\Api\TransaksiNasabahController;
 use App\Http\Controllers\Api\UniversalAuthController;
+use App\Http\Controllers\PinResetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -59,6 +60,9 @@ Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
     Route::post('/verify-pin', [AuthNasabahController::class, 'verifyPin'])->name('verify-pin');
     Route::post('/ganti-password', [AuthNasabahController::class, 'gantiPassword'])->name('ganti-password');
     Route::post('/ganti-pin', [AuthNasabahController::class, 'gantiPin'])->name('ganti-pin');
+    Route::post('/lupa-pin/ajukan', [PinResetController::class, 'apiRequestReset'])->name('lupa-pin.ajukan');
+    Route::get('/lupa-pin/status', [PinResetController::class, 'apiCheckStatus'])->name('lupa-pin.status');
+    Route::post('/lupa-pin/set-pin', [PinResetController::class, 'apiSetNewPin'])->name('lupa-pin.set-pin');
 
     // Inquiry & Saldo
     Route::get('/saldo', [ProfilNasabahController::class, 'saldo'])->name('saldo');

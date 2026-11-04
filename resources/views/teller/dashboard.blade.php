@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Loket Teller - Bank Mini Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         html { scrollbar-gutter: stable; overflow-y: scroll; }
     </style>
@@ -110,10 +111,13 @@
                     <h2 class="text-base font-bold text-slate-900">Pencarian Rekening & Layani Nasabah</h2>
                     <p class="text-xs text-slate-500 mt-0.5">Ketik NIS, Nomor Rekening, atau Nama Siswa untuk langsung memulai transaksi loket.</p>
                 </div>
-                <div>
-                    <a href="{{ url('/teller/scan') }}" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1.5">
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="bukaModalScan()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                        Scan Kartu / QR Siswa
+                        Scan Cepat QR Siswa
+                    </button>
+                    <a href="{{ url('/teller/scan') }}" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold px-3 py-2 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1" title="Buka Halaman Scan Khusus">
+                        Layar Penuh
                     </a>
                 </div>
             </div>
@@ -183,7 +187,7 @@
                                 @if(request('cari'))
                                     Nasabah dengan kata kunci "{{ request('cari') }}" tidak ditemukan.
                                 @else
-                                    Ketik NIS atau nama nasabah di atas untuk menampilkan data rekening siswa.
+                                    Ketik NIS, Nomor Rekening, atau gunakan tombol Scan Cepat QR di atas untuk melayani transaksi nasabah.
                                 @endif
                             </td>
                         </tr>
@@ -353,5 +357,69 @@
         </div>
 
     </main>
+
+    <!-- MODAL SCAN CEPAT QR DI DASHBOARD -->
+    <div id="modal-qr-scan" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between border-b border-slate-800">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <h3 class="text-sm font-bold text-white">Scan Cepat QR Siswa / Rekening</h3>
+                    </div>
+                    <button type="button" onclick="tutupModalScan()" class="text-slate-400 hover:text-white transition text-lg">&times;</button>
+                </div>
+                <div class="p-6 text-center">
+                    <p class="text-xs text-slate-600 mb-4">Arahkan kamera ke QR Code kartu pelajar atau aplikasi mobile nasabah.</p>
+                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden border border-slate-300 mb-4 bg-slate-100 min-h-[220px]"></div>
+                    <div id="qr-scan-status" class="text-xs font-semibold text-slate-600 mb-4">Menyiapkan kamera scanner...</div>
+                    <button type="button" onclick="tutupModalScan()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrScanner = null;
+
+        function bukaModalScan() {
+            document.getElementById('modal-qr-scan').classList.remove('hidden');
+            document.getElementById('qr-scan-status').innerHTML = '<span class="text-blue-600">Mengaktifkan kamera...</span>';
+
+            setTimeout(() => {
+                if (!html5QrScanner) {
+                    html5QrScanner = new Html5QrcodeScanner(
+                        "qr-reader",
+                        { fps: 10, qrbox: { width: 220, height: 220 } },
+                        false
+                    );
+                }
+
+                html5QrScanner.render(
+                    function(decodedText) {
+                        html5QrScanner.clear().then(() => {
+                            document.getElementById('qr-scan-status').innerHTML = '<span class="text-emerald-600 font-bold">Mendeteksi: ' + decodedText + '. Memuat nasabah...</span>';
+                            window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                        }).catch(err => {
+                            window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                        });
+                    },
+                    function(error) {
+                        // per-frame scan failure
+                    }
+                );
+            }, 300);
+        }
+
+        function tutupModalScan() {
+            if (html5QrScanner) {
+                html5QrScanner.clear().catch(e => console.log(e));
+                html5QrScanner = null;
+            }
+            document.getElementById('modal-qr-scan').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>

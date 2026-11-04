@@ -285,6 +285,7 @@
 
                     <!-- Input Nominal -->
                     <input type="number" name="nominal" id="nominal" min="1000" oninput="simpanDraft(); validasiSaldo();" onkeypress="cekEnter(event)" class="border border-slate-300 rounded-lg w-full py-2.5 px-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-lg font-bold bg-white tabular-nums" required placeholder="0">
+                    <p class="text-[11px] text-slate-500 mt-1" id="info-minimal-nominal">*Minimal setoran tunai adalah Rp 5.000. Saldo mengendap wajib Rp 10.000 tidak dapat ditarik habis.</p>
 
                     <!-- PESAN ERROR REAL-TIME VALIDASI SALDO & KAS -->
                     <div id="pesan-error" class="hidden mt-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
@@ -524,7 +525,12 @@
             const pesanError = document.getElementById('pesan-error');
             const teksError = document.getElementById('teks-error');
 
-            if (jenis === 'tarik' && nominal > saldoTersedia) {
+            if (jenis === 'setor' && nominal > 0 && nominal < 5000) {
+                teksError.innerText = "Nominal setoran tunai minimal adalah Rp 5.000.";
+                pesanError.classList.remove('hidden');
+                btnProses.disabled = true;
+                btnProses.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (jenis === 'tarik' && nominal > saldoTersedia) {
                 teksError.innerText = "Penarikan ditolak. Saldo tersedia nasabah hanya Rp " + formatRupiah(saldoTersedia) + ".";
                 pesanError.classList.remove('hidden');
                 btnProses.disabled = true;
@@ -564,7 +570,12 @@
             const pinInput = document.getElementById('pin_nasabah');
 
             if(jenis === '' || nominal < 1000) {
-                alert('Pilih jenis transaksi dan masukkan nominal minimal Rp 1.000!');
+                alert('Pilih jenis transaksi dan masukkan nominal minimal!');
+                return;
+            }
+
+            if(jenis === 'setor' && nominal < 5000) {
+                alert('Setoran tunai ditolak: Nominal setoran minimal adalah Rp 5.000!');
                 return;
             }
 

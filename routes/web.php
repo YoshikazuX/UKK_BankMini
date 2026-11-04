@@ -9,6 +9,7 @@ use App\Http\Controllers\DailyReportController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NasabahController;
 use App\Http\Controllers\PengajuanKasController;
+use App\Http\Controllers\PinResetController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TellerController;
 use Illuminate\Support\Facades\Artisan;
@@ -45,6 +46,11 @@ Route::middleware(['auth', 'role:admin,customer_service'])->group(function () {
     Route::post('/admin/hapus-nasabah/{id}', [NasabahController::class, 'destroy'])->name('admin.nasabah.destroy.post');
     Route::post('/admin/import-nasabah', [NasabahController::class, 'importCsv'])->name('admin.nasabah.import');
     Route::get('/admin/template-nasabah', [NasabahController::class, 'downloadTemplate'])->name('admin.nasabah.template');
+    Route::post('/admin/restore-nasabah/{id}', [NasabahController::class, 'restore'])->name('admin.nasabah.restore');
+
+    // FITUR: PERSETUJUAN RESET PIN NASABAH (ADMIN APPROVE, NASABAH BUAT PIN MANDIRI)
+    Route::post('/admin/pin-reset/approve/{id}', [PinResetController::class, 'adminApprove'])->name('admin.pin-reset.approve');
+    Route::post('/admin/pin-reset/reject/{id}', [PinResetController::class, 'adminReject'])->name('admin.pin-reset.reject');
 });
 
 // =========================================================================
@@ -188,8 +194,10 @@ Route::middleware(['auth'])->group(function () {
     // CETAK LEMBAR DAILY REPORT
     Route::get('/daily-report/cetak/{id}', [DailyReportController::class, 'cetak'])->name('daily-report.cetak');
 
-    // PORTAL DASHBOARD NASABAH
+    // PORTAL DASHBOARD NASABAH & LUPA PIN MANDIRI
     Route::get('/nasabah/dashboard', [NasabahController::class, 'dashboardNasabah'])->name('nasabah.dashboard');
+    Route::post('/nasabah/lupa-pin/ajukan', [PinResetController::class, 'requestReset'])->name('nasabah.lupa-pin.ajukan');
+    Route::post('/nasabah/lupa-pin/set-pin', [PinResetController::class, 'setNewPin'])->name('nasabah.lupa-pin.set-pin');
 });
 
 // =========================================================================

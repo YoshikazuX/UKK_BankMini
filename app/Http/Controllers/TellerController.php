@@ -30,18 +30,27 @@ class TellerController extends Controller
 {
     public function index(Request $request, DashboardWidgetService $widgetService): View
     {
-        $katakunci = $request->cari;
+        $katakunci = trim((string) $request->cari);
 
-        $query = Nasabah::query();
-        if ($katakunci) {
-            $query->where(function ($sub) use ($katakunci) {
-                $sub->where('nis', 'LIKE', '%'.$katakunci.'%')
-                    ->orWhere('no_rekening', 'LIKE', '%'.$katakunci.'%')
-                    ->orWhere('nama_siswa', 'LIKE', '%'.$katakunci.'%');
-            });
+        if ($katakunci !== '') {
+            // Prioritas 1: Pencocokan persis No Rekening atau NIS (misal dari Scan QR Kartu)
+            $exactMatch = Nasabah::where('no_rekening', $katakunci)
+                ->orWhere('nis', $katakunci)
+                ->get();
+
+            if ($exactMatch->isNotEmpty()) {
+                $nasabah = $exactMatch;
+            } else {
+                $nasabah = Nasabah::where(function ($sub) use ($katakunci) {
+                    $sub->where('nis', 'LIKE', '%'.$katakunci.'%')
+                        ->orWhere('no_rekening', 'LIKE', '%'.$katakunci.'%')
+                        ->orWhere('nama_siswa', 'LIKE', '%'.$katakunci.'%');
+                })->get();
+            }
+        } else {
+            // Ketika belum scan / cari, kosongkan daftar agar hanya nasabah yang dituju yang tampil
+            $nasabah = collect();
         }
-
-        $nasabah = $query->get();
 
         // ALGORITMA SORTING PINTAR (Tingkat -> Jurusan -> SubKelas -> NIS)
         $nasabah = $nasabah->sortBy(function ($item) {
@@ -99,17 +108,17 @@ class TellerController extends Controller
         $pendingPengajuan = PengajuanKas::where('user_id', Auth::id())->where('status', 'pending')->count();
         $absensiSummary = AvalisSyncHelper::getDashboardSummary($today);
 
-        // Arus Kas Operasional Loket Hari Ini
+        // Arus Kas Operasional Loket Hari Ini (Hanya transaksi berstatus sukses)
         $kasMasuk = Transaksi::where('petugas_id', Auth::id())
             ->whereDate('created_at', $today)
             ->where('jenis_transaksi', 'setor')
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->sum('nominal');
 
         $kasKeluar = Transaksi::where('petugas_id', Auth::id())
             ->whereDate('created_at', $today)
             ->whereIn('jenis_transaksi', ['tarik', 'admin'])
-            ->where('status', '!=', 'dibatalkan')
+            ->where('status', 'sukses')
             ->sum('nominal');
 
         // Layanan Metrik & Peringatan Khusus Teller
@@ -278,6 +287,13 @@ class TellerController extends Controller
                 DB::rollBack();
 
                 return back()->with('error', 'Transaksi Ditolak: Rekening nasabah berstatus non-aktif / ditangguhkan. Operasional transaksi tidak diizinkan!');
+            }
+
+            // Validasi Minimal Nominal Setoran (SOP Bank Mini: Minimal Rp 5.000)
+            if ($jenis === 'setor' && $nominal < 5000) {
+                DB::rollBack();
+
+                return back()->with('error', 'Setoran ditolak: Nominal setoran minimal adalah Rp 5.000.');
             }
 
             $minSaldoMengendap = SettingHelper::getSaldoMengendapMin();
