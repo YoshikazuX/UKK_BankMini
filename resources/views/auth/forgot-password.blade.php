@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Lupa Kata Sandi - LKM Mitra Siswa Abadi</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,16 +66,42 @@
                     <form id="form-step-1" onsubmit="submitStep1(event)" class="space-y-4">
                         <div>
                             <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                Alamat Email
+                                Alamat Email atau Username / NIS
                             </label>
                             <input 
-                                type="email" 
+                                type="text" 
                                 id="email" 
                                 name="email" 
-                                placeholder="Masukkan alamat email terdaftar" 
+                                placeholder="Masukkan email, username, atau NIS terdaftar" 
                                 required 
                                 autofocus
                                 autocomplete="email"
+                                class="w-full px-3.5 py-2.5 bg-white border border-slate-300 focus:border-slate-700 focus:ring-2 focus:ring-slate-900/10 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none transition"
+                            >
+                        </div>
+
+                        <div id="manual-username-box" class="hidden">
+                            <label for="manual_username" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                Username atau NIS Akun yang Ingin Direset
+                            </label>
+                            <input 
+                                type="text" 
+                                id="manual_username" 
+                                name="manual_username" 
+                                placeholder="Contoh: teller1, spv1, atau NIS siswa" 
+                                class="w-full px-3.5 py-2.5 bg-white border border-slate-300 focus:border-slate-700 focus:ring-2 focus:ring-slate-900/10 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none transition"
+                            >
+                        </div>
+
+                        <div id="manual-email-box" class="hidden">
+                            <label for="manual_contact" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                Alamat Email Tujuan Penerima OTP
+                            </label>
+                            <input 
+                                type="email" 
+                                id="manual_contact" 
+                                name="manual_contact" 
+                                placeholder="Masukkan alamat email aktif Anda" 
                                 class="w-full px-3.5 py-2.5 bg-white border border-slate-300 focus:border-slate-700 focus:ring-2 focus:ring-slate-900/10 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none transition"
                             >
                         </div>
@@ -119,7 +148,7 @@
                     </p>
 
                     <!-- FORM INPUT OTP -->
-                    <form id="form-step-2" onsubmit="submitStep2(event)" class="space-y-4">
+                    <form id="form-step-2" onsubmit="event.preventDefault(); submitStep2(event); return false;" class="space-y-4">
                         <div>
                             <div class="grid grid-cols-6 gap-2.5" id="otp-container">
                                 <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-box h-12 text-center text-lg font-semibold rounded-lg border border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-900/10 focus:outline-none transition text-slate-900 bg-white" data-index="0" autocomplete="one-time-code">
@@ -133,7 +162,8 @@
 
                         <!-- TOMBOL VERIFIKASI KODE -->
                         <button 
-                            type="submit" 
+                            type="button" 
+                            onclick="submitStep2(event)"
                             id="btn-step-2"
                             class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 mt-2"
                         >
@@ -295,6 +325,8 @@
         const state = {
             currentStep: 1,
             email: '',
+            otp: '',
+            otpVerified: false,
             timer: null,
             timeLeft: 59
         };
@@ -336,6 +368,12 @@
         }
 
         function goToStep(step) {
+            // Perlindungan ketat: Jangan izinkan masuk ke tahap 3 jika OTP belum diverifikasi sukses oleh server
+            if (step === 3 && !state.otpVerified) {
+                showAlert('Kode OTP belum diverifikasi atau salah. Silakan masukkan kode OTP yang valid.');
+                return;
+            }
+
             hideAlert();
             hideSuccess();
             state.currentStep = step;
@@ -364,21 +402,76 @@
             }
         }
 
-        // TAHAP 1: Submit email
-        function submitStep1(event) {
+        // TAHAP 1: Submit email / username ke server untuk kirim OTP via SMTP
+        async function submitStep1(event) {
             event.preventDefault();
             hideAlert();
 
             const emailInput = document.getElementById('email');
-            const emailVal = emailInput.value.trim();
+            const manualUsernameInput = document.getElementById('manual_username');
+            const manualContactInput = document.getElementById('manual_contact');
+            const manualUsernameBox = document.getElementById('manual-username-box');
+            const manualEmailBox = document.getElementById('manual-email-box');
 
-            if (!emailVal || !emailVal.includes('@')) {
-                showAlert('Silakan masukkan alamat email yang valid.');
+            const emailVal = emailInput.value.trim();
+            const manualUsernameVal = manualUsernameInput ? manualUsernameInput.value.trim() : '';
+            const manualContactVal = manualContactInput ? manualContactInput.value.trim() : '';
+            const btn1 = document.getElementById('btn-step-1');
+
+            if (!emailVal) {
+                showAlert('Silakan masukkan alamat email atau username yang terdaftar.');
                 return;
             }
 
-            state.email = emailVal;
-            goToStep(2);
+            btn1.disabled = true;
+            const originalText = btn1.innerHTML;
+            btn1.innerHTML = 'Mengirim Kode OTP...';
+
+            try {
+                const res = await fetch("{{ route('password.otp') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email: emailVal,
+                        username: emailVal,
+                        manual_username: manualUsernameVal,
+                        manual_contact: manualContactVal,
+                        metode: 'email'
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    if (data.needs_username && manualUsernameBox) {
+                        manualUsernameBox.classList.remove('hidden');
+                        if (manualUsernameInput) manualUsernameInput.focus();
+                    }
+                    if (data.needs_email && manualEmailBox) {
+                        manualEmailBox.classList.remove('hidden');
+                        if (manualContactInput) manualContactInput.focus();
+                    }
+                    showAlert(data.message || 'Gagal mengirim kode OTP. Periksa kembali email/username Anda.');
+                    btn1.disabled = false;
+                    btn1.innerHTML = originalText;
+                    return;
+                }
+
+                state.email = data.masked_contact || manualContactVal || emailVal;
+                state.rawInput = emailVal;
+                state.manualUsername = manualUsernameVal;
+                state.manualContact = manualContactVal;
+                goToStep(2);
+                showSuccess(data.message || 'Kode OTP telah dikirimkan ke email Anda.');
+            } catch (err) {
+                showAlert('Terjadi kesalahan jaringan saat menghubungi server SMTP.');
+            } finally {
+                btn1.disabled = false;
+                btn1.innerHTML = originalText;
+            }
         }
 
         // OTP Boxes input & navigation logic
@@ -395,6 +488,11 @@
             });
 
             box.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitStep2(e);
+                    return;
+                }
                 if (e.key === 'Backspace') {
                     if (!e.target.value && index > 0) {
                         otpBoxes[index - 1].focus();
@@ -432,19 +530,70 @@
             return code;
         }
 
-        // TAHAP 2: Submit OTP
-        function submitStep2(event) {
-            event.preventDefault();
+        // TAHAP 2: Submit OTP ke server untuk diverifikasi sebelum bisa ke tahap 3
+        async function submitStep2(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             hideAlert();
 
             const otp = getOtpValue();
             if (otp.length < 6) {
                 showAlert('Silakan lengkapi 6 digit kode OTP verifikasi.');
-                return;
+                return false;
             }
 
-            // Transisi ke Tahap 3
-            goToStep(3);
+            const btn2 = document.getElementById('btn-step-2');
+            btn2.disabled = true;
+            const originalText = btn2.innerHTML;
+            btn2.innerHTML = 'Memverifikasi Kode...';
+
+            try {
+                const res = await fetch("{{ route('password.verify-otp') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        otp_code: otp
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    state.otpVerified = false;
+                    showAlert(data.message || 'Kode verifikasi OTP salah. Silakan periksa kembali email Anda.');
+                    clearOtpBoxes();
+
+                    // Efek visual border merah pada kotak OTP jika salah
+                    otpBoxes.forEach(box => {
+                        box.classList.add('border-rose-500', 'bg-rose-50');
+                        setTimeout(() => {
+                            box.classList.remove('border-rose-500', 'bg-rose-50');
+                        }, 1500);
+                    });
+
+                    if (otpBoxes[0]) otpBoxes[0].focus();
+                    return false;
+                }
+
+                // KODE BENAR: Baru kunci dibuka dan transisi ke tahap 3 diizinkan
+                state.otp = otp;
+                state.otpVerified = true;
+                goToStep(3);
+                showSuccess(data.message || 'Kode OTP cocok! Silakan buat kata sandi baru.');
+                return true;
+            } catch (err) {
+                state.otpVerified = false;
+                showAlert('Terjadi kesalahan jaringan saat memverifikasi kode OTP.');
+                return false;
+            } finally {
+                btn2.disabled = false;
+                btn2.innerHTML = originalText;
+            }
         }
 
         // Countdown timer logic
@@ -476,23 +625,50 @@
             timerDisplay.textContent = formatted;
         }
 
-        function handleResendOtp() {
+        async function handleResendOtp() {
             clearOtpBoxes();
-            startCountdownTimer();
-            showSuccess('Kode OTP baru telah dikirimkan ke ' + state.email);
-            if (otpBoxes[0]) otpBoxes[0].focus();
+            hideAlert();
+
+            try {
+                const res = await fetch("{{ route('password.otp') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email: state.rawInput || state.email,
+                        username: state.rawInput || state.email,
+                        manual_username: state.manualUsername || '',
+                        manual_contact: state.manualContact || '',
+                        metode: 'email',
+                        force_resend: true
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showAlert(data.message || 'Gagal mengirim ulang kode OTP.');
+                    return;
+                }
+                startCountdownTimer();
+                showSuccess('Kode OTP baru telah dikirimkan ke ' + state.email);
+                if (otpBoxes[0]) otpBoxes[0].focus();
+            } catch (err) {
+                showAlert('Gagal menghubungi server untuk mengirim ulang OTP.');
+            }
         }
 
-        // TAHAP 3: Submit New Password
-        function submitStep3(event) {
+        // TAHAP 3: Submit New Password ke server
+        async function submitStep3(event) {
             event.preventDefault();
             hideAlert();
 
             const newPw = document.getElementById('new_password').value;
             const confirmPw = document.getElementById('confirm_password').value;
 
-            if (newPw.length < 8) {
-                showAlert('Kata sandi baru minimal harus 8 karakter.');
+            if (newPw.length < 6) {
+                showAlert('Kata sandi baru minimal harus 6 karakter.');
                 return;
             }
 
@@ -504,13 +680,44 @@
             // Tampilkan status proses
             const btn = document.getElementById('btn-step-3');
             btn.disabled = true;
+            const originalText = btn.innerHTML;
             btn.innerHTML = 'Menyimpan Kata Sandi...';
             btn.classList.add('opacity-80', 'cursor-not-allowed');
 
-            // Redirect ke halaman login dengan notifikasi sukses
-            setTimeout(() => {
-                window.location.href = "{{ route('login') }}?reset=success";
-            }, 500);
+            try {
+                const res = await fetch("{{ route('password.reset') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        otp_code: state.otp,
+                        password: newPw,
+                        password_confirmation: confirmPw
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                    if (data.message && data.message.toLowerCase().includes('otp')) {
+                        goToStep(2);
+                    }
+                    showAlert(data.message || 'Gagal memperbarui kata sandi.');
+                    return;
+                }
+
+                window.location.href = data.redirect || "{{ route('login') }}?reset=success";
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                showAlert('Terjadi kesalahan jaringan saat menyimpan kata sandi.');
+            }
         }
 
         // Toggle visibility password

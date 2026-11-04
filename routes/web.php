@@ -28,6 +28,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // =========================================================================
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 Route::post('/forgot-password/request-otp', [AuthController::class, 'requestOtp'])->name('password.otp');
+Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify-otp');
 Route::post('/forgot-password/verify-and-reset', [AuthController::class, 'verifyAndResetPassword'])->name('password.reset');
 Route::post('/forgot-password/ticket', [AuthController::class, 'submitResetTicket'])->name('password.ticket');
 Route::get('/forgot-password/cancel-session', [AuthController::class, 'resetForgotPasswordSession'])->name('password.cancel');

@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -580,11 +581,37 @@ class AdminController extends Controller
         $user->password = $tempPassword; // Casts will bcrypt it
         $user->save();
 
+        // Kirim kata sandi sementara via Email SMTP jika ada email tujuan
+        $targetEmail = filter_var($item->kontak, FILTER_VALIDATE_EMAIL)
+            ? $item->kontak
+            : ($user->email && filter_var($user->email, FILTER_VALIDATE_EMAIL) ? $user->email : null);
+
+        $emailStatus = '';
+        if ($targetEmail) {
+            try {
+                Mail::raw(
+                    "Halo {$user->nama_petugas},\n\n"
+                    ."Permohonan reset kata sandi Anda telah disetujui oleh Administrator ({$adminName}).\n\n"
+                    ."Username: {$user->username}\n"
+                    ."Kata Sandi Sementara: {$tempPassword}\n\n"
+                    ."Silakan segera masuk ke sistem LKM Mitra Siswa Abadi dan ubah kata sandi Anda.\n\n"
+                    ."Salam,\nLKM Mitra Siswa Abadi - SMK Negeri 1 Bantul",
+                    function ($message) use ($targetEmail, $user) {
+                        $message->to($targetEmail, $user->nama_petugas)
+                            ->subject('Kata Sandi Sementara - LKM Mitra Siswa Abadi');
+                    }
+                );
+                $emailStatus = " (Telah dikirim ke email {$targetEmail})";
+            } catch (\Throwable $e) {
+                $emailStatus = ' (Gagal kirim email: '.$e->getMessage().')';
+            }
+        }
+
         $item->update([
             'status' => 'completed',
             'handled_by' => $admin->id,
             'handled_at' => now(),
-            'keterangan' => 'Disetujui oleh '.$adminName.'. Password di-reset aman.',
+            'keterangan' => 'Disetujui oleh '.$adminName.'. Password di-reset aman.'.$emailStatus,
         ]);
 
         AuditHelper::log(
@@ -595,7 +622,7 @@ class AdminController extends Controller
             newValues: ['status' => 'completed', 'handled_by' => $adminName]
         );
 
-        return back()->with('success', 'Permohonan reset password akun '.$item->username.' berhasil disetujui! Kata sandi sementara pemohon: '.$tempPassword.' (Segera informasikan kepada pemohon).');
+        return back()->with('success', 'Permohonan reset password akun '.$item->username.' berhasil disetujui! Kata sandi sementara pemohon: '.$tempPassword.$emailStatus);
     }
 
     public function rejectResetRequest(Request $request, int|string $id): RedirectResponse
