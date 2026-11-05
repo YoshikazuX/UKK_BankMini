@@ -29,7 +29,11 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->create();
 
-// Mengarahkan direktori publik Laravel ke public_html hosting.
-$app->usePublicPath('/home/hanbankm/public_html');
+// Mengarahkan direktori publik Laravel ke public_html hosting jika tersedia.
+if (is_dir($publicHtml = dirname(__DIR__).'/../public_html')) {
+    $app->usePublicPath($publicHtml);
+} elseif (is_dir('/home/hanbankm/public_html')) {
+    $app->usePublicPath('/home/hanbankm/public_html');
+}
 
 return $app;
