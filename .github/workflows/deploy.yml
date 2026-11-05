@@ -55,8 +55,6 @@ jobs:
             **/.env
             **/.env.*
             **/public/build/**
-            **/vendor/**
-            **/vendor.zip
 
       - name: Deploy public files
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
