@@ -26,6 +26,11 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
+      - name: Prepare fresh vendor directory
+        run: |
+          mv vendor vendor_release
+          sed -i 's|hanbank_app/vendor/autoload.php|hanbank_app/vendor_release/autoload.php|' public/index.php
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,6 +42,13 @@ jobs:
 
       - name: Build frontend assets
         run: npm run build
+
+      - name: Verify deployment files
+        run: |
+          test -f vendor_release/autoload.php
+          test -f public/index.php
+          grep -q 'vendor_release/autoload.php' public/index.php
+          echo "Deployment files verified."
 
       - name: Deploy Laravel application
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
