@@ -1,14 +1,34 @@
 @php
     $user = Auth::user();
-    $role = $user->role ?? 'admin';
-
+    $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
+    $role = $user?->role ?? null;
+    $dashboardRoute = in_array($role, $validRoles) ? $role . '.dashboard' : null;
     $navItemClass = function(bool $isActive) {
         $base = "text-sm whitespace-nowrap px-3 py-1.5 rounded-lg transition-all duration-150 focus:outline-none";
-        return $isActive 
-            ? "{$base} text-white bg-slate-700 font-semibold shadow-inner" 
+        return $isActive
+            ? "{$base} text-white bg-slate-700 font-semibold shadow-inner"
             : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/60 font-medium";
     };
+    $mobileNavItemClass = function(bool $isActive) {
+        $base = "block text-sm px-3.5 py-2 rounded-lg transition-all duration-150 focus:outline-none font-medium";
+        return $isActive
+            ? "{$base} text-white bg-slate-700 font-semibold"
+            : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/50";
+    };
+@endphp
 
+
+@php
+    $user = Auth::user();
+    $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
+    $role = $user?->role ?? null;
+    $dashboardRoute = in_array($role, $validRoles) ? $role . '.dashboard' : null;
+    $navItemClass = function(bool $isActive) {
+        $base = "text-sm whitespace-nowrap px-3 py-1.5 rounded-lg transition-all duration-150 focus:outline-none";
+        return $isActive
+            ? "{$base} text-white bg-slate-700 font-semibold shadow-inner"
+            : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/60 font-medium";
+    };
     $mobileNavItemClass = function(bool $isActive) {
         $base = "block text-sm px-3.5 py-2 rounded-lg transition-all duration-150 focus:outline-none font-medium";
         return $isActive
@@ -36,6 +56,7 @@
     } elseif ($user && $role === 'admin') {
         $pendingResetTotal = \App\Models\PasswordResetRequest::where('status', 'pending')->count();
     }
+@endphp
 @endphp
 
 <!-- Font Plus Jakarta Sans terstandarisasi untuk navigasi website -->

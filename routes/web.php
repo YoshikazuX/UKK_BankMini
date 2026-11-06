@@ -10,22 +10,27 @@ use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NasabahController;
 use App\Http\Controllers\PengajuanKasController;
 use App\Http\Controllers\PinResetController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TellerController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/login');
+    return view('landing');
 });
+
+Route::get('/download', function () {
+    return view('download');
+})->name('download');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/dashboard', [AuthController::class, 'dashboardRedirect'])->middleware('auth')->name('dashboard');
 
-// =========================================================================
 // RUTE LUPA PASSWORD & PEMULIHAN AKUN (EMAIL / WHATSAPP / TIKET ADMIN)
-// =========================================================================
+
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 Route::post('/forgot-password/request-otp', [AuthController::class, 'requestOtp'])->name('password.otp');
 Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify-otp');
@@ -33,10 +38,13 @@ Route::post('/forgot-password/verify-and-reset', [AuthController::class, 'verify
 Route::post('/forgot-password/ticket', [AuthController::class, 'submitResetTicket'])->name('password.ticket');
 Route::get('/forgot-password/cancel-session', [AuthController::class, 'resetForgotPasswordSession'])->name('password.cancel');
 
-// =========================================================================
 // RUTE ADMIN & CUSTOMER SERVICE (MANAJEMEN REKENING NASABAH BARU)
-// =========================================================================
+
 Route::middleware(['auth', 'role:admin,customer_service'])->group(function () {
+    // Profile routes (Laravel Breeze style)
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/admin/data-nasabah', [NasabahController::class, 'index'])->name('admin.nasabah.index');
     Route::get('/admin/data-nasabah/{id}', [NasabahController::class, 'show'])->name('admin.nasabah.show');
     Route::get('/admin/tambah-nasabah', [NasabahController::class, 'create'])->name('admin.nasabah.create');
@@ -54,9 +62,8 @@ Route::middleware(['auth', 'role:admin,customer_service'])->group(function () {
     Route::post('/admin/pin-reset/reject/{id}', [PinResetController::class, 'adminReject'])->name('admin.pin-reset.reject');
 });
 
-// =========================================================================
 // RUTE KHUSUS ADMIN (PEGAWAI & AUDIT LOG)
-// =========================================================================
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/data-pegawai', [AdminController::class, 'pegawaiIndex'])->name('admin.pegawai.index');
@@ -83,18 +90,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/konfigurasi', [AdminController::class, 'updateKonfigurasi'])->name('admin.konfigurasi.update');
 });
 
-// =========================================================================
 // RUTE AUDIT JURNAL AKUNTANSI & LAPORAN (ADMIN, SUPERVISOR, ACCOUNTING)
-// =========================================================================
+
 Route::middleware(['auth', 'role:admin,supervisor,accounting'])->group(function () {
     Route::get('/laporan/jurnal', [LaporanKeuanganController::class, 'jurnalAkuntansi'])->name('laporan.jurnal');
     Route::get('/laporan/saldo-produk', [LaporanKeuanganController::class, 'saldoPerProduk'])->name('laporan.saldo-produk');
     Route::get('/laporan/tahunan', [LaporanKeuanganController::class, 'laporanTahunan'])->name('laporan.tahunan');
 });
 
-// =========================================================================
 // RUTE TELLER (TRANSAKSI, DAILY REPORT & KOREKSI)
-// =========================================================================
+
 Route::middleware(['auth', 'role:teller'])->group(function () {
     Route::get('/teller/dashboard', [TellerController::class, 'index'])->name('teller.dashboard');
     Route::get('/teller/transaksi/{id}', [TellerController::class, 'formTransaksi'])->name('teller.transaksi.form');
@@ -116,9 +121,8 @@ Route::middleware(['auth', 'role:teller'])->group(function () {
     Route::post('/teller/pengajuan-kas/kirim', [PengajuanKasController::class, 'store'])->name('teller.pengajuan-kas.store');
 });
 
-// =========================================================================
 // RUTE SUPERVISOR & ACCOUNTING (APPROVAL & PENGELOLA LAPORAN)
-// =========================================================================
+
 Route::middleware(['auth', 'role:supervisor,accounting'])->group(function () {
     Route::get('/supervisor/dashboard', [SupervisorController::class, 'index'])->name('supervisor.dashboard');
     Route::get('/supervisor/laporan', [SupervisorController::class, 'laporan'])->name('supervisor.laporan');
@@ -173,9 +177,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/kas-awal/set', [PengajuanKasController::class, 'setKasAwal'])->name('kas-awal.set');
 });
 
-// =========================================================================
 // RUTE MONITORING PETUGAS AVALIS & KUNJUNGAN SISWA (SEMUA ROLE PEGAWAI)
-// =========================================================================
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/absensi-avalis', [AbsensiAvalisController::class, 'index'])->name('admin.absensi-avalis');
     Route::get('/teller/absensi-avalis', [AbsensiAvalisController::class, 'index'])->name('teller.absensi-avalis');
@@ -201,9 +204,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/nasabah/lupa-pin/set-pin', [PinResetController::class, 'setNewPin'])->name('nasabah.lupa-pin.set-pin');
 });
 
-// =========================================================================
 // RUTE KHUSUS ADMINISTRATOR (PENGELOLAAN ABSENSI & MASTER AVALIS PENUH)
-// =========================================================================
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/absensi-avalis/simpan', [AbsensiAvalisController::class, 'store'])->name('absensi.store');
     Route::post('/absensi-avalis/update/{id}', [AbsensiAvalisController::class, 'update'])->name('absensi.update');
