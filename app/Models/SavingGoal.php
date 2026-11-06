@@ -51,4 +51,3 @@ class SavingGoal extends Model
         return (float) max(0.0, $this->target_amount - $this->current_amount);
     }
 }
-

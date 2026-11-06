@@ -88,7 +88,8 @@
                             <span class="ml-1.5 bg-amber-500 text-slate-900 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ $pendingPengajuan }}</span>
                         @endif
                     </a>
-                    <a href="{{ url('/teller/absensi-avalis') }}" class="{{ $navItemClass(request()->is('teller/absensi-avalis*') || request()->is('absensi-avalis*')) }}">Absensi Avalis</a>
+                    <a href="{{ url('/teller/profil') }}" class="{{ $navItemClass(request()->is('teller/profil*')) }}">Profil</a>
+                    <a href="{{ url('/teller/scan') }}" class="{{ $navItemClass(request()->is('teller/scan*')) }}">Scan QR</a>
 
                 @elseif($role === 'supervisor' || $role === 'accounting')
                     <a href="{{ url('/supervisor/dashboard') }}" class="{{ $navItemClass(request()->is('supervisor/dashboard*')) }}">Dashboard</a>

@@ -2,13 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
 use App\Models\Nasabah;
-use App\Models\SavingGoal;
-use App\Models\Transaksi;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class NasabahMobileFiturLengkapTest extends TestCase
@@ -210,4 +206,3 @@ class NasabahMobileFiturLengkapTest extends TestCase
         $this->assertCount(6, $trend);
     }
 }
-

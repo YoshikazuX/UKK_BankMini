@@ -8,6 +8,7 @@ use App\Http\Controllers\BukuTabunganController;
 use App\Http\Controllers\DailyReportController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NasabahController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PengajuanKasController;
 use App\Http\Controllers\PinResetController;
 use App\Http\Controllers\ProfileController;
@@ -16,13 +17,9 @@ use App\Http\Controllers\TellerController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('landing');
-});
+Route::get('/', [PageController::class, 'landing'])->name('landing');
 
-Route::get('/download', function () {
-    return view('download');
-})->name('download');
+Route::get('/download', [PageController::class, 'download'])->name('download');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);

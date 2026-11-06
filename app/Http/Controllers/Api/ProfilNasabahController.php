@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\AuditHelper;
 use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\Nasabah;
 use App\Models\Transaksi;
 use Illuminate\Http\JsonResponse;
