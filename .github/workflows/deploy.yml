@@ -117,6 +117,13 @@ jobs:
             **/tests/**
             **/.github/**
             **/phpunit.xml
+            **/docs/**
+            **/.agents/**
+            **/.ai/**
+            **/*.md
+            **/*.ps1
+            **/cookie.txt
+            **/.phpunit.result.cache
 
       # ==========================================
       # 11. DEPLOY PUBLIC FILES
