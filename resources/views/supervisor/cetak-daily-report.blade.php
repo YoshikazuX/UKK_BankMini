@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -108,7 +108,7 @@
                     </tr>
                     <tr>
                         <td class="p-2.5 pl-4 text-slate-600">3. Droping Kas Operasional Disetujui (Cash Drop)</td>
-                        <td class="p-2.5 pr-4 text-right font-bold text-indigo-700 tabular-nums">(+) Rp {{ number_format($report->total_cash_drop ?? 0, 0, ',', '.') }}</td>
+                        <td class="p-2.5 pr-4 text-right font-bold text-teal-700 tabular-nums">(+) Rp {{ number_format($report->total_cash_drop ?? 0, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td class="p-2.5 pl-4 text-slate-600">4. Total Penarikan Tunai & Biaya Admin (Withdrawal)</td>
@@ -226,3 +226,4 @@
     </div>
 </body>
 </html>
+

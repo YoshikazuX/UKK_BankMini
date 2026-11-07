@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 <!-- resources/views/download.blade.php -->
 <!-- Download Page for Bank Mini Sekolah Mobile App -->
+=======
+﻿<!-- resources/views/download.blade.php -->
+{{-- Download Page for Bank Mini Sekolah Mobile App --}}
+>>>>>>> 5272b57 (landing page)
 @extends('layouts.app')
 
 @section('header')
@@ -10,7 +15,11 @@
 
 @section('content')
 <div class="bg-white">
+<<<<<<< HEAD
     <!-- Hero section -->
+=======
+    {{-- Hero section â€“ dark gradient for consistency */}
+>>>>>>> 5272b57 (landing page)
     <section class="relative bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8 text-center">
         <div class="max-w-3xl mx-auto">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
@@ -26,7 +35,11 @@
                 <button type="button" class="px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed shadow-sm" disabled>
                     APK akan tersedia segera
                 </button>
+<<<<<<< HEAD
                 <a href="{{ route('download') }}" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none rounded-lg text-white font-medium shadow-sm transition">
+=======
+                <a href="{{ route('download') }}" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:outline-none rounded-md text-white transition">
+>>>>>>> 5272b57 (landing page)
                     Notifikasi Ketersediaan
                 </a>
             </div>
@@ -39,7 +52,11 @@
         </div>
     </section>
 
+<<<<<<< HEAD
     <!-- Mobile mock-up preview -->
+=======
+    {{-- Mobile mockâ€‘up preview */}
+>>>>>>> 5272b57 (landing page)
     <section class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
         <!-- Smartphone Frame Preview -->
         <div class="mx-auto mb-6 max-w-[270px]">

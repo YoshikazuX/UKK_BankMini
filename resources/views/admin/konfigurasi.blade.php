@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -105,7 +105,7 @@
             <!-- SECTION 2: ALGORITMA NOMOR REKENING & TAHUN AJARAN -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                 <div class="flex items-center space-x-3 border-b border-slate-100 pb-4 mb-6">
-                    <div class="w-10 h-10 rounded-xl bg-slate-800 text-indigo-400 flex items-center justify-center font-bold">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 text-teal-400 flex items-center justify-center font-bold">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     </div>
                     <div>
@@ -219,3 +219,4 @@
     </main>
 </body>
 </html>
+

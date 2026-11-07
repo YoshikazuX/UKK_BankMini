@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -46,11 +46,11 @@
             </div>
 
             <div class="flex items-center gap-2.5">
-                <a href="{{ route('supervisor.approval-center') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-2">
+                <a href="{{ route('supervisor.approval-center') }}" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                     <span>Pusat Persetujuan Lengkap</span>
                     @if($totalPekerjaanPending > 0)
-                        <span class="text-indigo-200 font-bold">({{ $totalPekerjaanPending }})</span>
+                        <span class="text-teal-200 font-bold">({{ $totalPekerjaanPending }})</span>
                     @endif
                 </a>
                 <a href="{{ url('/supervisor/cetak-harian') }}" target="_blank" class="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-3.5 py-2 rounded-lg text-xs transition shadow-sm flex items-center gap-1.5">
@@ -147,7 +147,7 @@
                         Kas Awal: Rp {{ number_format($kasAwal ?? 0, 0, ',', '.') }}
                     </span>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-semibold">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-teal-600 font-semibold">
                     <a href="{{ route('supervisor.monitoring-teller') }}" class="hover:text-indigo-800 flex items-center gap-1">
                         <span>Monitor Loket Teller</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -264,7 +264,7 @@
             <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                     <h2 class="text-sm font-bold text-slate-900">Aktivitas dan Jejak Keputusan Terbaru</h2>
-                    <a href="{{ route('supervisor.monitoring-teller') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                    <a href="{{ route('supervisor.monitoring-teller') }}" class="text-xs font-semibold text-teal-600 hover:text-indigo-800">
                         Monitoring Lengkap &rarr;
                     </a>
                 </div>
@@ -273,7 +273,7 @@
                     @forelse($riwayatAktivitasDanKeputusan as $act)
                     <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs hover:bg-slate-100/60 transition">
                         <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 rounded-lg {{ $act['is_keputusan'] ? 'bg-indigo-50 text-indigo-700' : 'bg-white border border-slate-200 text-slate-600' }} flex items-center justify-center font-bold shrink-0">
+                            <div class="w-8 h-8 rounded-lg {{ $act['is_keputusan'] ? 'bg-teal-50 text-teal-700' : 'bg-white border border-slate-200 text-slate-600' }} flex items-center justify-center font-bold shrink-0">
                                 @if($act['is_keputusan'])
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 @else
@@ -284,7 +284,7 @@
                                 <div class="flex items-center gap-1.5">
                                     <span class="font-bold text-slate-900">{{ $act['jenis'] }}</span>
                                     @if($act['is_keputusan'])
-                                        <span class="text-xs font-medium text-indigo-700">(Otorisasi)</span>
+                                        <span class="text-xs font-medium text-teal-700">(Otorisasi)</span>
                                     @endif
                                 </div>
                                 <span class="text-slate-500 text-[11px]">
@@ -311,7 +311,7 @@
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <h2 class="text-sm font-bold text-slate-900">Rekonsiliasi Kas Harian</h2>
-                        <a href="{{ route('supervisor.rekonsiliasi') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                        <a href="{{ route('supervisor.rekonsiliasi') }}" class="text-xs font-semibold text-teal-600 hover:text-indigo-800">
                             Rincian &rarr;
                         </a>
                     </div>
@@ -367,7 +367,7 @@
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-xs space-y-2">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                         <span class="font-bold text-slate-900">Kehadiran Avalis Hari Ini</span>
-                        <a href="{{ url('/supervisor/absensi-avalis') }}" class="text-[11px] font-semibold text-indigo-600">Jadwal &rarr;</a>
+                        <a href="{{ url('/supervisor/absensi-avalis') }}" class="text-[11px] font-semibold text-teal-600">Jadwal &rarr;</a>
                     </div>
                     <div class="flex justify-between items-center text-slate-600">
                         <span>Petugas Hadir:</span>
@@ -413,3 +413,4 @@
     </script>
 </body>
 </html>
+

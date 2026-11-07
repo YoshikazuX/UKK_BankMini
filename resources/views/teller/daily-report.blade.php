@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -85,11 +85,11 @@
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between">
                     <p class="text-xs font-semibold text-slate-500">3. Droping Kas (+)</p>
-                    <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <span class="p-1.5 bg-teal-50 text-teal-600 rounded-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     </span>
                 </div>
-                <p class="text-xl font-bold text-indigo-600 mt-2 tabular-nums">Rp {{ number_format($totalCashDrop ?? 0, 0, ',', '.') }}</p>
+                <p class="text-xl font-bold text-teal-600 mt-2 tabular-nums">Rp {{ number_format($totalCashDrop ?? 0, 0, ',', '.') }}</p>
                 <p class="text-[11px] text-slate-400 mt-0.5">Disetujui Supervisor</p>
             </div>
 
@@ -349,7 +349,7 @@
                             <td class="p-3 font-semibold text-slate-900 tabular-nums">{{ date('d/m/Y', strtotime($rep->report_date)) }}</td>
                             <td class="p-3 text-right tabular-nums">Rp {{ number_format($rep->opening_balance, 0, ',', '.') }}</td>
                             <td class="p-3 text-right text-emerald-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_deposit, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right text-indigo-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_cash_drop ?? 0, 0, ',', '.') }}</td>
+                            <td class="p-3 text-right text-teal-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_cash_drop ?? 0, 0, ',', '.') }}</td>
                             <td class="p-3 text-right text-rose-600 font-semibold tabular-nums">Rp {{ number_format($rep->total_withdrawal, 0, ',', '.') }}</td>
                             <td class="p-3 text-right font-semibold text-slate-900 tabular-nums">Rp {{ number_format($rep->system_balance, 0, ',', '.') }}</td>
                             <td class="p-3 text-right font-semibold tabular-nums">Rp {{ number_format($rep->physical_balance, 0, ',', '.') }}</td>
@@ -477,3 +477,4 @@
     </script>
 </body>
 </html>
+

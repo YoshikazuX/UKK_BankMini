@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-labelledby="title">
+  <title>Teller icon – cash transaction</title>
+  <defs><style>.navy{fill:#1e293b}.teal{fill:#19C9A3}.stroke{stroke:#1e293b;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+  <g class="stroke">
+    <rect x="40" y="60" width="120" height="80" rx="8" ry="8" class="navy"/>
+    <line x1="60" y1="100" x2="140" y2="100" class="teal"/>
+    <polygon points="80,80 90,70 100,80" class="teal"/>
+    <polygon points="120,120 130,130 140,120" class="teal"/>
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -96,7 +96,7 @@
                         Proses Tutup Kas
                     </a>
                 @elseif($tellerAlerts['pending_kas_alert']['count'] > 0)
-                    <a href="{{ url('/teller/pengajuan-kas') }}" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition whitespace-nowrap shadow-sm">
+                    <a href="{{ url('/teller/pengajuan-kas') }}" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition whitespace-nowrap shadow-sm">
                         Lihat Pengajuan Kas
                     </a>
                 @endif
@@ -104,7 +104,7 @@
         </div>
         @endif
 
-        <!-- 2. PENCARIAN NASABAH (PRIORITAS UTAMA — PALING ATAS SETELAH HEADER) -->
+        <!-- 2. PENCARIAN NASABAH (PRIORITAS UTAMA â€” PALING ATAS SETELAH HEADER) -->
         <div id="tabel-nasabah" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
                 <div>
@@ -272,7 +272,7 @@
             <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                     <h2 class="text-sm font-bold text-slate-900">Aktivitas Transaksi Terakhir Saya</h2>
-                    <a href="{{ url('/teller/riwayat') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                    <a href="{{ url('/teller/riwayat') }}" class="text-xs font-semibold text-teal-600 hover:text-indigo-800">
                         Riwayat Lengkap &rarr;
                     </a>
                 </div>
@@ -423,3 +423,4 @@
     </script>
 </body>
 </html>
+

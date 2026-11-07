@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -52,7 +52,7 @@
                 <div>
                     <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
                         <span>Total Nasabah Terdaftar</span>
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     </div>
                     <p class="text-2xl font-black text-slate-900 tabular-nums">
                         {{ number_format($nasabahSummary['total'], 0, ',', '.') }}
@@ -68,7 +68,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-semibold group-hover:text-indigo-800">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-teal-600 font-semibold group-hover:text-indigo-800">
                     <span>Manajemen Nasabah</span>
                     <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
@@ -229,11 +229,11 @@
 
                         <a href="{{ url('/admin/data-nasabah') }}" class="p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition flex items-center justify-between group">
                             <div class="flex items-center space-x-3">
-                                <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                                <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 </div>
                                 <div>
-                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-indigo-700">Data Master Nasabah</span>
+                                    <span class="text-xs font-bold text-slate-900 block group-hover:text-teal-700">Data Master Nasabah</span>
                                     <span class="text-[11px] text-slate-500">Rekening siswa, status & saldo</span>
                                 </div>
                             </div>
@@ -262,7 +262,7 @@
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                         <h2 class="text-sm font-bold text-slate-900">Jejak Audit Aktivitas</h2>
-                        <a href="{{ url('/admin/audit') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                        <a href="{{ url('/admin/audit') }}" class="text-xs font-semibold text-teal-600 hover:text-indigo-800">
                             Semua Log &rarr;
                         </a>
                     </div>
@@ -322,3 +322,4 @@
     </script>
 </body>
 </html>
+

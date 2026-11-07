@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -42,9 +42,9 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
                 <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                    <a href="{{ route('supervisor.approval-center') }}" class="hover:text-indigo-600">&larr; Kembali ke Pusat Persetujuan</a>
+                    <a href="{{ route('supervisor.approval-center') }}" class="hover:text-teal-600">&larr; Kembali ke Pusat Persetujuan</a>
                     <span>&bull;</span>
-                    <a href="{{ route('supervisor.pengajuan-kas') }}" class="hover:text-indigo-600">Daftar Pengajuan Kas</a>
+                    <a href="{{ route('supervisor.pengajuan-kas') }}" class="hover:text-teal-600">Daftar Pengajuan Kas</a>
                 </div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
@@ -113,7 +113,7 @@
 
                         <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-100">
                             <span class="text-slate-500 block mb-0.5">Nominal Kas yang Diminta:</span>
-                            <span class="font-black text-indigo-700 text-lg tabular-nums">Rp {{ number_format($pengajuan->nominal, 0, ',', '.') }}</span>
+                            <span class="font-black text-teal-700 text-lg tabular-nums">Rp {{ number_format($pengajuan->nominal, 0, ',', '.') }}</span>
                             <span class="block text-[10px] text-slate-400 mt-0.5">{{ \App\Helpers\TerbilangHelper::terbilang($pengajuan->nominal) }} rupiah</span>
                         </div>
 
@@ -161,10 +161,10 @@
                             <span class="font-bold text-sm tabular-nums mt-0.5 block">Rp {{ number_format($totalPenarikanKeluar, 0, ',', '.') }}</span>
                             <span class="text-[10px] text-rose-600">{{ $jumlahPenarikan }} penarikan nasabah</span>
                         </div>
-                        <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-indigo-900">
-                            <span class="text-indigo-700 block">Estimasi Kas Laci:</span>
+                        <div class="bg-teal-50 p-3 rounded-lg border border-indigo-100 text-indigo-900">
+                            <span class="text-teal-700 block">Estimasi Kas Laci:</span>
                             <span class="font-black text-sm tabular-nums mt-0.5 block">Rp {{ number_format($estimasiKasLaciTeller, 0, ',', '.') }}</span>
-                            <span class="text-[10px] {{ $estimasiKasLaciTeller <= 0 ? 'text-rose-600 font-bold' : 'text-indigo-600' }}">
+                            <span class="text-[10px] {{ $estimasiKasLaciTeller <= 0 ? 'text-rose-600 font-bold' : 'text-teal-600' }}">
                                 {{ $estimasiKasLaciTeller <= 0 ? 'Kas Kritis / Habis' : 'Posisi saat ini' }}
                             </span>
                         </div>
@@ -496,4 +496,5 @@
     </script>
 </body>
 </html>
+
 

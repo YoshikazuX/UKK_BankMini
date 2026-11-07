@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -57,13 +57,13 @@
 
         <!-- TABS FILTER STATUS NOTIFIKASI -->
         <div class="flex items-center space-x-2 border-b border-slate-200 pb-px mb-6 text-xs">
-            <a href="{{ route('supervisor.notifikasi', ['status' => 'semua']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'semua' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
+            <a href="{{ route('supervisor.notifikasi', ['status' => 'semua']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'semua' ? 'border-teal-600 text-teal-700 bg-teal-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
                 Semua ({{ $totalCount }})
             </a>
-            <a href="{{ route('supervisor.notifikasi', ['status' => 'belum_dibaca']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'belum_dibaca' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
+            <a href="{{ route('supervisor.notifikasi', ['status' => 'belum_dibaca']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'belum_dibaca' ? 'border-teal-600 text-teal-700 bg-teal-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
                 Belum Dibaca ({{ $unreadCount }})
             </a>
-            <a href="{{ route('supervisor.notifikasi', ['status' => 'sudah_dibaca']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'sudah_dibaca' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
+            <a href="{{ route('supervisor.notifikasi', ['status' => 'sudah_dibaca']) }}" class="px-4 py-2 font-bold border-b-2 transition {{ $filterStatus === 'sudah_dibaca' ? 'border-teal-600 text-teal-700 bg-teal-50/40' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
                 Sudah Dibaca
             </a>
         </div>
@@ -133,4 +133,5 @@
     </main>
 </body>
 </html>
+
 

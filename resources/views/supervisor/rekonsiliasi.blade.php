@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -152,7 +152,7 @@
                             </td>
                             <td class="py-3 px-4 text-right tabular-nums text-slate-600">Rp {{ number_format($r->opening_balance, 0, ',', '.') }}</td>
                             <td class="py-3 px-4 text-right text-emerald-700 tabular-nums font-medium">Rp {{ number_format($r->total_deposit, 0, ',', '.') }}</td>
-                            <td class="py-3 px-4 text-right text-indigo-700 tabular-nums font-medium">Rp {{ number_format($r->total_cash_drop, 0, ',', '.') }}</td>
+                            <td class="py-3 px-4 text-right text-teal-700 tabular-nums font-medium">Rp {{ number_format($r->total_cash_drop, 0, ',', '.') }}</td>
                             <td class="py-3 px-4 text-right text-rose-700 tabular-nums font-medium">Rp {{ number_format($r->total_withdrawal, 0, ',', '.') }}</td>
                             <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums">Rp {{ number_format($r->system_balance, 0, ',', '.') }}</td>
                             <td class="py-3 px-4 text-right font-black text-slate-900 tabular-nums">Rp {{ number_format($r->physical_balance, 0, ',', '.') }}</td>
@@ -194,4 +194,5 @@
     </main>
 </body>
 </html>
+
 

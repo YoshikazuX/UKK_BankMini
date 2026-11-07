@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <a href="{{ route('supervisor.approval-center') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                <a href="{{ route('supervisor.approval-center') }}" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     Pusat Persetujuan
                 </a>
@@ -188,11 +188,11 @@
                             </td>
                             <td class="py-3 px-4 text-center">
                                 @if($h->pekerjaan_type === 'pengajuan_kas')
-                                    <a href="{{ route('supervisor.pengajuan-kas.detail', $h->pekerjaan_id) }}" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs">
+                                    <a href="{{ route('supervisor.pengajuan-kas.detail', $h->pekerjaan_id) }}" class="text-teal-600 hover:text-indigo-800 font-semibold text-xs">
                                         Lihat Tiket
                                     </a>
                                 @elseif($h->pekerjaan_type === 'daily_report')
-                                    <a href="{{ route('supervisor.daily-report.detail', $h->pekerjaan_id) }}" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs">
+                                    <a href="{{ route('supervisor.daily-report.detail', $h->pekerjaan_id) }}" class="text-teal-600 hover:text-indigo-800 font-semibold text-xs">
                                         Lihat Dokumen
                                     </a>
                                 @endif
@@ -219,4 +219,5 @@
     </main>
 </body>
 </html>
+
 

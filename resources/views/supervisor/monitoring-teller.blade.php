@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -145,7 +145,7 @@
                                 <span class="tabular-nums font-bold text-slate-900">{{ $stat->total_transaksi }} transaksi ({{ $stat->transaksi_sukses }} sukses &bull; {{ $stat->transaksi_batal }} void)</span>
                             </div>
                             <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden flex">
-                                <div class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
+                                <div class="bg-teal-600 h-3 rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
                             </div>
                         </div>
                     @endforeach
@@ -282,4 +282,5 @@
     </main>
 </body>
 </html>
+
 

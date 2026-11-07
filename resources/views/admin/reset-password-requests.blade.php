@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -219,7 +219,7 @@
                                         WhatsApp OTP
                                     </span>
                                 @elseif($req->metode === 'email')
-                                    <span class="font-semibold text-xs text-indigo-700">
+                                    <span class="font-semibold text-xs text-teal-700">
                                         Email OTP
                                     </span>
                                 @else
@@ -513,4 +513,5 @@
     </script>
 </body>
 </html>
+
 

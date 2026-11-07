@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-labelledby="title">
+  <title>Supervisor icon – monitoring radar</title>
+  <defs><style>.navy{fill:#1e293b}.teal{fill:#19C9A3}.stroke{stroke:#1e293b;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+  <g class="stroke">
+    <circle cx="100" cy="100" r="70" class="navy"/>
+    <path d="M100 40 v120" class="teal"/>
+    <path d="M60 100 h80" class="teal"/>
+    <path d="M80 70 l40 40" class="teal"/>
+    <path d="M120 70 l-40 40" class="teal"/>
+  </g>
+</svg>

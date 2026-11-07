@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -42,9 +42,9 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-4">
             <div>
                 <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                    <a href="{{ route('supervisor.approval-center') }}" class="hover:text-indigo-600">&larr; Kembali ke Pusat Persetujuan</a>
+                    <a href="{{ route('supervisor.approval-center') }}" class="hover:text-teal-600">&larr; Kembali ke Pusat Persetujuan</a>
                     <span>&bull;</span>
-                    <a href="{{ route('supervisor.daily-report') }}" class="hover:text-indigo-600">Daftar Daily Report</a>
+                    <a href="{{ route('supervisor.daily-report') }}" class="hover:text-teal-600">Daftar Daily Report</a>
                 </div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
@@ -130,7 +130,7 @@
                             <span>(+) Total Setoran Masuk Nasabah:</span>
                             <span class="font-bold tabular-nums">Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex justify-between items-center py-1 text-indigo-700">
+                        <div class="flex justify-between items-center py-1 text-teal-700">
                             <span>(+) Droping Kas Disetujui:</span>
                             <span class="font-bold tabular-nums">Rp {{ number_format($report->total_cash_drop, 0, ',', '.') }}</span>
                         </div>
@@ -460,4 +460,5 @@
     </script>
 </body>
 </html>
+
 

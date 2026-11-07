@@ -1,4 +1,4 @@
-@php
+﻿@php
     $user = Auth::user();
     $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
     $role = $user?->role ?? null;
@@ -196,7 +196,7 @@
                             @if($unreadNotificationCount > 0)
                             <form action="{{ route('notifikasi.baca-semua') }}" method="POST" class="inline">
                                 @csrf
-                                <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">Tandai Baca</button>
+                                <button type="submit" class="text-xs text-teal-600 hover:text-indigo-800 font-semibold">Tandai Baca</button>
                             </form>
                             @endif
                         </div>
@@ -374,3 +374,4 @@
         closeNavDropdowns(null);
     });
 </script>
+

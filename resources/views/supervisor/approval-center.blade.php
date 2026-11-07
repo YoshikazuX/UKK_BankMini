@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -116,7 +116,7 @@
                     $isActive = $currentTab === $key;
                     $url = request()->fullUrlWithQuery(['kategori' => $key, 'page' => 1]);
                 @endphp
-                <a href="{{ $url }}" class="whitespace-nowrap px-4 py-2.5 text-xs font-bold border-b-2 transition {{ $isActive ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }}">
+                <a href="{{ $url }}" class="whitespace-nowrap px-4 py-2.5 text-xs font-bold border-b-2 transition {{ $isActive ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }}">
                     {{ $label }}
                     @if($key === 'menunggu_persetujuan' && $totalPengajuanPending > 0)
                         <span class="ml-1.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-900 text-[10px] font-black">{{ $totalPengajuanPending }}</span>
@@ -236,7 +236,7 @@
                             <td class="py-3 px-4 max-w-xs text-slate-600">
                                 <p class="truncate" title="{{ $item->keterangan }}">{{ $item->keterangan ?: '-' }}</p>
                                 @if($item->catatan_spv)
-                                    <p class="text-[10px] text-indigo-700 italic mt-0.5 truncate" title="Catatan SPV: {{ $item->catatan_spv }}">
+                                    <p class="text-[10px] text-teal-700 italic mt-0.5 truncate" title="Catatan SPV: {{ $item->catatan_spv }}">
                                         SPV: "{{ $item->catatan_spv }}"
                                     </p>
                                 @endif
@@ -276,4 +276,5 @@
     </main>
 </body>
 </html>
+
 

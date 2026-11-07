@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -183,7 +183,7 @@
                 <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80">
                     <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-200/80">
                         <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
                             <span class="text-xs font-bold text-slate-900 uppercase tracking-wider">Shift Siang</span>
                         </div>
                         <span class="text-[11px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
@@ -745,3 +745,4 @@
     </script>
 </body>
 </html>
+

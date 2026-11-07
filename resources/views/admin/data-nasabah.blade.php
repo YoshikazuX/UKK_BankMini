@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -279,7 +279,7 @@
 
                             <!-- NIS & Nama -->
                             <td class="py-3.5 px-4">
-                                <a href="{{ url('/admin/data-nasabah/'.$n->id) }}" class="font-bold text-slate-900 hover:text-indigo-600 transition block text-sm">
+                                <a href="{{ url('/admin/data-nasabah/'.$n->id) }}" class="font-bold text-slate-900 hover:text-teal-600 transition block text-sm">
                                     {{ $n->nama_siswa }}
                                 </a>
                                 <span class="text-slate-500 font-mono text-[11px]">NIS: {{ $n->nis }}</span>
@@ -462,7 +462,7 @@
                     @csrf
                     <div class="mb-4">
                         <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis menghasilkan Nomor Rekening terstandar untuk setiap siswa yang di-import.</p>
-                        <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
+                        <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-teal-600 font-semibold hover:underline">
                             &darr; Unduh Template CSV Resmi
                         </a>
                     </div>
@@ -582,3 +582,4 @@
     </script>
 </body>
 </html>
+
