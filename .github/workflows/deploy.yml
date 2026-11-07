@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      sync_vendor:
+        description: 'Upload folder vendor_release (Hanya centang jika ada perubahan composer.json / package baru)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -12,7 +18,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 190
+    timeout-minutes: 30
 
     steps:
       # ==========================================
@@ -47,9 +53,6 @@ jobs:
       # ==========================================
       - name: Cache Laravel routes
         run: php artisan route:cache
-
-      - name: Cache Laravel views
-        run: php artisan view:cache
 
       # ==========================================
       # 5. SETUP NODE.JS
@@ -114,6 +117,8 @@ jobs:
             **/.env.*
             **/public/**
             **/vendor/**
+            ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.sync_vendor == 'true' && '# include vendor' || '**/vendor_release/**' }}
+            **/storage/**
             **/tests/**
             **/.github/**
             **/phpunit.xml
