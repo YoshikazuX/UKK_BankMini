@@ -10,7 +10,7 @@
 
 @section('content')
 <div class="bg-white">
-    {{-- Hero Section – dark navy gradient, strong visual --}}
+    {{-- Hero Section - dark navy gradient, strong visual --}}
     <section class="relative bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8 text-center">
         <div class="max-w-4xl mx-auto">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
@@ -36,7 +36,7 @@
         </div>
     </section>
 
-    {{-- Introduction - tighter spacing -}}
+    {{-- Introduction - tighter spacing --}}
     <section class="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Tentang Bank Mini Sekolah</h2>
         <p class="text-gray-700 leading-relaxed">
@@ -44,7 +44,7 @@
         </p>
     </section>
 
-    {{-- Services Overview – cards with hover effect –}}
+    {{-- Services Overview - cards with hover effect --}}
     <section class="bg-gray-50 py-10 sm:py-12">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Layanan Utama</h2>
@@ -65,7 +65,7 @@
         </div>
     </section>
 
-    {{-- Mobile App Promotion – include mockup placeholder –}} 
+    {{-- Mobile App Promotion - include mockup placeholder --}} 
     <section class="max-w-5xl mx-auto py-10 sm:py-12 px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Aplikasi Mobile</h2>
         <p class="text-gray-600 mb-6">
@@ -77,7 +77,7 @@
         </a>
     </section>
 
-    {{-- FAQ – compact accordion style –}} 
+    {{-- FAQ - compact accordion style --}} 
     <section class="bg-gray-50 py-10 sm:py-12">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Pertanyaan Umum</h2>
@@ -98,7 +98,7 @@
         </div>
     </section>
 
-    {{-- Contact – concise –}} 
+    {{-- Contact - concise --}} 
     <section class="max-w-5xl mx-auto py-10 sm:py-12 px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Hubungi Kami</h2>
         <p class="text-gray-600 mb-2">Email: <a href="mailto:info@hanbank.my.id" class="text-indigo-600 underline">info@hanbank.my.id</a></p>
