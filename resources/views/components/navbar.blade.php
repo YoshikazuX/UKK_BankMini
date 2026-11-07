@@ -1,23 +1,3 @@
-﻿@php
-    $user = Auth::user();
-    $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
-    $role = $user?->role ?? null;
-    $dashboardRoute = in_array($role, $validRoles) ? $role . '.dashboard' : null;
-    $navItemClass = function(bool $isActive) {
-        $base = "text-sm whitespace-nowrap px-3 py-1.5 rounded-lg transition-all duration-150 focus:outline-none";
-        return $isActive
-            ? "{$base} text-white bg-slate-700 font-semibold shadow-inner"
-            : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/60 font-medium";
-    };
-    $mobileNavItemClass = function(bool $isActive) {
-        $base = "block text-sm px-3.5 py-2 rounded-lg transition-all duration-150 focus:outline-none font-medium";
-        return $isActive
-            ? "{$base} text-white bg-slate-700 font-semibold"
-            : "{$base} text-slate-300 hover:text-white hover:bg-slate-700/50";
-    };
-@endphp
-
-
 @php
     $user = Auth::user();
     $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
@@ -56,15 +36,11 @@
     } elseif ($user && $role === 'admin') {
         $pendingResetTotal = \App\Models\PasswordResetRequest::where('status', 'pending')->count();
     }
-@endphp
-@endphp
-
-<!-- Font Plus Jakarta Sans terstandarisasi untuk navigasi website -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<nav class="bg-slate-800 text-white shadow-md relative no-print z-40" style="font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
+@endphp<nav class="bg-slate-800 text-white shadow-md relative no-print z-40" style="font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
+    <!-- Font Plus Jakarta Sans terstandarisasi untuk navigasi website -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <!-- Brand Logo Resmi SMK Negeri 1 Bantul + Nama Institusi -->
@@ -88,7 +64,6 @@
                             <span class="ml-1.5 bg-amber-500 text-slate-900 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ $pendingPengajuan }}</span>
                         @endif
                     </a>
-                    <a href="{{ url('/teller/profil') }}" class="{{ $navItemClass(request()->is('teller/profil*')) }}">Profil</a>
                     <a href="{{ url('/teller/scan') }}" class="{{ $navItemClass(request()->is('teller/scan*')) }}">Scan QR</a>
 
                 @elseif($role === 'supervisor' || $role === 'accounting')
@@ -256,7 +231,7 @@
                                 'accounting' => 'Accounting',
                                 'teller' => 'Teller',
                                 'nasabah' => 'Nasabah',
-                                default => ucfirst($role)
+                                default => ucfirst($role ?? '')
                             };
                             $profileUrl = url('/' . ($role === 'teller' ? 'teller/profil' : ($role === 'supervisor' || $role === 'accounting' ? 'supervisor/profil' : 'admin/profil')));
                         @endphp
