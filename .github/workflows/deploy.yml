@@ -13,9 +13,11 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -23,37 +25,48 @@ jobs:
           extensions: bcmath, ctype, curl, dom, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, xml, zip
           coverage: none
 
+      
       - name: Install Composer dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
-      - name: Prepare fresh vendor directory
-        run: |
-          mv vendor vendor_release
-          sed -i 's|hanbank_app/vendor/autoload.php|hanbank_app/vendor_release/autoload.php|' public/index.php
+     
+      - name: Cache Laravel routes
+        run: php artisan route:cache
 
+      - name: Cache Laravel views
+        run: php artisan view:cache
+
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
 
+      
       - name: Install frontend dependencies
         run: npm ci
 
+      
       - name: Build frontend assets
         run: npm run build
-      - name: Cache Laravel routes
-        run: php artisan route:cache
-      - name: Cache Laravel views
-        run: php artisan view:cache
 
+      
+      - name: Prepare production vendor directory
+        run: |
+          mv vendor vendor_release
+          sed -i 's|hanbank_app/vendor/autoload.php|hanbank_app/vendor_release/autoload.php|' public/index.php
+
+      
       - name: Verify deployment files
         run: |
           test -f vendor_release/autoload.php
           test -f public/index.php
           grep -q 'vendor_release/autoload.php' public/index.php
+          test -d public/build
           echo "Deployment files verified."
 
+      
       - name: Deploy Laravel application
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -70,8 +83,11 @@ jobs:
             **/node_modules/**
             **/.env
             **/.env.*
-            **/public/build/**
+            **/public/**
+            **/vendor/**
+            **/vendor_release/.git*
 
+      
       - name: Deploy public files
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
