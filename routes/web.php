@@ -227,11 +227,3 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/kunjungan-siswa/reset/{id}', [AbsensiAvalisController::class, 'resetVerifikasiKunjungan'])->name('kunjungan-siswa.reset');
 });
 
-// HELPER DATABASE & STORAGE
-Route::get('/fix-database-pegawai', fn () => 'OK')->name('fix.db.pegawai');
-Route::get('/fix-database-void', fn () => 'OK')->name('fix.db.void');
-Route::get('/fix-foto', function () {
-    Artisan::call('storage:link');
-
-    return 'OK';
-})->name('fix.foto');
