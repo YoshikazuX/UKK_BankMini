@@ -1,6 +1,9 @@
 name: Deploy HANBANK to DomaiNesia
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -75,13 +78,7 @@ jobs:
       - name: Prepare production vendor directory
         run: |
           test -f vendor/autoload.php
-
           mv vendor vendor_release
-
-          sed -i \
-            's|hanbank_app/vendor/autoload.php|hanbank_app/vendor_release/autoload.php|' \
-            public/index.php
-
           echo "Production vendor directory prepared."
 
       # ==========================================
@@ -93,10 +90,6 @@ jobs:
           test -f public/index.php
           test -f bootstrap/app.php
           test -f public/build/manifest.json
-
-          grep -q 'hanbank_app/vendor_release/autoload.php' public/index.php
-          grep -q 'hanbank_app/bootstrap/app.php' public/index.php
-
           echo "All deployment files verified."
 
       # ==========================================
