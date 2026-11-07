@@ -172,7 +172,7 @@ class NasabahApiTest extends TestCase
         $response = $this->actingAs($userAdmin)->get('/admin/hapus-nasabah/'.$nasabah->id);
         $response->assertRedirect('/admin/data-nasabah');
 
-        $this->assertDatabaseMissing('nasabah', [
+        $this->assertSoftDeleted('nasabah', [
             'id' => $nasabah->id,
         ]);
     }

@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 <!-- resources/views/download.blade.php -->
-<!-- Download Page for Bank Mini Sekolah Mobile App -->
-=======
-﻿<!-- resources/views/download.blade.php -->
 {{-- Download Page for Bank Mini Sekolah Mobile App --}}
->>>>>>> 5272b57 (landing page)
 @extends('layouts.app')
 
 @section('header')
@@ -15,18 +10,14 @@
 
 @section('content')
 <div class="bg-white">
-<<<<<<< HEAD
-    <!-- Hero section -->
-=======
-    {{-- Hero section â€“ dark gradient for consistency */}
->>>>>>> 5272b57 (landing page)
+    {{-- Hero section --}}
     <section class="relative bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8 text-center">
         <div class="max-w-3xl mx-auto">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
                 Aplikasi Android Bank Mini Sekolah
             </h1>
             <p class="mt-4 text-lg sm:text-xl text-slate-200">
-                Versi terbaru: <strong>v1.0.0</strong> (dirilis 1 Nov 2026)
+                Versi terbaru: <strong>v1.0.0</strong> (dirilis November 2026)
             </p>
             <p class="mt-6 text-base sm:text-lg text-slate-200 max-w-2xl mx-auto">
                 Aplikasi memungkinkan siswa, orang tua, dan staf mengakses semua fitur perbankan langsung dari ponsel.
@@ -35,12 +26,8 @@
                 <button type="button" class="px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed shadow-sm" disabled>
                     APK akan tersedia segera
                 </button>
-<<<<<<< HEAD
-                <a href="{{ route('download') }}" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none rounded-lg text-white font-medium shadow-sm transition">
-=======
-                <a href="{{ route('download') }}" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:outline-none rounded-md text-white transition">
->>>>>>> 5272b57 (landing page)
-                    Notifikasi Ketersediaan
+                <a href="{{ route('landing') }}" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:outline-none rounded-lg text-white font-medium shadow-sm transition">
+                    Kembali ke Beranda
                 </a>
             </div>
         </div>
@@ -52,11 +39,7 @@
         </div>
     </section>
 
-<<<<<<< HEAD
-    <!-- Mobile mock-up preview -->
-=======
-    {{-- Mobile mockâ€‘up preview */}
->>>>>>> 5272b57 (landing page)
+    {{-- Mobile mock-up preview --}}
     <section class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
         <!-- Smartphone Frame Preview -->
         <div class="mx-auto mb-6 max-w-[270px]">
@@ -105,7 +88,7 @@
         </div>
 
         <p class="text-gray-600 mb-4">
-            Klik tombol di atas untuk menerima notifikasi ketika APK sudah siap.
+            Aplikasi mobile HanBank saat ini sedang dalam tahap integrasi akhir untuk rilis APK Android publik.
         </p>
     </section>
 </div>
