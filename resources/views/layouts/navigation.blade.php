@@ -6,28 +6,29 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     @guest
-    <a href="{{ url('/') }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
-        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-    </a>
-    <a href="{{ route('login') }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Login</a>
-    <a href="{{ route('download') }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Download</a>
-@endguest
-@auth
-    @php
-    $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
-    $role = Auth::user()->role ?? null;
-    $dashboardRoute = in_array($role, $validRoles) ? $role . '.dashboard' : null;
-@endphp
-    @if($dashboardRoute)
-        <a href="{{ route($dashboardRoute) }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
-            <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-        </a>
-    @else
-        <a href="{{ url('/') }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
-            <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-        </a>
-    @endif
-@endauth
+                        <a href="{{ url('/') }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
+                            <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                            <span class="text-base font-bold text-slate-900 tracking-tight">Bank Mini Sekolah</span>
+                        </a>
+                    @endguest
+                    @auth
+                        @php
+                            $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
+                            $role = Auth::user()->role ?? null;
+                            $dashboardRoute = in_array($role, $validRoles) ? $role . '.dashboard' : null;
+                        @endphp
+                        @if($dashboardRoute)
+                            <a href="{{ route($dashboardRoute) }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
+                                <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                                <span class="text-base font-bold text-slate-900 tracking-tight">Bank Mini Sekolah</span>
+                            </a>
+                        @else
+                            <a href="{{ url('/') }}" class="flex items-center space-x-3 whitespace-nowrap shrink-0 mr-4 focus:outline-none group">
+                                <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                                <span class="text-base font-bold text-slate-900 tracking-tight">Bank Mini Sekolah</span>
+                            </a>
+                        @endif
+                    @endauth
                 </div>
 
                 <!-- Navigation Links -->
@@ -47,7 +48,13 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
+            <!-- Settings Dropdown / Guest Auth Buttons -->
+            @guest
+            <div class="hidden sm:flex sm:items-center sm:gap-3">
+                <a href="{{ route('download') }}" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-lg transition">Unduh Aplikasi</a>
+                <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">Masuk</a>
+            </div>
+            @endguest
             @auth
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
@@ -98,6 +105,14 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            @guest
+                <x-responsive-nav-link :href="route('download')">
+                    {{ __('Unduh Aplikasi') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('login')">
+                    {{ __('Masuk Dashboard') }}
+                </x-responsive-nav-link>
+            @endguest
             @auth
     @php
         $validRoles = ['admin', 'teller', 'supervisor', 'nasabah'];
