@@ -9,8 +9,11 @@
     @include('components.public_navbar')
 
     @php
-        $apkPath = public_path('downloads/hanbank-mobile.apk');
-        $hasApk = file_exists($apkPath);
+        $apkUrl = config('app.apk_download_url', env('APK_DOWNLOAD_URL'));
+        $localApkPath = public_path('downloads/hanbank-mobile.apk');
+        $downloadUrl = $apkUrl ?: (file_exists($localApkPath) ? asset('downloads/hanbank-mobile.apk') : null);
+        $hasApk = !empty($downloadUrl);
+        $isExternal = $downloadUrl && (str_starts_with($downloadUrl, 'http://') || str_starts_with($downloadUrl, 'https://'));
     @endphp
 
     {{-- 2. HERO SECTION — DOWNLOAD HANBANK MOBILE --}}
@@ -52,7 +55,7 @@
                                 <h3 class="text-base font-bold text-slate-900">HanBank Mobile Siswa</h3>
                             </div>
                             <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $hasApk ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
-                                {{ $hasApk ? 'Siap Diunduh' : 'v1.0.0 — Rilis November 2026' }}
+                                {{ $hasApk ? 'v2.4.0 — Siap Diunduh' : 'v2.4.0 — Segera Rilis' }}
                             </span>
                         </div>
 
@@ -63,11 +66,11 @@
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Versi</span>
-                                <span class="font-bold text-slate-800">v1.0.0</span>
+                                <span class="font-bold text-slate-800">v2.4.0</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Ukuran</span>
-                                <span class="font-bold text-slate-800">~24.8 MB</span>
+                                <span class="font-bold text-slate-800">~73 MB</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Kompatibilitas</span>
@@ -79,7 +82,8 @@
                     {{-- Download & Return Action Buttons --}}
                     <div class="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                         @if($hasApk)
-                            <a href="{{ asset('downloads/hanbank-mobile.apk') }}" download
+                            <a href="{{ $downloadUrl }}" 
+                               {{ $isExternal ? 'target="_blank" rel="noopener noreferrer"' : 'download' }}
                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-lg shadow-emerald-500/20 transition active:scale-[0.99] text-sm sm:text-base">
                                 <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -94,7 +98,7 @@
                                 </svg>
                                 <span>Unduh APK Android</span>
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-emerald-300 border border-slate-700">
-                                    v1.0.0
+                                    v2.4.0
                                 </span>
                             </button>
                         @endif
