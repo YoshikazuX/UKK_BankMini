@@ -109,12 +109,17 @@
         </div>
         @endif
 
-        <!-- 2. PENCARIAN NASABAH (PRIORITAS UTAMA â€” PALING ATAS SETELAH HEADER) -->
+        <!-- 2. DAFTAR NASABAH & PENCARIAN REKENING (LAYANI TRANSAKSI LOKET) -->
         <div id="tabel-nasabah" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900">Pencarian Rekening & Layani Nasabah</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Ketik NIS, Nomor Rekening, atau Nama Siswa untuk langsung memulai transaksi loket.</p>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold text-slate-900">Data Nasabah & Pencarian Rekening</h2>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {{ number_format($totalNasabah ?? ($nasabah->total() ?? 0), 0, ',', '.') }} Siswa Terdaftar
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Daftar lengkap nasabah sekolah. Cari berdasarkan NIS, Nama, Rekening, atau filter kelas untuk verifikasi & melayani transaksi loket.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="bukaModalScan()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer">
@@ -127,22 +132,34 @@
                 </div>
             </div>
 
-            <!-- Form Pencarian -->
-            <form action="{{ url('/teller/dashboard') }}" method="GET" class="flex items-center gap-3 mb-5">
-                <div class="flex-grow relative">
+            <!-- Form Pencarian & Filter Kelas -->
+            <form action="{{ url('/teller/dashboard') }}#tabel-nasabah" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-5">
+                <div class="sm:col-span-6 relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari NIS, Nomor Rekening, atau Nama Siswa..." class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-slate-900 text-xs sm:text-sm" autocomplete="off" autofocus>
+                    <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari NIS, Nomor Rekening, atau Nama Siswa..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-slate-900 text-xs sm:text-sm" autocomplete="off">
                 </div>
-                <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-5 rounded-lg transition shadow-sm text-xs sm:text-sm whitespace-nowrap">
-                    Cari Nasabah
-                </button>
-                @if(request('cari'))
-                    <a href="{{ url('/teller/dashboard') }}" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-3.5 rounded-lg transition text-xs sm:text-sm whitespace-nowrap">
-                        Reset
-                    </a>
-                @endif
+
+                <div class="sm:col-span-3">
+                    <select name="kelas" onchange="this.form.submit()" class="w-full py-2 px-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-xs sm:text-sm bg-white text-slate-700">
+                        <option value="all">Semua Kelas</option>
+                        @foreach($daftarKelas ?? [] as $kls)
+                            <option value="{{ $kls }}" {{ request('kelas') === $kls ? 'selected' : '' }}>{{ $kls }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="sm:col-span-3 flex items-center gap-2">
+                    <button type="submit" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-xs sm:text-sm text-center">
+                        Cari / Filter
+                    </button>
+                    @if(request('cari') || (request('kelas') && request('kelas') !== 'all'))
+                        <a href="{{ url('/teller/dashboard') }}#tabel-nasabah" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-3 rounded-lg transition text-xs sm:text-sm whitespace-nowrap">
+                            Reset
+                        </a>
+                    @endif
+                </div>
             </form>
 
             <!-- Tabel Hasil Nasabah -->
@@ -161,45 +178,69 @@
                     <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse ($nasabah as $n)
                         <tr class="hover:bg-slate-50/70 transition">
-                            <td class="py-3 px-4 font-bold text-slate-900 tabular-nums">
-                                {{ $n->no_rekening }}
-                                <span class="text-slate-400 block text-[11px] font-normal">NIS: {{ $n->nis }}</span>
+                            <td class="py-3 px-4 font-bold text-slate-900 tabular-nums whitespace-nowrap">
+                                <span class="font-mono">{{ $n->no_rekening }}</span>
+                                <span class="text-slate-400 block text-[11px] font-normal font-mono">NIS: {{ $n->nis }}</span>
                             </td>
-                            <td class="py-3 px-4 font-medium text-slate-800">{{ $n->nama_siswa }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ $n->kelas }} - {{ $n->jurusan }}</td>
-                            <td class="py-3 px-4 text-center">
-                                @if($n->status === 'aktif')
-                                    <span class="text-xs font-semibold text-emerald-700">Aktif</span>
-                                @else
-                                    <span class="text-xs font-semibold text-slate-500">{{ ucfirst($n->status) }}</span>
+                            <td class="py-3 px-4">
+                                <span class="font-semibold text-slate-800 block text-xs sm:text-sm">{{ $n->nama_siswa }}</span>
+                                @if($n->kategori && $n->kategori !== 'siswa')
+                                    <span class="text-[10px] text-slate-500 uppercase tracking-wide">{{ ucfirst($n->kategori) }}</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums">
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="font-medium text-slate-800">{{ $n->kelas }}</span>
+                                <span class="text-slate-400 block text-[11px]">{{ $n->jurusan }}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                @if($n->status === 'aktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>
+                                @elseif($n->status === 'nonaktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Nonaktif</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">{{ ucfirst($n->status) }}</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">
                                 Rp {{ number_format($n->saldo, 0, ',', '.') }}
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap space-x-1.5">
-                                <a href="{{ url('/teller/transaksi/'.$n->id) }}" class="inline-block bg-slate-900 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded-lg transition text-xs shadow-sm">
+                                <a href="{{ url('/teller/transaksi/'.$n->id) }}" class="inline-block bg-slate-900 hover:bg-slate-800 text-white font-semibold py-1.5 px-3 rounded-lg transition text-xs shadow-sm">
                                     Layani Transaksi &rarr;
                                 </a>
-                                <a href="{{ url('/buku-tabungan/'.$n->id) }}" class="inline-block bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-1 px-2.5 rounded-lg transition text-xs shadow-sm">
+                                <a href="{{ url('/buku-tabungan/'.$n->id) }}" class="inline-block bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-1.5 px-2.5 rounded-lg transition text-xs shadow-sm" title="Lihat Buku Tabungan">
                                     Buku
                                 </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 italic">
-                                @if(request('cari'))
-                                    Nasabah dengan kata kunci "{{ request('cari') }}" tidak ditemukan.
-                                @else
-                                    Ketik NIS, Nomor Rekening, atau gunakan tombol Scan Cepat QR di atas untuk melayani transaksi nasabah.
-                                @endif
+                            <td colspan="6" class="py-10 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-10 h-10 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    <p class="font-medium text-slate-600">Tidak ada data nasabah yang cocok.</p>
+                                    @if(request('cari') || (request('kelas') && request('kelas') !== 'all'))
+                                        <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih Semua Kelas.</p>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination & Info -->
+            @if(method_exists($nasabah, 'hasPages') && $nasabah->hasPages())
+            <div class="px-4 py-3 bg-slate-50 border border-slate-200 border-t-0 rounded-b-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs mt-0">
+                <span class="text-slate-500">
+                    Menampilkan <strong>{{ $nasabah->firstItem() ?? 0 }}</strong> sampai <strong>{{ $nasabah->lastItem() ?? 0 }}</strong> dari <strong>{{ $nasabah->total() }}</strong> nasabah
+                </span>
+                <div>
+                    {{ $nasabah->links() }}
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- 3. POSISI KAS LOKET (SATU BAGIAN KAS TERPADU MENGGANTIKAN 3 KARTU TERPISAH) -->

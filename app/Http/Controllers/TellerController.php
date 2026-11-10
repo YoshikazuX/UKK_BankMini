@@ -40,74 +40,40 @@ class TellerController extends Controller
             $katakunci = trim($mNis[1]);
         }
 
-        if ($katakunci !== '') {
-            // Prioritas 1: Pencocokan persis No Rekening atau NIS (misal dari Scan QR Kartu)
-            $exactMatch = Nasabah::where('no_rekening', $katakunci)
-                ->orWhere('nis', $katakunci)
-                ->get();
+        $query = Nasabah::query();
 
-            if ($exactMatch->isNotEmpty()) {
-                $nasabah = $exactMatch;
-            } else {
-                $nasabah = Nasabah::where(function ($sub) use ($katakunci) {
-                    $sub->where('nis', 'LIKE', '%'.$katakunci.'%')
-                        ->orWhere('no_rekening', 'LIKE', '%'.$katakunci.'%')
-                        ->orWhere('nama_siswa', 'LIKE', '%'.$katakunci.'%');
-                })->get();
-            }
-        } else {
-            // Ketika belum scan / cari, kosongkan daftar agar hanya nasabah yang dituju yang tampil
-            $nasabah = collect();
+        if ($katakunci !== '') {
+            $query->where(function ($sub) use ($katakunci) {
+                $sub->where('nis', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('no_rekening', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('nama_siswa', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('kelas', 'LIKE', '%'.$katakunci.'%');
+            });
         }
 
-        // ALGORITMA SORTING PINTAR (Tingkat -> Jurusan -> SubKelas -> NIS)
-        $nasabah = $nasabah->sortBy(function ($item) {
-            $k = strtoupper($item->kelas);
+        if ($request->filled('kelas') && $request->kelas !== 'all') {
+            $query->where('kelas', $request->kelas);
+        }
 
-            // 1. Deteksi Tingkat (Grade)
-            $grade = 99;
-            if (preg_match('/\bXII\b/', $k)) {
-                $grade = 3;
-            } elseif (preg_match('/\bXI\b/', $k)) {
-                $grade = 2;
-            } elseif (preg_match('/\bX\b/', $k)) {
-                $grade = 1;
-            }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
 
-            // 2. Deteksi Jurusan
-            $jurusan = 99;
-            if (preg_match('/\bRPL\b/', $k)) {
-                $jurusan = 1;
-            } elseif (preg_match('/\bTKJ\b/', $k)) {
-                $jurusan = 2;
-            } elseif (preg_match('/\bDKV\b/', $k)) {
-                $jurusan = 3;
-            } elseif (preg_match('/\bAK\b/', $k)) {
-                $jurusan = 4;
-            } elseif (preg_match('/\bLPS\b/', $k)) {
-                $jurusan = 5;
-            } elseif (preg_match('/\bMP\b/', $k)) {
-                $jurusan = 6;
-            } elseif (preg_match('/\bBR\b/', $k)) {
-                $jurusan = 7;
-            } elseif (preg_match('/\bBD\b/', $k)) {
-                $jurusan = 8;
-            }
+        // Daftar kelas unik dari database untuk pilihan dropdown filter
+        $daftarKelas = Nasabah::whereNotNull('kelas')
+            ->where('kelas', '!=', '')
+            ->distinct()
+            ->orderBy('kelas', 'asc')
+            ->pluck('kelas');
 
-            // 3. Deteksi Sub-kelas
-            $sub = 99;
-            if (preg_match('/\b(?:4|IV)\b/', $k)) {
-                $sub = 4;
-            } elseif (preg_match('/\b(?:3|III)\b/', $k)) {
-                $sub = 3;
-            } elseif (preg_match('/\b(?:2|II)\b/', $k)) {
-                $sub = 2;
-            } elseif (preg_match('/\b(?:1|I)\b/', $k)) {
-                $sub = 1;
-            }
+        $totalNasabah = Nasabah::count();
+        $totalAktif = Nasabah::where('status', 'aktif')->count();
 
-            return sprintf('%02d-%02d-%02d-%s', $grade, $jurusan, $sub, $item->nis);
-        })->values();
+        // Tampilkan data nasabah berhalaman (10 per halaman) agar teller mudah mengecek
+        $nasabah = $query->orderBy('nama_siswa', 'asc')
+            ->paginate(10)
+            ->withQueryString()
+            ->fragment('tabel-nasabah');
 
         $today = Carbon::today()->toDateString();
         $brankasHariIni = Brankas::getOrCreateToday($today);
@@ -137,6 +103,9 @@ class TellerController extends Controller
 
         return view('teller.dashboard', compact(
             'nasabah',
+            'daftarKelas',
+            'totalNasabah',
+            'totalAktif',
             'kasTersedia',
             'kasAwal',
             'kasMasuk',
