@@ -9,9 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Loket Teller - Bank Mini Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
     <style>
         html { scrollbar-gutter: stable; overflow-y: scroll; }
+        #qr-reader video, #qr-reader canvas { width: 100% !important; height: 100% !important; border-radius: 0.75rem; object-fit: cover; transform: scaleX(-1) !important; -webkit-transform: scaleX(-1) !important; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800">
@@ -386,41 +387,71 @@
     </div>
 
     <script>
-        let html5QrScanner = null;
+        let html5Qr = null;
+        let isModalScanning = false;
 
         function bukaModalScan() {
             document.getElementById('modal-qr-scan').classList.remove('hidden');
-            document.getElementById('qr-scan-status').innerHTML = '<span class="text-blue-600">Mengaktifkan kamera...</span>';
+            const statusEl = document.getElementById('qr-scan-status');
+            statusEl.innerHTML = '<span class="text-blue-600 font-semibold animate-pulse">Meminta izin & mengaktifkan kamera...</span>';
 
             setTimeout(() => {
-                if (!html5QrScanner) {
-                    html5QrScanner = new Html5QrcodeScanner(
-                        "qr-reader",
-                        { fps: 10, qrbox: { width: 220, height: 220 } },
-                        false
-                    );
+                if (!html5Qr) {
+                    html5Qr = new Html5Qrcode("qr-reader");
+
+                    // Default dibalikkan horisontal agar webcam modal tidak mirror
+                    const qrVideoObserver = new MutationObserver(() => {
+                        const v = document.querySelector('#qr-reader video, #qr-reader canvas');
+                        if (v) {
+                            const isF = localStorage.getItem('teller_camera_flipped');
+                            const val = (isF === 'false') ? 'none' : 'scaleX(-1)';
+                            v.style.setProperty('transform', val, 'important');
+                            v.style.setProperty('-webkit-transform', val, 'important');
+                        }
+                    });
+                    const qrReaderBox = document.getElementById('qr-reader');
+                    if (qrReaderBox) {
+                        qrVideoObserver.observe(qrReaderBox, { childList: true, subtree: true });
+                    }
                 }
 
-                html5QrScanner.render(
-                    function(decodedText) {
-                        html5QrScanner.clear().then(() => {
-                            document.getElementById('qr-scan-status').innerHTML = '<span class="text-emerald-600 font-bold">Mendeteksi: ' + decodedText + '. Memuat nasabah...</span>';
-                            window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
-                        }).catch(err => {
-                            window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
-                        });
-                    },
-                    function(error) {
-                        // per-frame scan failure
-                    }
-                );
-            }, 300);
+                const scanConfig = { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+                function onScan(decodedText) {
+                    if (isModalScanning) return;
+                    isModalScanning = true;
+                    statusEl.innerHTML = '<span class="text-emerald-600 font-bold">Mendeteksi: ' + decodedText + '. Memuat nasabah...</span>';
+                    html5Qr.stop().then(() => {
+                        window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                    }).catch(() => {
+                        window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                    });
+                }
+
+                // Coba kamera belakang (environment), fallback ke kamera user / webcam
+                html5Qr.start({ facingMode: "environment" }, scanConfig, onScan, () => {})
+                    .then(() => {
+                        statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">Kamera aktif. Arahkan QR Code ke kotak scanner.</span>';
+                    })
+                    .catch(() => {
+                        html5Qr.start({ facingMode: "user" }, scanConfig, onScan, () => {})
+                            .then(() => {
+                                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">Kamera aktif (Webcam). Arahkan QR Code ke scanner.</span>';
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                statusEl.innerHTML = '<span class="text-rose-600 font-semibold">Kamera gagal diakses. Pastikan izin kamera aktif atau buka halaman <a href="{{ url("/teller/scan") }}" class="underline text-blue-600 font-bold">Scan QR</a>.</span>';
+                            });
+                    });
+            }, 250);
         }
 
         function tutupModalScan() {
-            if (html5QrScanner) {
-                html5QrScanner.clear().catch(e => console.log(e));
-                html5QrScanner = null;
+            if (html5Qr) {
+                html5Qr.stop().catch(e => console.log(e)).finally(() => {
+                    html5Qr = null;
+                    isModalScanning = false;
+                });
             }
             document.getElementById('modal-qr-scan').classList.add('hidden');
         }
