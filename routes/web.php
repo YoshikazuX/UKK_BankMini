@@ -21,6 +21,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TellerController;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [PageController::class, 'landing'])->name('landing');

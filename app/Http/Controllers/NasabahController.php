@@ -663,86 +663,95 @@ class NasabahController extends Controller
         }
 
         try {
-            // Pre-hash password default '123456' SEKALI SAJA di luar loop (menghemat 99% waktu eksekusi CPU Bcrypt)
+            // 1. Ubah Transaction Isolation Level sesi ke READ COMMITTED untuk menghilangkan Gap-Lock InnoDB
+            try {
+                DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            } catch (\Throwable) {}
+
+            // 2. Pre-hash password default '123456' SEKALI SAJA di luar loop (menghemat 99% waktu eksekusi CPU Bcrypt)
             $defaultPasswordHashed = Hash::make('123456');
 
-            // Kumpulkan seluruh NIS unik dari file yang diunggah
-            $allNis = array_values(array_unique(array_column($parsedStudents, 'nis')));
+            // 3. Pre-fetch seluruh Nomor Rekening yang sudah ada ke memori (O(1) hash lookup tanpa SQL di dalam loop)
+            $knownAccounts = Nasabah::withTrashed()
+                ->pluck('no_rekening')
+                ->flip()
+                ->toArray();
 
-            // 4. Eksekusi database transaction dengan mekanisme retry otomatis (3x percobaan) jika terjadi Deadlock (MySQL 1213 / 40001)
-            $result = DB::transaction(function () use (
-                $parsedStudents,
-                $allNis,
-                $defaultPasswordHashed
-            ) {
-                // Reset nomor terakhir per percobaan transaksi
-                self::$lastNumbers = [];
-                $sukses = 0;
-                $diperbarui = 0;
+            // 4. Reset nomor urut terakhir di memori
+            self::$lastNumbers = [];
+            $sukses = 0;
+            $diperbarui = 0;
 
-                // Pre-fetch seluruh siswa yang sudah ada berdasarkan NIS ke memori (Mencegah Gap-Lock InnoDB)
-                $existingNasabahMap = Nasabah::withTrashed()
-                    ->whereIn('nis', $allNis)
-                    ->get()
-                    ->keyBy('nis');
+            // 5. Proses baris per baris secara atomik independen dengan mekanisme retry otomatis per baris
+            foreach ($parsedStudents as $student) {
+                $nis = $student['nis'];
+                $nama = $student['nama'];
+                $kelas = $student['kelas'];
+                $jurusan = $student['jurusan'];
+                $statusNasabah = $student['status'];
 
-                // Pre-fetch seluruh Nomor Rekening yang sudah ada ke memori (O(1) hash lookup tanpa SQL di dalam loop)
-                $knownAccounts = Nasabah::withTrashed()
-                    ->pluck('no_rekening')
-                    ->flip()
-                    ->toArray();
+                try {
+                    retry(3, function () use (
+                        $nis,
+                        $nama,
+                        $kelas,
+                        $jurusan,
+                        $statusNasabah,
+                        &$sukses,
+                        &$diperbarui,
+                        &$knownAccounts,
+                        $defaultPasswordHashed
+                    ) {
+                        DB::transaction(function () use (
+                            $nis,
+                            $nama,
+                            $kelas,
+                            $jurusan,
+                            $statusNasabah,
+                            &$sukses,
+                            &$diperbarui,
+                            &$knownAccounts,
+                            $defaultPasswordHashed
+                        ) {
+                            $existing = Nasabah::withTrashed()->where('nis', $nis)->first();
 
-                foreach ($parsedStudents as $student) {
-                    $nis = $student['nis'];
-                    $nama = $student['nama'];
-                    $kelas = $student['kelas'];
-                    $jurusan = $student['jurusan'];
-                    $statusNasabah = $student['status'];
+                            if ($existing) {
+                                if ($existing->trashed()) {
+                                    $existing->restore();
+                                }
+                                $existing->update([
+                                    'nama_siswa' => $nama,
+                                    'kelas' => $kelas,
+                                    'jurusan' => $jurusan,
+                                ]);
+                                $diperbarui++;
+                            } else {
+                                $no_rekening = self::generateNoRekening($jurusan, 'siswa', $nis, $knownAccounts);
 
-                    $existing = $existingNasabahMap->get($nis);
+                                Nasabah::create([
+                                    'no_rekening' => $no_rekening,
+                                    'nis' => $nis,
+                                    'nama_siswa' => $nama,
+                                    'kelas' => $kelas,
+                                    'jurusan' => $jurusan,
+                                    'username' => $nis,
+                                    'password' => $defaultPasswordHashed,
+                                    'pin_keamanan' => '123456',
+                                    'saldo' => 0,
+                                    'status' => $statusNasabah,
+                                    'kategori' => 'siswa',
+                                ]);
 
-                    if ($existing) {
-                        if ($existing->trashed()) {
-                            $existing->restore();
-                        }
-                        $existing->update([
-                            'nama_siswa' => $nama,
-                            'kelas' => $kelas,
-                            'jurusan' => $jurusan,
-                        ]);
-                        $diperbarui++;
-                    } else {
-                        $no_rekening = self::generateNoRekening($jurusan, 'siswa', $nis, $knownAccounts);
-
-                        $newNasabah = Nasabah::create([
-                            'no_rekening' => $no_rekening,
-                            'nis' => $nis,
-                            'nama_siswa' => $nama,
-                            'kelas' => $kelas,
-                            'jurusan' => $jurusan,
-                            'username' => $nis,
-                            'password' => $defaultPasswordHashed,
-                            'pin_keamanan' => '123456',
-                            'saldo' => 0,
-                            'status' => $statusNasabah,
-                            'kategori' => 'siswa',
-                        ]);
-
-                        // Catat ke memori agar jika ada NIS terulang dalam file yang sama tidak terjadi constraint violation
-                        $existingNasabahMap->put($nis, $newNasabah);
-                        $knownAccounts[$no_rekening] = true;
-                        $sukses++;
-                    }
+                                $knownAccounts[$no_rekening] = true;
+                                $sukses++;
+                            }
+                        });
+                    }, 100);
+                } catch (\Throwable $rowError) {
+                    $gagal++;
+                    Log::warning("Gagal impor data siswa baris NIS {$nis} ({$nama}): ".$rowError->getMessage());
                 }
-
-                return [
-                    'sukses' => $sukses,
-                    'diperbarui' => $diperbarui,
-                ];
-            }, 3);
-
-            $sukses = $result['sukses'];
-            $diperbarui = $result['diperbarui'];
+            }
 
             AuditHelper::log(
                 jenisAktivitas: 'IMPORT_NASABAH',
@@ -774,6 +783,10 @@ class NasabahController extends Controller
 
             return back()->with('error', 'Gagal impor data: '.$e->getMessage());
         } finally {
+            try {
+                DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+            } catch (\Throwable) {}
+
             if ($lock && $lockAcquired) {
                 try {
                     $lock->release();
