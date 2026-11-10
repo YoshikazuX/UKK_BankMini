@@ -129,5 +129,8 @@ class DatabaseSeeder extends Seeder
                 ]));
             }
         }
+
+        // Jalankan seeder seluruh 1.711 data hadir siswa SMKN 1 Bantul resmi
+        $this->call(DaftarHadirNasabahSeeder::class);
     }
 }

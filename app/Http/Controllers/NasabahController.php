@@ -401,12 +401,20 @@ class NasabahController extends Controller
     public function importCsv(Request $request): RedirectResponse
     {
         $request->validate([
-            'file_csv' => 'required|mimes:csv,txt|max:4096',
+            'file_csv' => 'required|file|max:10240',
             'status_default' => 'nullable|in:auto,nonaktif,aktif',
+        ], [
+            'file_csv.required' => 'Pilih file CSV atau TXT yang ingin diimpor.',
+            'file_csv.max' => 'Ukuran file maksimal adalah 10MB.',
         ]);
 
-        $statusDefault = $request->input('status_default', 'auto');
         $file = $request->file('file_csv');
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (! in_array($extension, ['csv', 'txt'], true)) {
+            return back()->with('error', 'Format file tidak didukung (.'.$extension.'). Mohon simpan file Excel Anda sebagai format CSV (.csv) atau TXT sebelum diunggah.');
+        }
+
+        $statusDefault = $request->input('status_default', 'auto');
         $filePath = $file->getPathname();
         
         $handle = fopen($filePath, 'r');
