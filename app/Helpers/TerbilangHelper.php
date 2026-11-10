@@ -68,6 +68,8 @@ class TerbilangHelper
             return 'TKJ';
         } elseif (str_contains($j, 'AKUNTANSI') || str_contains($j, 'AKL') || str_contains($j, 'AK')) {
             return 'AK';
+        } elseif (str_contains($j, 'PERBANKAN') || str_contains($j, 'SYARIAH') || str_contains($j, 'LPS')) {
+            return 'LPS';
         } elseif (str_contains($j, 'RETAIL') || str_contains($j, 'RITEL') || str_contains($j, 'BR')) {
             return 'BR';
         } elseif (str_contains($j, 'BISNIS DIGITAL') || str_contains($j, 'BD')) {
@@ -84,5 +86,26 @@ class TerbilangHelper
         $clean = preg_replace('/[^A-Z]/', '', $j);
 
         return substr($clean, 0, 3) ?: 'TAB';
+    }
+
+    /**
+     * Konversi Kode atau Singkatan Jurusan ke Nama Jurusan Lengkap Resmi
+     */
+    public static function getNamaJurusan(?string $jurusanOrKelas): string
+    {
+        $kode = self::getKodeJurusan($jurusanOrKelas);
+
+        return match ($kode) {
+            'RPL' => 'Rekayasa Perangkat Lunak',
+            'TKJ' => 'Teknik Komputer dan Jaringan',
+            'AK' => 'Akuntansi dan Keuangan Lembaga',
+            'LPS' => 'Layanan Perbankan Syariah',
+            'BR' => 'Bisnis Retail',
+            'BD' => 'Bisnis Digital',
+            'MP' => 'Manajemen Perkantoran',
+            'DKV' => 'Desain Komunikasi Visual',
+            'GK' => 'Guru dan Tenaga Kependidikan',
+            default => !empty($jurusanOrKelas) ? trim($jurusanOrKelas) : 'Umum',
+        };
     }
 }

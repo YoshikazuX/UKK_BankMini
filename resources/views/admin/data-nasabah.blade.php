@@ -465,9 +465,13 @@
                 <form action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
                     @csrf
                     <div class="mb-4">
-                        <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis menghasilkan Nomor Rekening terstandar untuk setiap siswa yang di-import.</p>
+                        <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis mendeteksi format file, membaca kelas, jurusan, serta menghasilkan Nomor Rekening otomatis.</p>
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-2.5 text-[11px] text-emerald-800 flex items-start gap-2">
+                            <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span><strong>Mendukung Format File Absen:</strong> Anda dapat langsung mengunggah file Dokumen Daftar Hadir / Absensi Siswa resmi sekolah (.csv / .txt) atau menggunakan template CSV standar.</span>
+                        </div>
                         <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-teal-600 font-semibold hover:underline">
-                            &darr; Unduh Template CSV Resmi
+                            &darr; Unduh Template CSV Resmi Standar
                         </a>
                     </div>
                     <div class="mb-4">
