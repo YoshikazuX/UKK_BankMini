@@ -420,11 +420,22 @@
                 function onScan(decodedText) {
                     if (isModalScanning) return;
                     isModalScanning = true;
-                    statusEl.innerHTML = '<span class="text-emerald-600 font-bold">Mendeteksi: ' + decodedText + '. Memuat nasabah...</span>';
+
+                    // Ekstraksi jika format BANKMINI:REK:...:NIS:...
+                    let targetId = decodedText.trim();
+                    const rekMatch = targetId.match(/REK:([a-zA-Z0-9_-]+)/i);
+                    const nisMatch = targetId.match(/NIS:([a-zA-Z0-9_-]+)/i);
+                    if (rekMatch) {
+                        targetId = rekMatch[1];
+                    } else if (nisMatch) {
+                        targetId = nisMatch[1];
+                    }
+
+                    statusEl.innerHTML = '<span class="text-emerald-600 font-bold">Mendeteksi: ' + targetId + '. Membuka data...</span>';
                     html5Qr.stop().then(() => {
-                        window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                        window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(targetId);
                     }).catch(() => {
-                        window.location.href = "{{ url('/teller/dashboard') }}?cari=" + encodeURIComponent(decodedText);
+                        window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(targetId);
                     });
                 }
 

@@ -30,7 +30,15 @@ class TellerController extends Controller
 {
     public function index(Request $request, DashboardWidgetService $widgetService): View
     {
-        $katakunci = trim((string) $request->cari);
+        $rawKatakunci = trim((string) $request->cari);
+        $katakunci = $rawKatakunci;
+
+        // Ekstraksi jika input berasal dari QR Code Mobile (BANKMINI:REK:...:NIS:...)
+        if (preg_match('/REK:([a-zA-Z0-9\-\_]+)/i', $rawKatakunci, $mRek)) {
+            $katakunci = trim($mRek[1]);
+        } elseif (preg_match('/NIS:([a-zA-Z0-9\-\_]+)/i', $rawKatakunci, $mNis)) {
+            $katakunci = trim($mNis[1]);
+        }
 
         if ($katakunci !== '') {
             // Prioritas 1: Pencocokan persis No Rekening atau NIS (misal dari Scan QR Kartu)
@@ -144,15 +152,43 @@ class TellerController extends Controller
 
     public function cariByNis(string $nis): RedirectResponse
     {
-        $nasabah = Nasabah::where('nis', $nis)
-            ->orWhere('no_rekening', $nis)
-            ->first();
+        $raw = trim($nis);
+        $extractedRek = null;
+        $extractedNis = null;
+
+        // Ekstraksi jika berasal dari payload QR Mobile: BANKMINI:REK:...:NIS:...:NAMA:...
+        if (preg_match('/REK:([a-zA-Z0-9\-\_]+)/i', $raw, $mRek)) {
+            $extractedRek = trim($mRek[1]);
+        }
+        if (preg_match('/NIS:([a-zA-Z0-9\-\_]+)/i', $raw, $mNis)) {
+            $extractedNis = trim($mNis[1]);
+        }
+
+        $nasabah = null;
+        if ($extractedRek || $extractedNis) {
+            $nasabah = Nasabah::where(function ($q) use ($extractedRek, $extractedNis) {
+                if ($extractedRek) {
+                    $q->orWhere('no_rekening', $extractedRek);
+                }
+                if ($extractedNis) {
+                    $q->orWhere('nis', $extractedNis);
+                }
+            })->first();
+        }
+
+        // Pencarian fallback langsung
+        if (! $nasabah) {
+            $nasabah = Nasabah::where('nis', $raw)
+                ->orWhere('no_rekening', $raw)
+                ->first();
+        }
 
         if ($nasabah) {
             return redirect('/teller/transaksi/'.$nasabah->id);
         }
 
-        return redirect('/teller/dashboard')->with('error', 'Nasabah dengan NIS atau Nomor Rekening '.$nis.' tidak ditemukan!');
+        $display = $extractedRek ?: ($extractedNis ?: $raw);
+        return redirect('/teller/dashboard')->with('error', 'Nasabah dengan NIS atau Nomor Rekening '.$display.' tidak ditemukan!');
     }
 
     public function formTransaksi(int|string $id): View|RedirectResponse

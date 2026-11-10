@@ -286,22 +286,49 @@
             }
         }
 
+        function extractNasabahData(qrText) {
+            if (!qrText) return { id: '', name: '' };
+            const text = qrText.trim();
+
+            let rek = null;
+            let nis = null;
+            let name = null;
+
+            // Format QR Mobile Siswa: BANKMINI:REK:202601001:NIS:17763:NAMA:Dewi Handayani Nur Halimah
+            const rekMatch = text.match(/REK:([a-zA-Z0-9_-]+)/i);
+            if (rekMatch) rek = rekMatch[1];
+
+            const nisMatch = text.match(/NIS:([a-zA-Z0-9_-]+)/i);
+            if (nisMatch) nis = nisMatch[1];
+
+            const nameMatch = text.match(/NAMA:([^:\n\r]+)/i);
+            if (nameMatch) name = nameMatch[1].trim();
+
+            const targetId = rek || nis || text;
+            return {
+                id: targetId,
+                name: name || targetId
+            };
+        }
+
         function onScanSuccess(decodedText) {
             if (isRedirecting) return;
             isRedirecting = true;
 
+            const nasabahInfo = extractNasabahData(decodedText);
+
             playScanBeep();
-            updateStatus('success', `Berhasil mendeteksi: <strong>${decodedText}</strong>. Membuka transaksi...`);
+            updateStatus('success', `Berhasil mendeteksi nasabah: <strong>${nasabahInfo.name}</strong> (${nasabahInfo.id}). Membuka transaksi...`);
 
             if (html5QrCode && isScanning) {
                 html5QrCode.stop().then(() => {
                     isScanning = false;
-                    window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(decodedText);
+                    window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(nasabahInfo.id);
                 }).catch(() => {
-                    window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(decodedText);
+                    window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(nasabahInfo.id);
                 });
             } else {
-                window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(decodedText);
+                window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(nasabahInfo.id);
             }
         }
 
@@ -463,7 +490,8 @@
                 alert("Silakan ketikkan NIS atau Nomor Rekening nasabah terlebih dahulu.");
                 return;
             }
-            window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(val);
+            const info = extractNasabahData(val);
+            window.location.href = "{{ url('/teller/cari-nis') }}/" + encodeURIComponent(info.id);
         }
 
         // Jalankan scanner otomatis saat halaman terbuka
