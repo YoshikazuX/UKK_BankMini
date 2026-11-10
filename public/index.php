@@ -17,11 +17,13 @@ if (file_exists($maintenance = $appPath.'/storage/framework/maintenance.php')) {
     require $maintenance;
 }
 
-// Autoloader (prioritaskan vendor_release jika di-deploy oleh workflow, atau vendor standar)
-if (file_exists($autoload = $appPath.'/vendor_release/autoload.php')) {
+// Autoloader (prioritaskan vendor standar development lokal, atau vendor_release jika di production cPanel)
+if (file_exists($autoload = $appPath.'/vendor/autoload.php')) {
+    require $autoload;
+} elseif (file_exists($autoload = $appPath.'/vendor_release/autoload.php')) {
     require $autoload;
 } else {
-    require $appPath.'/vendor/autoload.php';
+    throw new RuntimeException('Autoloader composer tidak ditemukan.');
 }
 
 // Bootstrap application

@@ -83,7 +83,7 @@ class DaftarHadirNasabahSeeder extends Seeder
                         ]);
                         $diperbarui++;
                     } else {
-                        $no_rekening = NasabahController::generateNoRekening($jurusan, 'siswa');
+                        $no_rekening = NasabahController::generateNoRekening($jurusan, 'siswa', $nis);
 
                         Nasabah::create([
                             'no_rekening' => $no_rekening,

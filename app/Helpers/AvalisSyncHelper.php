@@ -29,6 +29,26 @@ class AvalisSyncHelper
         AbsensiAvalis::where('status', 'Alpha')->update(['status' => 'Tidak Masuk']);
         AbsensiAvalis::where('status', 'Sakit')->update(['status' => 'Izin']);
 
+        // 1b. Bersihkan riwayat absensi & master avalis untuk pegawai yang akunnya sudah dihapus
+        $activeUserNames = User::whereIn('role', ['teller', 'avalis', 'admin', 'supervisor'])
+            ->pluck('nama_petugas')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        // Sinkronisasi jika ada nama lama (seperti '08 Naruhisa Handa' -> 'Handa')
+        if (in_array('Handa', $activeUserNames, true)) {
+            AbsensiAvalis::where('nama', '08 Naruhisa Handa')->update(['nama' => 'Handa']);
+            Avalis::where('nama', '08 Naruhisa Handa')->update(['nama' => 'Handa']);
+        }
+
+        // Hapus riwayat absen dan data avalis dari akun yang sudah tidak terdaftar / telah dihapus
+        if (! empty($activeUserNames)) {
+            AbsensiAvalis::whereNotIn('nama', $activeUserNames)->delete();
+            Avalis::whereNotIn('nama', $activeUserNames)->delete();
+        }
+
         // 2. Ambil seluruh data petugas teller aktif dari tabel users
         $tellers = User::where('role', 'teller')->get();
         if ($tellers->isEmpty()) {

@@ -42,22 +42,22 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-slate-700 mb-2">NIS (Nomor Induk Siswa)</label>
-                    <input type="text" name="nis" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tuliskan NIS Anda">
+                    <input type="text" name="nis" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap Siswa</label>
-                    <input type="text" name="nama_siswa" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tuliskan nama lengkap Anda">
+                    <input type="text" name="nama_siswa" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="flex gap-4 mb-6">
                     <div class="w-1/2">
                         <label class="block text-sm font-bold text-slate-700 mb-2">Kelas</label>
-                        <input type="text" name="kelas" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tuliskan kelas Anda">
+                        <input type="text" name="kelas" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="w-1/2">
                         <label class="block text-sm font-bold text-slate-700 mb-2">Jurusan</label>
-                        <input type="text" name="jurusan" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tuliskan jurusan Anda">
+                        <input type="text" name="jurusan" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
 
@@ -69,11 +69,11 @@
                 <div class="bg-slate-50 p-4 rounded-md border border-slate-200 mb-6">
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-slate-700 mb-2">Username Login</label>
-                        <input type="text" name="username" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tuliskan username">
+                        <input type="text" name="username" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Password Login</label>
-                        <input type="password" name="password" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Minimal 6 karakter">
+                        <input type="password" name="password" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
 

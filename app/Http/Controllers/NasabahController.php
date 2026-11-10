@@ -158,7 +158,7 @@ class NasabahController extends Controller
         ]);
 
         $kategori = $validated['kategori'] ?? 'siswa';
-        $no_rekening = $request->filled('no_rekening') ? $request->no_rekening : self::generateNoRekening($validated['jurusan'], $kategori);
+        $no_rekening = $request->filled('no_rekening') ? $request->no_rekening : self::generateNoRekening($validated['jurusan'], $kategori, $validated['nis']);
         $username = $validated['username'] ?? $validated['nis'];
         $password = $validated['password'] ?? '123456';
 
@@ -256,12 +256,14 @@ class NasabahController extends Controller
         }
         $nasabah->save();
 
+        $alasan = request('alasan') ?: 'Pembaruan data nasabah oleh Administrator';
+
         AuditHelper::log(
             jenisAktivitas: 'UPDATE_NASABAH',
             modul: 'Nasabah',
             objekId: $nasabah->no_rekening,
-            oldValues: $oldValues,
-            newValues: [
+            oldValues: array_merge(['alasan' => $alasan], $oldValues),
+            newValues: array_merge(['alasan' => $alasan], [
                 'nama_siswa' => $nasabah->nama_siswa,
                 'kelas' => $nasabah->kelas,
                 'jurusan' => $nasabah->jurusan,
@@ -270,7 +272,7 @@ class NasabahController extends Controller
                 'email' => $nasabah->email,
                 'no_hp' => $nasabah->no_hp,
                 'username' => $nasabah->username,
-            ]
+            ])
         );
 
         return redirect('/admin/data-nasabah')->with('success', 'Data nasabah berhasil diperbarui!');
@@ -279,12 +281,14 @@ class NasabahController extends Controller
     public function destroy(int|string $id): RedirectResponse
     {
         $nasabah = Nasabah::findOrFail($id);
+        $alasan = request('alasan') ?: 'Pengarsipan / penghapusan data nasabah oleh Administrator';
 
         AuditHelper::log(
             jenisAktivitas: 'HAPUS_NASABAH',
             modul: 'Nasabah',
             objekId: $nasabah->no_rekening,
             oldValues: [
+                'alasan' => $alasan,
                 'no_rekening' => $nasabah->no_rekening,
                 'nis' => $nasabah->nis,
                 'nama_siswa' => $nasabah->nama_siswa,
@@ -319,15 +323,30 @@ class NasabahController extends Controller
 
     /**
      * Algoritma Pembuatan Nomor Rekening Baru Otomatis
-     * Berbasis Urutan Tahun Ajaran dan Nomor Urut Siswa (Contoh: 26-RPL-001 atau 2026/RPL/001)
+     * Mendukung Format JURUSAN-NIS (Contoh: RPL-17763, AKL-18001) serta Berbasis Urutan Standar
      */
-    public static function generateNoRekening(string $jurusan, string $kategori = 'siswa'): string
+    public static function generateNoRekening(string $jurusan, string $kategori = 'siswa', ?string $nis = null): string
     {
         $kode = ($kategori === 'guru_karyawan') ? 'GK' : TerbilangHelper::getKodeJurusan($jurusan);
         $setting = SettingHelper::getSettings();
-        $format = $setting->format_no_rekening ?? 'TA-JURUSAN-URUT';
+        $format = $setting->format_no_rekening ?? 'JURUSAN-NIS';
         $ta = $setting->tahun_ajaran_aktif ?? '2026/2027';
 
+        // 1. Format JURUSAN-NIS (Contoh: RPL-17763, AKL-19126)
+        if (($format === 'JURUSAN-NIS' || $format === 'KODE-NIS') && ! empty($nis)) {
+            $candidate = "{$kode}-{$nis}";
+            if (! Nasabah::withTrashed()->where('no_rekening', $candidate)->exists()) {
+                return $candidate;
+            }
+            $suffix = 1;
+            while (Nasabah::withTrashed()->where('no_rekening', "{$candidate}-{$suffix}")->exists()) {
+                $suffix++;
+            }
+
+            return "{$candidate}-{$suffix}";
+        }
+
+        // 2. Format urutan standar
         // Ekstrak 2 digit atau 4 digit tahun ajaran
         preg_match('/(\d{4})/', $ta, $m);
         $fullYear = $m[1] ?? date('Y');
@@ -510,7 +529,7 @@ class NasabahController extends Controller
                     ]);
                     $diperbarui++;
                 } else {
-                    $no_rekening = self::generateNoRekening($jurusan, 'siswa');
+                    $no_rekening = self::generateNoRekening($jurusan, 'siswa', $nis);
 
                     Nasabah::create([
                         'no_rekening' => $no_rekening,

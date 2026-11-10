@@ -39,12 +39,9 @@
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-semibold mb-2">Peran & Hak Akses (Role RBAC)</label>
                     <select name="role" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm bg-white" required>
-                        <option value="teller" {{ $pegawai->role == 'teller' ? 'selected' : '' }}>Teller (Pelayanan Loket & Transaksi)</option>
                         <option value="supervisor" {{ $pegawai->role == 'supervisor' ? 'selected' : '' }}>Supervisor (Approval & Monitoring Kas)</option>
-                        <option value="customer_service" {{ in_array($pegawai->role, ['customer_service', 'cs']) ? 'selected' : '' }}>Customer Service (Registrasi & Data Nasabah)</option>
-                        <option value="avalis" {{ $pegawai->role == 'avalis' ? 'selected' : '' }}>Avalis (Piket Shift & Kunjungan Siswa)</option>
-                        <option value="accounting" {{ $pegawai->role == 'accounting' ? 'selected' : '' }}>Accounting (Jurnal & Laporan Keuangan)</option>
                         <option value="admin" {{ $pegawai->role == 'admin' ? 'selected' : '' }}>Administrator (Tata Kelola Akun & Sistem)</option>
+                        <option value="teller" {{ $pegawai->role == 'teller' ? 'selected' : '' }}>Teller (Pelayanan Loket & Transaksi)</option>
                     </select>
                 </div>
 
@@ -58,17 +55,17 @@
 
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Kelas (Khusus Murid)</label>
-                    <input type="text" name="kelas" value="{{ $pegawai->kelas }}" placeholder="Contoh: XI RPL 1" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    <input type="text" name="kelas" value="{{ $pegawai->kelas }}" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Nomor Telepon / WhatsApp</label>
-                    <input type="text" name="no_hp" value="{{ $pegawai->no_hp }}" placeholder="Contoh: 081234567890" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm tabular-nums">
+                    <input type="text" name="no_hp" value="{{ $pegawai->no_hp }}" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm tabular-nums">
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Alamat Email <span class="text-xs text-slate-500">(Untuk pemulihan kata sandi)</span></label>
-                    <input type="email" name="email" value="{{ $pegawai->email ?? '' }}" placeholder="Contoh: pegawai@banksekolah.id" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    <input type="email" name="email" value="{{ $pegawai->email ?? '' }}" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-900 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
                 </div>
 
                 <div class="mb-8">

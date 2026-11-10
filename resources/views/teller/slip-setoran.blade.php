@@ -48,7 +48,7 @@
             <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3 mb-3">
                 <div>
                     <h1 class="font-black text-lg tracking-wider text-slate-900 uppercase">LKM MITRA SISWA ABADI</h1>
-                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Mitra Siswa Abadi</p>
+                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Negeri 1 Bantul</p>
                 </div>
                 <div class="text-right">
                     <span class="inline-block bg-slate-900 text-white font-bold text-[11px] px-2.5 py-1 rounded uppercase tracking-wider">SLIP SETORAN TUNAI</span>
@@ -163,7 +163,7 @@
             <div class="flex justify-between items-start border-b-2 border-amber-800 pb-3 mb-3">
                 <div>
                     <h1 class="font-black text-lg tracking-wider text-slate-900 uppercase">LKM MITRA SISWA ABADI</h1>
-                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Mitra Siswa Abadi</p>
+                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Negeri 1 Bantul</p>
                 </div>
                 <div class="text-right">
                     <span class="inline-block bg-amber-800 text-white font-bold text-[11px] px-2.5 py-1 rounded uppercase tracking-wider">SLIP SETORAN TUNAI</span>

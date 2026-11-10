@@ -152,7 +152,7 @@ class AdminController extends Controller
             'nama_petugas' => 'required|string|max:150',
             'username' => 'required|string|max:50|unique:users,username',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,teller,supervisor,customer_service,avalis,accounting',
+            'role' => 'required|in:admin,teller,supervisor',
             'status' => 'nullable|in:aktif,nonaktif',
             'kelas' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:25',
@@ -212,7 +212,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'nama_petugas' => 'required|string|max:150',
-            'role' => 'required|in:admin,teller,supervisor,customer_service,avalis,accounting',
+            'role' => 'required|in:admin,teller,supervisor',
             'status' => 'nullable|in:aktif,nonaktif',
             'kelas' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:25',
@@ -264,18 +264,34 @@ class AdminController extends Controller
             }
         }
 
+        // Sinkronkan nama di absensi jika nama petugas diubah
+        if ($oldValues['nama_petugas'] !== $user->nama_petugas) {
+            \App\Models\AbsensiAvalis::where('nama', $oldValues['nama_petugas'])->update([
+                'nama' => $user->nama_petugas,
+                'kelas' => $user->kelas,
+                'no_wa' => $user->no_hp,
+            ]);
+            Avalis::where('nama', $oldValues['nama_petugas'])->update([
+                'nama' => $user->nama_petugas,
+                'kelas' => $user->kelas,
+                'no_wa' => $user->no_hp,
+            ]);
+        }
+
+        $alasan = request('alasan') ?: 'Pembaruan data pegawai oleh Administrator';
+
         AuditHelper::log(
             jenisAktivitas: 'UPDATE_PEGAWAI',
             modul: 'Pegawai',
             objekId: $user->username,
-            oldValues: $oldValues,
-            newValues: [
+            oldValues: array_merge(['alasan' => $alasan], $oldValues),
+            newValues: array_merge(['alasan' => $alasan], [
                 'nama_petugas' => $user->nama_petugas,
                 'role' => $user->role,
                 'kelas' => $user->kelas,
                 'email' => $user->email,
                 'no_hp' => $user->no_hp,
-            ]
+            ])
         );
 
         return redirect('/admin/dashboard')->with('success', 'Data pegawai diperbarui dan tersinkronisasi!');
@@ -284,13 +300,14 @@ class AdminController extends Controller
     public function destroy(int|string $id): RedirectResponse
     {
         $user = User::findOrFail($id);
+        $alasan = request('alasan') ?: 'Penghapusan akun pegawai oleh Administrator';
 
         AuditHelper::log(
             jenisAktivitas: 'HAPUS_PEGAWAI',
             modul: 'Pegawai',
             objekId: $user->username,
             oldValues: [
-                'id' => $user->id,
+                'alasan' => $alasan,
                 'nama_petugas' => $user->nama_petugas,
                 'username' => $user->username,
                 'role' => $user->role,
@@ -298,8 +315,13 @@ class AdminController extends Controller
             newValues: null
         );
 
-        Avalis::where('user_id', $id)->update(['user_id' => null]);
+        // Bersihkan data absensi dan avalis untuk pegawai yang dihapus
+        \App\Models\AbsensiAvalis::where('nama', $user->nama_petugas)->delete();
+        Avalis::where('user_id', $id)->orWhere('nama', $user->nama_petugas)->delete();
+
         $user->delete();
+
+        AvalisSyncHelper::autoSync(true);
 
         return redirect('/admin/dashboard')->with('success', 'Pegawai berhasil dihapus.');
     }

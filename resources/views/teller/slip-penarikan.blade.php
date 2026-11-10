@@ -48,7 +48,7 @@
             <div class="flex justify-between items-start border-b-2 border-rose-800 pb-3 mb-3">
                 <div>
                     <h1 class="font-black text-lg tracking-wider text-rose-900 uppercase">LKM MITRA SISWA ABADI</h1>
-                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Mitra Siswa Abadi</p>
+                    <p class="text-xs text-slate-600 font-medium">Laboratorium Perbankan Mini Siswa • SMK Negeri 1 Bantul</p>
                 </div>
                 <div class="text-right">
                     <span class="inline-block bg-rose-800 text-white font-bold text-[11px] px-2.5 py-1 rounded uppercase tracking-wider">SLIP PENARIKAN TUNAI</span>

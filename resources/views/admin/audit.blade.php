@@ -171,7 +171,7 @@
                             <!-- Pelaksana -->
                             <td class="py-3 px-4">
                                 <span class="font-bold text-slate-900 block">{{ $log->nama_user }}</span>
-                                <span class="text-slate-400 font-mono text-[10px]">ID: #{{ $log->user_id ?? '-' }} &bull; IP: {{ $log->ip_address ?? '-' }}</span>
+                                <span class="text-slate-400 font-mono text-[10px]">ID: #{{ $log->user_id ?? '-' }}</span>
                             </td>
 
                             <!-- Role -->
@@ -291,36 +291,29 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-500 text-[11px]">
-                    <div>Waktu: <strong class="text-slate-700" id="detail-waktu">-</strong></div>
-                    <div>Alamat IP: <strong class="text-slate-700 font-mono" id="detail-ip">-</strong></div>
+                <div class="text-slate-500 text-[11px] flex items-center justify-between pb-1">
+                    <div>Waktu Sistem: <strong class="text-slate-700 font-medium" id="detail-waktu">-</strong></div>
+                    <div>Jenis: <span class="font-semibold px-2 py-0.5 rounded text-[10px]" id="detail-jenis-badge">-</span></div>
                 </div>
 
-                <!-- Perbandingan Before vs After -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <!-- Nilai Sebelum -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-rose-700">
-                                Nilai Sebelum Perubahan
-                            </span>
+                <!-- KOTAK ALASAN / KETERANGAN UTAMA (HIGHLIGHTED REASON) -->
+                <div id="detail-box-alasan" class="p-4 rounded-xl border">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <div id="detail-icon-wrap" class="w-6 h-6 rounded-full flex items-center justify-center shrink-0">
+                            <!-- icon injected via JS -->
                         </div>
-                        <div class="bg-rose-50/50 border border-rose-200 rounded-xl p-3 font-mono text-[11px] text-slate-800 overflow-x-auto min-h-[140px]" id="detail-before">
-                            <span class="text-slate-400 italic">(Tidak ada data lama / Tambah baru)</span>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider block" id="detail-title-alasan">Alasan Aktivitas</span>
                         </div>
                     </div>
+                    <div class="pl-8">
+                        <p class="text-sm font-semibold leading-relaxed" id="detail-text-alasan"></p>
+                    </div>
+                </div>
 
-                    <!-- Nilai Sesudah -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-emerald-700">
-                                Nilai Sesudah Perubahan
-                            </span>
-                        </div>
-                        <div class="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 font-mono text-[11px] text-slate-800 overflow-x-auto min-h-[140px]" id="detail-after">
-                            <span class="text-slate-400 italic">(Tidak ada data baru / Hapus)</span>
-                        </div>
-                    </div>
+                <!-- RINCIAN INFORMASI (DESKRIPTIF / NON-KODE) -->
+                <div id="detail-rincian-wrapper" class="space-y-3 pt-1">
+                    <!-- Dinamis: Tabel perbandingan edit atau ringkasan data yang dihapus -->
                 </div>
 
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-start gap-2">
@@ -341,28 +334,252 @@
     </div>
 
     <script>
+        function labelFormat(key) {
+            const map = {
+                'nama_petugas': 'Nama Petugas',
+                'nama_siswa': 'Nama Siswa',
+                'username': 'Username',
+                'role': 'Hak Akses (Role)',
+                'status': 'Status',
+                'kelas': 'Kelas',
+                'no_hp': 'No. Telepon / WA',
+                'email': 'Email',
+                'saldo': 'Saldo Rekening',
+                'no_rekening': 'No. Rekening',
+                'nis': 'NIS',
+                'difference': 'Selisih Kas',
+                'system_balance': 'Saldo Sistem',
+                'physical_balance': 'Saldo Fisik',
+                'catatan_spv': 'Catatan Supervisor',
+                'alasan': 'Alasan',
+                'alasan_penolakan': 'Alasan Penolakan',
+                'alasan_batal': 'Alasan Pembatalan',
+                'catatan': 'Catatan',
+                'keterangan': 'Keterangan'
+            };
+            return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatDisplayValue(key, val) {
+            if (val === null || val === undefined || val === '') {
+                return '<span class="text-slate-400 italic">(Kosong)</span>';
+            }
+            if (typeof val === 'boolean') {
+                return val ? 'Ya' : 'Tidak';
+            }
+            if (typeof val === 'number' && (key.includes('saldo') || key.includes('balance') || key === 'difference')) {
+                return 'Rp ' + Number(val).toLocaleString('id-ID');
+            }
+            return String(val);
+        }
+
         function lihatDetailAudit(log) {
-            document.getElementById('detail-log-id').textContent = 'Log #' + log.id + ' (' + log.jenis_aktivitas + ')';
+            document.getElementById('detail-log-id').textContent = 'Log #' + log.id;
             document.getElementById('detail-user').textContent = log.nama_user;
             document.getElementById('detail-role').textContent = log.role_user || '-';
             document.getElementById('detail-modul').textContent = log.modul;
             document.getElementById('detail-objek').textContent = log.objek_id || '-';
-            document.getElementById('detail-waktu').textContent = log.created_at;
-            document.getElementById('detail-ip').textContent = log.ip_address || '-';
 
-            const beforeEl = document.getElementById('detail-before');
-            const afterEl = document.getElementById('detail-after');
+            // Format waktu rapi
+            const waktuObj = new Date(log.created_at);
+            const tglFormatted = !isNaN(waktuObj) 
+                ? waktuObj.toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'medium' }) + ' WIB'
+                : log.created_at;
+            document.getElementById('detail-waktu').textContent = tglFormatted;
 
-            if (log.old_values && Object.keys(log.old_values).length > 0) {
-                beforeEl.innerHTML = '<pre class="whitespace-pre-wrap leading-relaxed">' + JSON.stringify(log.old_values, null, 2) + '</pre>';
-            } else {
-                beforeEl.innerHTML = '<span class="text-slate-400 italic">(Tidak ada data sebelum perubahan)</span>';
+            const badgeJenis = document.getElementById('detail-jenis-badge');
+            badgeJenis.textContent = log.jenis_aktivitas;
+
+            const akt = (log.jenis_aktivitas || '').toUpperCase();
+            let oldVals = log.old_values;
+            if (typeof oldVals === 'string') {
+                try { oldVals = JSON.parse(oldVals); } catch(e) {}
+            }
+            let newVals = log.new_values;
+            if (typeof newVals === 'string') {
+                try { newVals = JSON.parse(newVals); } catch(e) {}
             }
 
-            if (log.new_values && Object.keys(log.new_values).length > 0) {
-                afterEl.innerHTML = '<pre class="whitespace-pre-wrap leading-relaxed">' + JSON.stringify(log.new_values, null, 2) + '</pre>';
+            const isHapus = akt.includes('HAPUS') || akt.includes('DELETE') || (oldVals && !newVals);
+            const isEdit = akt.includes('UPDATE') || akt.includes('EDIT') || akt.includes('UBAH');
+            const isApprove = akt.includes('APPROVE') || akt.includes('DISETUJUI');
+            const isReject = akt.includes('REJECT') || akt.includes('DITOLAK');
+
+            if (isHapus || isReject) {
+                badgeJenis.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 border border-rose-200';
+            } else if (isApprove) {
+                badgeJenis.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200';
             } else {
-                afterEl.innerHTML = '<span class="text-slate-400 italic">(Tidak ada data sesudah perubahan)</span>';
+                badgeJenis.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 border border-amber-200';
+            }
+
+            // 1. Ekstrak Alasan Aktivitas
+            let alasan = '';
+            if (newVals && newVals.alasan) alasan = newVals.alasan;
+            else if (oldVals && oldVals.alasan) alasan = oldVals.alasan;
+            else if (newVals && newVals.catatan_spv) alasan = newVals.catatan_spv;
+            else if (oldVals && oldVals.catatan_spv) alasan = oldVals.catatan_spv;
+            else if (newVals && newVals.alasan_penolakan) alasan = newVals.alasan_penolakan;
+            else if (newVals && newVals.alasan_batal) alasan = newVals.alasan_batal;
+            else if (newVals && newVals.catatan) alasan = newVals.catatan;
+            else if (oldVals && oldVals.catatan) alasan = oldVals.catatan;
+
+            if (!alasan) {
+                if (isHapus) {
+                    const targetNama = (oldVals && (oldVals.nama_petugas || oldVals.nama_siswa)) || log.objek_id || '';
+                    alasan = 'Penghapusan data ' + (log.modul ? log.modul.toLowerCase() : 'data') + (targetNama ? ' (' + targetNama + ')' : '') + ' dari sistem oleh ' + log.nama_user + '.';
+                } else if (isEdit) {
+                    alasan = 'Pembaruan data ' + (log.modul ? log.modul.toLowerCase() : 'sistem') + ' (' + (log.objek_id || '-') + ') oleh ' + log.nama_user + '.';
+                } else if (isApprove) {
+                    alasan = 'Pusat persetujuan telah memverifikasi dan menyetujui ' + (log.objek_id || 'laporan/transaksi') + '.';
+                } else if (isReject) {
+                    alasan = 'Pusat persetujuan menolak laporan/transaksi ' + (log.objek_id || '') + '.';
+                } else {
+                    alasan = 'Aktivitas ' + log.jenis_aktivitas.replace(/_/g, ' ') + ' pada modul ' + log.modul + ' oleh ' + log.nama_user + '.';
+                }
+            }
+
+            // Tampilkan Box Alasan
+            const boxAlasan = document.getElementById('detail-box-alasan');
+            const titleAlasan = document.getElementById('detail-title-alasan');
+            const textAlasan = document.getElementById('detail-text-alasan');
+            const iconWrap = document.getElementById('detail-icon-wrap');
+
+            textAlasan.textContent = alasan;
+
+            if (isHapus) {
+                boxAlasan.className = 'p-4 rounded-xl border bg-rose-50 border-rose-200 text-rose-900';
+                titleAlasan.textContent = 'Alasan Penghapusan';
+                iconWrap.className = 'w-6 h-6 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0';
+                iconWrap.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+            } else if (isReject) {
+                boxAlasan.className = 'p-4 rounded-xl border bg-rose-50 border-rose-200 text-rose-900';
+                titleAlasan.textContent = 'Alasan Penolakan';
+                iconWrap.className = 'w-6 h-6 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0';
+                iconWrap.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+            } else if (isApprove) {
+                boxAlasan.className = 'p-4 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900';
+                titleAlasan.textContent = 'Alasan & Catatan Persetujuan';
+                iconWrap.className = 'w-6 h-6 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0';
+                iconWrap.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+            } else if (isEdit) {
+                boxAlasan.className = 'p-4 rounded-xl border bg-amber-50 border-amber-200 text-amber-900';
+                titleAlasan.textContent = 'Alasan & Catatan Perubahan';
+                iconWrap.className = 'w-6 h-6 rounded-full bg-amber-200 text-amber-700 flex items-center justify-center shrink-0';
+                iconWrap.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+            } else {
+                boxAlasan.className = 'p-4 rounded-xl border bg-slate-50 border-slate-200 text-slate-800';
+                titleAlasan.textContent = 'Keterangan Aktivitas';
+                iconWrap.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0';
+                iconWrap.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            }
+
+            // 2. Render Rincian Tanpa Kode Program
+            const rincianWrapper = document.getElementById('detail-rincian-wrapper');
+            rincianWrapper.innerHTML = '';
+
+            const ignoredKeys = ['id', 'alasan', 'catatan', 'catatan_spv', 'alasan_penolakan', 'alasan_batal'];
+
+            if (isHapus) {
+                // Tampilan Penghapusan: Ringkasan Data yang Dihapus (Tanpa syntax kode JSON)
+                const oldData = oldVals || {};
+                const keys = Object.keys(oldData).filter(k => !ignoredKeys.includes(k));
+
+                let html = '<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">';
+                html += '<div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 font-semibold text-slate-700 text-xs flex items-center justify-between">';
+                html += '<span>Data Objek yang Dihapus</span>';
+                html += '<span class="text-[10px] text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">TERHAPUS</span>';
+                html += '</div>';
+
+                if (keys.length > 0) {
+                    html += '<div class="divide-y divide-slate-100">';
+                    keys.forEach(k => {
+                        html += '<div class="flex items-center justify-between px-4 py-2.5 text-xs">';
+                        html += '<span class="text-slate-500 font-medium">' + labelFormat(k) + '</span>';
+                        html += '<span class="font-semibold text-slate-800">' + formatDisplayValue(k, oldData[k]) + '</span>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="p-4 text-slate-400 italic text-center">Data objek telah dihapus dari sistem.</div>';
+                }
+                html += '</div>';
+                rincianWrapper.innerHTML = html;
+
+            } else if (isEdit || (oldVals && newVals)) {
+                // Tampilan Pengeditan: Perbandingan Nilai Sebelum -> Sesudah (Format Tabel Bersih)
+                const oldData = oldVals || {};
+                const newData = newVals || {};
+                const allKeys = Array.from(new Set([...Object.keys(oldData), ...Object.keys(newData)]))
+                    .filter(k => !ignoredKeys.includes(k));
+
+                let changedRows = [];
+                allKeys.forEach(k => {
+                    const oldVal = oldData[k];
+                    const newVal = newData[k];
+                    if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+                        changedRows.push({
+                            key: k,
+                            label: labelFormat(k),
+                            old: formatDisplayValue(k, oldVal),
+                            new: formatDisplayValue(k, newVal)
+                        });
+                    }
+                });
+
+                let html = '<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">';
+                html += '<div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 font-semibold text-slate-700 text-xs flex items-center justify-between">';
+                html += '<span>Rincian Perubahan Data</span>';
+                html += '<span class="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">' + changedRows.length + ' Atribut Berubah</span>';
+                html += '</div>';
+
+                if (changedRows.length > 0) {
+                    html += '<table class="min-w-full text-xs text-left">';
+                    html += '<thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 text-[11px]">';
+                    html += '<tr><th class="py-2 px-4">Bidang Data</th><th class="py-2 px-4">Nilai Sebelum</th><th class="py-2 px-4">Nilai Sesudah</th></tr>';
+                    html += '</thead>';
+                    html += '<tbody class="divide-y divide-slate-100">';
+                    changedRows.forEach(row => {
+                        html += '<tr>';
+                        html += '<td class="py-2.5 px-4 font-semibold text-slate-700">' + row.label + '</td>';
+                        html += '<td class="py-2.5 px-4 text-slate-500 bg-rose-50/30">' + row.old + '</td>';
+                        html += '<td class="py-2.5 px-4 font-semibold text-emerald-700 bg-emerald-50/30">' + row.new + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                } else {
+                    html += '<div class="p-4 text-slate-400 italic text-center">Data objek berhasil disinkronisasikan ke sistem.</div>';
+                }
+                html += '</div>';
+                rincianWrapper.innerHTML = html;
+
+            } else if (newVals && Object.keys(newVals).length > 0) {
+                // Tampilan Tambah Baru
+                const newData = newVals || {};
+                const keys = Object.keys(newData).filter(k => !ignoredKeys.includes(k));
+
+                let html = '<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">';
+                html += '<div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 font-semibold text-slate-700 text-xs flex items-center justify-between">';
+                html += '<span>Data Baru yang Disimpan</span>';
+                html += '<span class="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">DATA BARU</span>';
+                html += '</div>';
+
+                if (keys.length > 0) {
+                    html += '<div class="divide-y divide-slate-100">';
+                    keys.forEach(k => {
+                        html += '<div class="flex items-center justify-between px-4 py-2.5 text-xs">';
+                        html += '<span class="text-slate-500 font-medium">' + labelFormat(k) + '</span>';
+                        html += '<span class="font-semibold text-slate-800">' + formatDisplayValue(k, newData[k]) + '</span>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="p-4 text-slate-400 italic text-center">Data baru berhasil disimpan ke sistem.</div>';
+                }
+                html += '</div>';
+                rincianWrapper.innerHTML = html;
+            } else {
+                rincianWrapper.innerHTML = '<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 italic text-center">Tidak ada rincian atribut data tambahan.</div>';
             }
 
             document.getElementById('modal-detail-audit').classList.remove('hidden');

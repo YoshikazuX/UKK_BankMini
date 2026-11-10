@@ -41,7 +41,7 @@
                 <div>
                     <h2 class="text-xl font-black text-slate-900 uppercase">LKM MITRA SISWA ABADI</h2>
                     <p class="text-xs font-bold text-slate-600 uppercase">Laboratorium Perbankan & Lembaga Keuangan Mikro Sekolah</p>
-                    <p class="text-[11px] text-slate-500">Jl. Pendidikan No. 01, Kompleks Kampus Sekolah Kejuruan | Telp: (021) 8899-7711</p>
+                    <p class="text-[11px] text-slate-500">Jl. Parangtritis Km. 11, Sabdodadi, Bantul, D.I. Yogyakarta 55715 | Telp: (0274) 367156</p>
                 </div>
             </div>
             <div class="text-right text-xs">
@@ -122,11 +122,11 @@
 
             <div>
                 <p class="text-slate-500 mb-1">Disetujui Oleh,</p>
-                <p class="font-bold text-slate-700">Supervisor / Kepala Bank Mini</p>
+                <p class="font-bold text-slate-700">Kepala Sekolah</p>
                 <div class="h-20 flex items-end justify-center">
-                    <p class="font-bold underline uppercase">( Handayani, S.Pd., M.M )</p>
+                    <p class="font-bold underline uppercase">( Raharjo, S.IP., M.Pd. )</p>
                 </div>
-                <p class="text-[10px] text-slate-400">NIP. 19850712 201001 2 021</p>
+                <p class="text-[10px] text-slate-400">NIP. 19690404 198903 1 001</p>
             </div>
         </div>
     </div>

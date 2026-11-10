@@ -52,28 +52,25 @@
                     <label class="block text-slate-700 text-xs font-semibold mb-2">Peran & Hak Akses (Role RBAC)</label>
                     <select name="role" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm bg-white" required>
                         <option value="">-- Pilih Peran / Role --</option>
-                        <option value="teller" {{ old('role') === 'teller' ? 'selected' : '' }}>Teller (Pelayanan Loket & Transaksi)</option>
                         <option value="supervisor" {{ old('role') === 'supervisor' ? 'selected' : '' }}>Supervisor (Approval & Monitoring Kas)</option>
-                        <option value="customer_service" {{ old('role') === 'customer_service' ? 'selected' : '' }}>Customer Service (Registrasi & Data Nasabah)</option>
-                        <option value="avalis" {{ old('role') === 'avalis' ? 'selected' : '' }}>Avalis (Piket Shift & Kunjungan Siswa)</option>
-                        <option value="accounting" {{ old('role') === 'accounting' ? 'selected' : '' }}>Accounting (Jurnal & Laporan Keuangan)</option>
                         <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrator (Tata Kelola Akun & Sistem)</option>
+                        <option value="teller" {{ old('role') === 'teller' ? 'selected' : '' }}>Teller (Pelayanan Loket & Transaksi)</option>
                     </select>
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Kelas <span class="text-xs text-slate-500">(Opsional jika Admin)</span></label>
-                    <input type="text" name="kelas" placeholder="Contoh: XI RPL 1" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    <input type="text" name="kelas" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Nomor Telepon / WhatsApp</label>
-                    <input type="text" name="no_hp" placeholder="Contoh: 081234567890" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm tabular-nums">
+                    <input type="text" name="no_hp" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm tabular-nums">
                 </div>
 
                 <div class="mb-8">
                     <label class="block text-slate-700 text-xs font-medium mb-2">Alamat Email</label>
-                    <input type="email" name="email" placeholder="Contoh: pegawai@banksekolah.id" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
+                    <input type="email" name="email" class="border border-slate-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none text-sm">
                 </div>
 
                 <div class="flex justify-end items-center space-x-3 border-t border-slate-200 pt-6">

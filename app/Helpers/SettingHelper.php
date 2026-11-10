@@ -17,7 +17,7 @@ class SettingHelper
                 'saldo_mengendap_min' => 10000,
                 'scanner_kamera_aktif' => true,
                 'tahun_ajaran_aktif' => '2026/2027',
-                'format_no_rekening' => 'TA-JURUSAN-URUT',
+                'format_no_rekening' => 'JURUSAN-NIS',
                 'nama_bank' => 'LKM Mitra Siswa Abadi',
                 'biaya_administrasi_buku' => 5000,
             ]);
@@ -27,7 +27,7 @@ class SettingHelper
             'saldo_mengendap_min' => 10000,
             'scanner_kamera_aktif' => true,
             'tahun_ajaran_aktif' => '2026/2027',
-            'format_no_rekening' => 'TA-JURUSAN-URUT',
+            'format_no_rekening' => 'JURUSAN-NIS',
             'nama_bank' => 'LKM Mitra Siswa Abadi',
             'biaya_administrasi_buku' => 5000,
         ]);

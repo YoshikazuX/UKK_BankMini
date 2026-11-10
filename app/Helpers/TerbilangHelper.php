@@ -67,7 +67,7 @@ class TerbilangHelper
         } elseif (str_contains($j, 'JARINGAN') || str_contains($j, 'TKJ') || str_contains($j, 'KOMPUTER')) {
             return 'TKJ';
         } elseif (str_contains($j, 'AKUNTANSI') || str_contains($j, 'AKL') || str_contains($j, 'AK')) {
-            return 'AK';
+            return 'AKL';
         } elseif (str_contains($j, 'PERBANKAN') || str_contains($j, 'SYARIAH') || str_contains($j, 'LPS')) {
             return 'LPS';
         } elseif (str_contains($j, 'RETAIL') || str_contains($j, 'RITEL') || str_contains($j, 'BR')) {
@@ -98,7 +98,7 @@ class TerbilangHelper
         return match ($kode) {
             'RPL' => 'Rekayasa Perangkat Lunak',
             'TKJ' => 'Teknik Komputer dan Jaringan',
-            'AK' => 'Akuntansi dan Keuangan Lembaga',
+            'AK', 'AKL' => 'Akuntansi dan Keuangan Lembaga',
             'LPS' => 'Layanan Perbankan Syariah',
             'BR' => 'Bisnis Retail',
             'BD' => 'Bisnis Digital',

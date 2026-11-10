@@ -44,17 +44,17 @@
 
                 <div class="mb-5">
                     <label class="block text-slate-700 text-sm font-bold mb-2">Nomor Induk Siswa (NIS)</label>
-                    <input type="text" name="nis" placeholder="Tuliskan NIS Anda" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
+                    <input type="text" name="nis" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
                 </div>
 
                 <div class="mb-5">
                     <label class="block text-slate-700 text-sm font-bold mb-2">Nama Lengkap Siswa</label>
-                    <input type="text" name="nama_siswa" placeholder="Tuliskan nama lengkap Anda" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
+                    <input type="text" name="nama_siswa" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
                 </div>
 
                 <div class="mb-5">
                     <label class="block text-slate-700 text-sm font-bold mb-2">Kelas Siswa</label>
-                    <input type="text" name="kelas" placeholder="Tuliskan kelas Anda" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
+                    <input type="text" name="kelas" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700" required>
                 </div>
 
                 <div class="mb-5">
@@ -70,7 +70,7 @@
                     <select name="jurusan" class="shadow-sm border border-slate-300 rounded w-full py-2.5 px-3 focus:ring-2 focus:ring-slate-500 focus:outline-none text-slate-700 bg-white" required>
                         <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak (Kode: RPL)</option>
                         <option value="Teknik Komputer dan Jaringan">Teknik Komputer dan Jaringan (Kode: TKJ)</option>
-                        <option value="Akuntansi dan Keuangan Lembaga">Akuntansi dan Keuangan Lembaga (Kode: AK)</option>
+                        <option value="Akuntansi dan Keuangan Lembaga">Akuntansi dan Keuangan Lembaga (Kode: AKL)</option>
                         <option value="Layanan Perbankan Syariah">Layanan Perbankan Syariah (Kode: LPS)</option>
                         <option value="Bisnis Retail">Bisnis Retail (Kode: BR)</option>
                         <option value="Bisnis Digital">Bisnis Digital (Kode: BD)</option>
@@ -84,7 +84,7 @@
                         Penomoran Rekening Otomatis:
                     </p>
                     <p class="mt-0.5 text-slate-600">
-                        Sistem akan menghasilkan Nomor Rekening otomatis dengan format <strong>(Kode Jurusan - No Urut)</strong>, misalnya <code>RPL-001</code>.
+                        Sistem akan menghasilkan Nomor Rekening otomatis dengan format <strong>(Kode Jurusan - NIS)</strong>, misalnya <code>RPL-17763</code> atau <code>AKL-18001</code>.
                     </p>
                 </div>
 

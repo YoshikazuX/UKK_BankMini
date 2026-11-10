@@ -148,6 +148,9 @@
                             id="format_no_rekening" 
                             class="w-full px-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-800"
                         >
+                            <option value="JURUSAN-NIS" {{ ($setting->format_no_rekening ?? 'JURUSAN-NIS') == 'JURUSAN-NIS' ? 'selected' : '' }}>
+                                KODE JURUSAN - NIS (Contoh: RPL-17763, AKL-18001) [Rekomendasi]
+                            </option>
                             <option value="TA-JURUSAN-URUT" {{ ($setting->format_no_rekening ?? '') == 'TA-JURUSAN-URUT' ? 'selected' : '' }}>
                                 TA - KODE JURUSAN - URUT (Contoh: 26-RPL-001)
                             </option>
@@ -159,7 +162,7 @@
                             </option>
                         </select>
                         <p class="text-[11px] text-slate-500 mt-1">
-                            Nomor urut siswa berlanjut secara otomatis setiap kali nasabah baru didaftarkan.
+                            Pilih pola penomoran rekening. Format <strong>JURUSAN-NIS</strong> memudahkan identifikasi rekening langsung dari NIS siswa.
                         </p>
                     </div>
                 </div>

@@ -557,7 +557,12 @@
             const iconContainer = document.getElementById('modal-icon-container');
 
             form.action = '{{ url("/admin/hapus-nasabah") }}/' + id;
-            inputsContainer.innerHTML = '';
+            inputsContainer.innerHTML = `
+                <div class="mb-3 text-left">
+                    <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Penghapusan / Arsip <span class="text-slate-400 font-normal">(Dicatat di Jejak Audit)</span></label>
+                    <input type="text" name="alasan" placeholder="Contoh: Siswa sudah lulus / mutasi sekolah" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
+                </div>
+            `;
             namaEl.textContent = nama;
             rekEl.textContent = noRekening;
 

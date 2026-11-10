@@ -63,12 +63,9 @@
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Jabatan / Role</label>
                     <select name="role" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 focus:outline-none">
                         <option value="">Semua Peran</option>
-                        <option value="teller" {{ request('role') === 'teller' ? 'selected' : '' }}>Teller</option>
                         <option value="supervisor" {{ request('role') === 'supervisor' ? 'selected' : '' }}>Supervisor</option>
                         <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="customer_service" {{ request('role') === 'customer_service' ? 'selected' : '' }}>Customer Service</option>
-                        <option value="accounting" {{ request('role') === 'accounting' ? 'selected' : '' }}>Accounting</option>
-                        <option value="avalis" {{ request('role') === 'avalis' ? 'selected' : '' }}>Avalis</option>
+                        <option value="teller" {{ request('role') === 'teller' ? 'selected' : '' }}>Teller</option>
                     </select>
                 </div>
                 <div>
@@ -207,6 +204,12 @@
                 </p>
 
                 <form id="formHapusPegawai" method="GET" onsubmit="handleHapusPegawaiSubmit(this)">
+                    <div class="mb-4">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1.5" for="hapus_pegawai_alasan">
+                            Alasan Penghapusan Akun <span class="text-slate-400 font-normal">(Dicatat di Jejak Audit)</span>
+                        </label>
+                        <input type="text" name="alasan" id="hapus_pegawai_alasan" placeholder="Contoh: Selesai masa tugas / Akun dinonaktifkan" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
+                    </div>
                     <div class="flex items-center justify-end gap-2.5">
                         <button type="button" onclick="closeModalHapusPegawai()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition">
                             Batal
@@ -227,6 +230,8 @@
             document.getElementById('hapus_pegawai_nama').textContent = nama;
             document.getElementById('hapus_pegawai_user').textContent = username;
             document.getElementById('hapus_pegawai_role').textContent = role;
+            const inputAlasan = document.getElementById('hapus_pegawai_alasan');
+            if (inputAlasan) inputAlasan.value = '';
             document.getElementById('modalHapusPegawai').classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         }
