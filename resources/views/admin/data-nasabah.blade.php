@@ -58,8 +58,8 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="bukaModalImport()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 px-3.5 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Import CSV
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Import Excel / CSV
                 </button>
                 <a href="{{ url('/admin/tambah-nasabah') }}" class="bg-slate-900 hover:bg-slate-800 text-white py-2 px-4 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -364,13 +364,16 @@
                                     <!-- Edit -->
                                     <a href="{{ url('/admin/edit-nasabah/'.$n->id) }}" class="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1 px-2 rounded text-[11px] transition">Edit</a>
 
-                                    <!-- Hapus (Modal Konfirmasi Feature 7) -->
-                                    <button
-                                        type="button"
-                                        onclick="konfirmasiHapusNasabah({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', {{ $n->saldo }})"
-                                        class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-1 px-2 rounded text-[11px] transition border border-rose-200">
-                                        Hapus
-                                    </button>
+                                    @if ($n->status !== 'aktif')
+                                        <!-- Hapus (Tombol dihilangkan jika nasabah masih aktif) -->
+                                        <button
+                                            type="button"
+                                            onclick="konfirmasiHapusNasabah({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', {{ $n->saldo }})"
+                                            class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-1 px-2 rounded text-[11px] transition border border-rose-200"
+                                            title="Hapus / Arsipkan Data Nasabah Nonaktif/Alumni">
+                                            Hapus
+                                        </button>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -452,26 +455,26 @@
         </div>
     </div>
 
-    <!-- MODAL POP-UP IMPORT CSV -->
+    <!-- MODAL POP-UP IMPORT EXCEL / CSV -->
     <div id="modal-import" class="hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm p-4 overflow-y-auto">
         <div class="min-h-full flex items-center justify-center">
             <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
                 <div class="bg-slate-900 px-6 py-4 border-b border-slate-800">
                     <h3 class="text-base font-bold text-white flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Import Data Nasabah (CSV)
+                        Import Data Nasabah (Excel / CSV)
                     </h3>
                 </div>
                 <form action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
                     @csrf
                     <div class="mb-4">
-                        <p class="text-xs text-slate-600 mb-2">Sistem akan secara otomatis mendeteksi format file, membaca kelas, jurusan, serta menghasilkan Nomor Rekening otomatis.</p>
+                        <p class="text-xs text-slate-600 mb-2">Sistem otomatis mendeteksi file Excel (.xlsx, .xls) maupun CSV (.csv, .txt), membaca kelas & jurusan per rombel, serta menerbitkan Nomor Rekening otomatis.</p>
                         <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-2.5 text-[11px] text-emerald-800 flex items-start gap-2">
                             <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span><strong>Mendukung Format File Absen:</strong> Anda dapat langsung mengunggah file Dokumen Daftar Hadir / Absensi Siswa resmi sekolah (.csv / .txt) atau menggunakan template CSV standar.</span>
+                            <span><strong>Mendukung Format Daftar Hadir Siswa:</strong> Anda bisa langsung mengunggah dokumen Daftar Hadir / Absensi Siswa resmi sekolah (.xlsx / .xls / .csv) tanpa perlu mengubah format secara manual!</span>
                         </div>
                         <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-teal-600 font-semibold hover:underline">
-                            &darr; Unduh Template CSV Resmi Standar
+                            &darr; Unduh Template CSV / Excel Resmi Standar
                         </a>
                     </div>
                     <div class="mb-4">
@@ -484,8 +487,8 @@
                         <p class="text-[11px] text-slate-500 mt-1">Pilih <strong>Belum Aktif</strong> atau <strong>Otomatis</strong> untuk mengimpor data murid baru kelas 10 agar akun tidak langsung aktif sebelum diverifikasi.</p>
                     </div>
                     <div class="mb-6">
-                        <label class="block text-slate-700 text-xs font-semibold mb-2">Pilih File CSV (.csv / .txt):</label>
-                        <input type="file" name="file_csv" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
+                        <label class="block text-slate-700 text-xs font-semibold mb-2">Pilih Dokumen Excel / CSV (.xlsx, .xls, .csv, .txt):</label>
+                        <input type="file" name="file_csv" required accept=".xlsx,.xls,.csv,.txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
                     </div>
                     <div class="flex justify-end space-x-2 border-t border-slate-100 pt-4">
                         <button type="button" onclick="tutupModalImport()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition">Batal</button>
