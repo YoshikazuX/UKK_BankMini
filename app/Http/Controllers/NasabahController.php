@@ -13,9 +13,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
+use ZipArchive;
 
 class NasabahController extends Controller
 {
@@ -283,8 +285,8 @@ class NasabahController extends Controller
     {
         $nasabah = Nasabah::findOrFail($id);
 
-        if ($nasabah->status !== 'nonaktif') {
-            return back()->with('error', 'Hanya nasabah dengan status nonaktif yang dapat dihapus/diarsipkan. Silakan nonaktifkan rekening terlebih dahulu sebelum menghapus.');
+        if ($nasabah->status === 'aktif') {
+            return back()->with('error', 'Nasabah dengan status aktif tidak dapat dihapus/diarsipkan. Silakan nonaktifkan rekening terlebih dahulu sebelum menghapus.');
         }
 
         $alasan = request('alasan') ?: 'Pengarsipan / penghapusan data nasabah oleh Administrator';
@@ -430,19 +432,26 @@ class NasabahController extends Controller
         $sheetGroups = [];
 
         try {
-            if (in_array($extension, ['xlsx', 'xls'], true)) {
-                $spreadsheet = IOFactory::load($filePath);
-                foreach ($spreadsheet->getAllSheets() as $sheet) {
-                    $highestRow = $sheet->getHighestDataRow();
-                    if ($highestRow < 2) {
-                        continue;
+            if ($extension === 'xlsx') {
+                // Gunakan parser XLSX mandiri (Zero-Dependency) yang bekerja 100% di cloud hosting
+                $sheetGroups = self::parseXlsxNative($filePath);
+            } elseif ($extension === 'xls') {
+                // Untuk format XLS biner lama, gunakan IOFactory jika tersedia
+                if (class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
+                    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                    foreach ($spreadsheet->getAllSheets() as $sheet) {
+                        $highestRow = $sheet->getHighestDataRow();
+                        if ($highestRow < 2) {
+                            continue;
+                        }
+                        $rows = $sheet->rangeToArray("A1:E{$highestRow}", null, true, true, false);
+                        $sheetGroups[] = [
+                            'sheet_title' => trim($sheet->getTitle()),
+                            'rows' => $rows,
+                        ];
                     }
-                    // Ambil kolom A sampai E untuk efisiensi tinggi
-                    $rows = $sheet->rangeToArray("A1:E{$highestRow}", null, true, true, false);
-                    $sheetGroups[] = [
-                        'sheet_title' => trim($sheet->getTitle()),
-                        'rows' => $rows,
-                    ];
+                } else {
+                    return back()->with('error', 'Format .xls (Excel lama) membutuhkan library khusus di server. Harap simpan file Anda sebagai format .xlsx (Excel modern) atau .csv lalu coba unggah kembali.');
                 }
             } else {
                 $handle = fopen($filePath, 'r');
@@ -470,7 +479,9 @@ class NasabahController extends Controller
                     'rows' => $csvRows,
                 ];
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Import File Read Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return back()->with('error', 'Gagal membaca isi file: '.$e->getMessage());
         }
 
@@ -665,8 +676,9 @@ class NasabahController extends Controller
             }
 
             return back()->with('success', trim($pesan));
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Import File Processing Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return back()->with('error', 'Gagal impor data: '.$e->getMessage());
         }
@@ -729,5 +741,168 @@ class NasabahController extends Controller
         }
 
         return view('nasabah.dashboard', compact('nasabah', 'transaksi', 'pinResetRequest'));
+    }
+
+    /**
+     * Parser XLSX mandiri (Zero-Dependency) menggunakan ekstensi bawaan PHP (ZipArchive & SimpleXML).
+     * Solusi ini 100% aman dan bekerja di semua lingkungan hosting/cPanel tanpa memerlukan library Composer tambahan.
+     *
+     * @return array<int, array{sheet_title: string, rows: array<int, array<int, string>>}>
+     */
+    protected static function parseXlsxNative(string $filePath): array
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            throw new \RuntimeException('Gagal membuka arsip file format Excel (.xlsx). Pastikan file tidak rusak.');
+        }
+
+        // 1. Ambil tabel shared strings (kamus string bersama Excel)
+        $sharedStrings = [];
+        $ssXml = $zip->getFromName('xl/sharedStrings.xml') ?: $zip->getFromName('xl/SharedStrings.xml');
+        if ($ssXml) {
+            $xml = @simplexml_load_string($ssXml);
+            if ($xml) {
+                foreach ($xml->si as $si) {
+                    if (isset($si->t)) {
+                        $sharedStrings[] = (string) $si->t;
+                    } elseif (isset($si->r)) {
+                        $text = '';
+                        foreach ($si->r as $r) {
+                            $text .= (string) $r->t;
+                        }
+                        $sharedStrings[] = $text;
+                    } else {
+                        $sharedStrings[] = '';
+                    }
+                }
+            }
+        }
+
+        // 2. Baca relasi workbook untuk memetakan nama sheet ke file XML-nya
+        $sheetTargets = [];
+        $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        if ($relsXml) {
+            $rels = @simplexml_load_string($relsXml);
+            if ($rels) {
+                foreach ($rels->Relationship as $rel) {
+                    $sheetTargets[(string) $rel['Id']] = (string) $rel['Target'];
+                }
+            }
+        }
+
+        // 3. Baca daftar sheets di workbook
+        $sheets = [];
+        $wbXml = $zip->getFromName('xl/workbook.xml');
+        if ($wbXml) {
+            $wb = @simplexml_load_string($wbXml);
+            if ($wb && isset($wb->sheets->sheet)) {
+                foreach ($wb->sheets->sheet as $s) {
+                    $name = (string) $s['name'];
+                    $rId = (string) $s->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
+                    $target = $sheetTargets[$rId] ?? '';
+                    if ($target) {
+                        $entryPath = ltrim(str_replace('\\', '/', $target), '/');
+                        if (! str_starts_with($entryPath, 'xl/')) {
+                            $entryPath = 'xl/'.$entryPath;
+                        }
+                        $sheets[] = [
+                            'name' => $name,
+                            'path' => $entryPath,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Fallback jika tidak ada deklarasi rels
+        if (empty($sheets)) {
+            for ($i = 1; $i <= 50; $i++) {
+                $p = "xl/worksheets/sheet{$i}.xml";
+                if ($zip->locateName($p) !== false) {
+                    $sheets[] = ['name' => "Sheet{$i}", 'path' => $p];
+                }
+            }
+        }
+
+        // Helper konversi abjad kolom Excel ke indeks 0-based: A => 0, B => 1, ...
+        $colLetterToIndex = function (string $letters): int {
+            $letters = strtoupper($letters);
+            $len = strlen($letters);
+            $num = 0;
+            for ($i = 0; $i < $len; $i++) {
+                $num = $num * 26 + (ord($letters[$i]) - 64);
+            }
+
+            return $num - 1;
+        };
+
+        $sheetGroups = [];
+
+        foreach ($sheets as $sh) {
+            $sheetXml = $zip->getFromName($sh['path']);
+            if (! $sheetXml) {
+                continue;
+            }
+
+            $xml = @simplexml_load_string($sheetXml);
+            if (! $xml || ! isset($xml->sheetData->row)) {
+                continue;
+            }
+
+            $sheetRows = [];
+
+            foreach ($xml->sheetData->row as $row) {
+                $cells = [];
+                $maxIdx = -1;
+
+                foreach ($row->c as $c) {
+                    $ref = (string) $c['r']; // Contoh: "B12"
+                    if (! preg_match('/^([A-Z]+)(\d+)$/', $ref, $m)) {
+                        continue;
+                    }
+                    $colIdx = $colLetterToIndex($m[1]);
+                    // Kita hanya butuh data nasabah hingga kolom E atau lebih sedikit, batasi sampai 25 kolom
+                    if ($colIdx > 25) {
+                        continue;
+                    }
+
+                    $type = (string) $c['t'];
+                    $val = '';
+
+                    if ($type === 's') {
+                        $idx = (int) $c->v;
+                        $val = $sharedStrings[$idx] ?? '';
+                    } elseif ($type === 'inlineStr' && isset($c->is->t)) {
+                        $val = (string) $c->is->t;
+                    } else {
+                        $val = isset($c->v) ? (string) $c->v : '';
+                    }
+
+                    $cells[$colIdx] = trim($val);
+                    if ($colIdx > $maxIdx) {
+                        $maxIdx = $colIdx;
+                    }
+                }
+
+                if ($maxIdx >= 0) {
+                    $orderedRow = [];
+                    for ($k = 0; $k <= $maxIdx; $k++) {
+                        $orderedRow[] = $cells[$k] ?? '';
+                    }
+                    $sheetRows[] = $orderedRow;
+                }
+            }
+
+            if (! empty($sheetRows)) {
+                $sheetGroups[] = [
+                    'sheet_title' => $sh['name'],
+                    'rows' => $sheetRows,
+                ];
+            }
+        }
+
+        $zip->close();
+
+        return $sheetGroups;
     }
 }
