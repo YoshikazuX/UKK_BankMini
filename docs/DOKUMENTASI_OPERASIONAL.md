@@ -137,12 +137,13 @@ Sistem HanBank telah dioptimalkan untuk memproses data ribuan siswa secara insta
    - Menyinkronkan siswa lama jika NIS sudah ada di database tanpa membuat data ganda.
 6. Notifikasi hasil impor akan memunculkan ringkasan: jumlah data baru terdaftar, jumlah data diperbarui, dan status baris dilewati.
 
-### 4.3 Kebijakan Keamanan: Penonaktifan Tombol Hapus pada Nasabah Aktif
-Untuk melindungi integritas keuangan dan mencegah hilangnya saldo nasabah secara tidak sah:
-- **Tombol "Hapus" otomatis dihilangkan** untuk seluruh nasabah yang berstatus **Aktif**.
-- Tombol "Hapus" hanya akan ditampilkan jika nasabah telah dialihkan ke status **Nonaktif** atau **Alumni**.
-- Sistem backend secara ketat memvalidasi dan menolak setiap upaya penghapusan rekening aktif.
-- Setiap penghapusan dilakukan secara **Soft Delete** (arsip aman) sehingga riwayat mutasi transaksi buku tabungan tetap utuh.
+### 4.3 Kebijakan Keamanan: Tombol Hapus Khusus untuk Nasabah Nonaktif
+Untuk melindungi integritas keuangan dan mencegah hilangnya data/saldo nasabah secara tidak sengaja:
+- **Tombol "Hapus" hanya dimunculkan khusus untuk nasabah yang berstatus Nonaktif**.
+- Nasabah dengan status **Aktif** maupun status lainnya tidak memiliki tombol Hapus di antarmuka tabel.
+- Sistem backend secara ketat memvalidasi dan menolak setiap upaya penghapusan nasabah yang bukan berstatus Nonaktif (`$nasabah->status !== 'nonaktif'`).
+- Jika sebuah rekening perlu dihapus/diarsipkan, Administrator harus terlebih dahulu menonaktifkan rekening tersebut (klik tombol **Nonaktifkan**), lalu menekan tombol **Hapus**.
+- Setiap penghapusan dilakukan secara **Soft Delete** (arsip aman) sehingga riwayat mutasi transaksi buku tabungan tetap utuh di database dan dapat dipulihkan (*Restore*) kapan saja melalui tab arsip.
 
 ---
 

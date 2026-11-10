@@ -283,8 +283,8 @@ class NasabahController extends Controller
     {
         $nasabah = Nasabah::findOrFail($id);
 
-        if ($nasabah->status === 'aktif') {
-            return back()->with('error', 'Nasabah dengan status aktif tidak dapat dihapus. Silakan nonaktifkan rekening terlebih dahulu sebelum menghapus.');
+        if ($nasabah->status !== 'nonaktif') {
+            return back()->with('error', 'Hanya nasabah dengan status nonaktif yang dapat dihapus/diarsipkan. Silakan nonaktifkan rekening terlebih dahulu sebelum menghapus.');
         }
 
         $alasan = request('alasan') ?: 'Pengarsipan / penghapusan data nasabah oleh Administrator';

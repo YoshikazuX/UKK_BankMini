@@ -364,13 +364,13 @@
                                     <!-- Edit -->
                                     <a href="{{ url('/admin/edit-nasabah/'.$n->id) }}" class="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1 px-2 rounded text-[11px] transition">Edit</a>
 
-                                    @if ($n->status !== 'aktif')
-                                        <!-- Hapus (Tombol dihilangkan jika nasabah masih aktif) -->
+                                    @if (($n->status ?? '') === 'nonaktif')
+                                        <!-- Hapus (Hanya muncul khusus untuk nasabah berstatus nonaktif) -->
                                         <button
                                             type="button"
                                             onclick="konfirmasiHapusNasabah({{ $n->id }}, '{{ addslashes($n->nama_siswa) }}', '{{ $n->no_rekening }}', {{ $n->saldo }})"
                                             class="inline-block bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-1 px-2 rounded text-[11px] transition border border-rose-200"
-                                            title="Hapus / Arsipkan Data Nasabah Nonaktif/Alumni">
+                                            title="Hapus / Arsipkan Data Nasabah Nonaktif">
                                             Hapus
                                         </button>
                                     @endif
@@ -575,8 +575,8 @@
                 extraEl.innerHTML = '<span class="text-slate-500">Saldo Rekening: Rp 0</span>';
             }
 
-            title.textContent = 'Hapus / Arsipkan Data Nasabah Alumni?';
-            message.textContent = 'Data nasabah akan dihapus dari daftar aktif (Soft Delete), namun seluruh riwayat mutasi transaksi di buku tabungan dan kas TETAP AMAN tersimpan utuh di sistem.';
+            title.textContent = 'Hapus / Arsipkan Data Nasabah Nonaktif?';
+            message.textContent = 'Data nasabah nonaktif ini akan diarsipkan (Soft Delete), namun seluruh riwayat mutasi transaksi di buku tabungan dan kas TETAP AMAN tersimpan utuh di sistem.';
             btn.className = 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2';
             btnText.textContent = 'Ya, Hapus & Simpan Riwayat';
             iconContainer.className = 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4';

@@ -55,17 +55,17 @@ Pada versi sebelumnya, sistem hanya menerima file teks berformat CSV standar sat
    - Waktu Eksekusi: **~1,4 detik**
    - Penggunaan Memori: **< 48 MB** (Sangat efisien dengan pembatasan *rangeToArray* A1:E{N}).
 
-### 4.2 Kebijakan Keamanan: Penghilangan Tombol Hapus pada Nasabah Aktif
+### 4.2 Kebijakan Keamanan: Tombol Hapus Khusus untuk Nasabah Nonaktif
 - **Masalah Sebelumnya**: Tombol hapus tampil pada seluruh baris tabel, membuka celah potensi kesalahan klik teller/admin yang dapat menghapus nasabah yang masih memiliki saldo aktif.
 - **Implementasi Solusi**:
-  - Pada Blade template (`data-nasabah.blade.php`), tombol Hapus dibungkus kondisi `@if ($n->status !== 'aktif')`.
+  - Pada Blade template (`data-nasabah.blade.php`), tombol Hapus dibungkus kondisi ketat `@if (($n->status ?? '') === 'nonaktif')` sehingga **hanya nasabah berstatus nonaktif yang memiliki tombol Hapus**.
   - Pada Controller (`NasabahController::destroy`), ditambahkan validasi proteksi lapis kedua:
     ```php
-    if ($nasabah->status === 'aktif') {
-        return back()->with('error', 'Nasabah dengan status aktif tidak dapat dihapus. Silakan nonaktifkan rekening terlebih dahulu.');
+    if ($nasabah->status !== 'nonaktif') {
+        return back()->with('error', 'Hanya nasabah dengan status nonaktif yang dapat dihapus/diarsipkan. Silakan nonaktifkan rekening terlebih dahulu sebelum menghapus.');
     }
     ```
-  - Admin diwajibkan melakukan penonaktifan rekening terlebih dahulu sebelum dapat mengarsipkan nasabah.
+  - Admin diwajibkan melakukan penonaktifan rekening terlebih dahulu (klik tombol Nonaktifkan) sebelum dapat mengarsipkan nasabah nonaktif tersebut.
 
 ### 4.3 Resolusi Kendala Lingkungan Server (*Server Environment Fix*)
 Pada saat pengujian `php artisan serve`, ditemukan dua kendala teknis yang langsung berhasil diperbaiki:

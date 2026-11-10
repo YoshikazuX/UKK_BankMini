@@ -156,7 +156,7 @@ Dokumentasi operasional terperinci, laporan evaluasi, dan spesifikasi arsitektur
 
 ## 🔒 Kebijakan Keamanan & Kepatuhan Perbankan
 
-1. **Aturan Deletion Guard**: Rekening yang berstatus **Aktif** tidak dapat dihapus baik melalui antarmuka admin maupun permintaan langsung ke server. Rekening harus berstatus *Nonaktif* atau *Alumni* sebelum dapat diarsipkan secara *Soft-Delete*.
+1. **Aturan Deletion Guard**: Tombol Hapus hanya dimunculkan khusus untuk nasabah yang berstatus **Nonaktif**. Rekening yang berstatus *Aktif* maupun status lainnya tidak dapat dihapus langsung, dan harus dinonaktifkan terlebih dahulu sebelum dapat diarsipkan secara *Soft-Delete*.
 2. **Pencegahan Kas Negatif**: Setiap transaksi penarikan tunai divalidasi ganda terhadap kecukupan saldo nasabah (dikurangi saldo mengendap minimum) dan ketersediaan fisik uang kas di loket teller terkait.
 3. **Pessimistic Locking**: Permintaan dana kas dan penarikan diproteksi dengan `DB::raw` / `lockForUpdate()` untuk mencegah anomali konkurensi data.
 4. **Enkripsi Kredensial**: Password dan PIN 6-digit terenkripsi menggunakan algoritma `bcrypt` satu arah.
