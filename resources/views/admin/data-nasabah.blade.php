@@ -465,7 +465,7 @@
                         Import Data Nasabah (Excel / CSV)
                     </h3>
                 </div>
-                <form action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                <form id="form-import-nasabah" action="{{ url('/admin/import-nasabah') }}" method="POST" enctype="multipart/form-data" class="p-6">
                     @csrf
                     <div class="mb-4">
                         <p class="text-xs text-slate-600 mb-2">Sistem otomatis mendeteksi file Excel (.xlsx, .xls) maupun CSV (.csv, .txt), membaca kelas & jurusan per rombel, serta menerbitkan Nomor Rekening otomatis.</p>
@@ -491,8 +491,17 @@
                         <input type="file" name="file_csv" required accept=".xlsx,.xls,.csv,.txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-lg p-2">
                     </div>
                     <div class="flex justify-end space-x-2 border-t border-slate-100 pt-4">
-                        <button type="button" onclick="tutupModalImport()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">Proses Import Data</button>
+                        <button type="button" id="btn-cancel-import" onclick="tutupModalImport()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition">Batal</button>
+                        <button type="submit" id="btn-submit-import" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition shadow-sm inline-flex items-center gap-2">
+                            <span id="btn-import-text">Proses Import Data</span>
+                            <span id="btn-import-spinner" class="hidden items-center gap-2">
+                                <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Mengimpor Data...</span>
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -505,6 +514,21 @@
         }
         function tutupModalImport() {
             document.getElementById('modal-import').classList.add('hidden');
+            const btn = document.getElementById('btn-submit-import');
+            const btnCancel = document.getElementById('btn-cancel-import');
+            const text = document.getElementById('btn-import-text');
+            const spinner = document.getElementById('btn-import-spinner');
+            if (btn) {
+                btn.removeAttribute('data-submitting');
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+            if (btnCancel) btnCancel.classList.remove('pointer-events-none', 'opacity-50');
+            if (text) text.classList.remove('hidden');
+            if (spinner) {
+                spinner.classList.add('hidden');
+                spinner.classList.remove('inline-flex');
+            }
         }
 
         // =====================================================================
@@ -595,6 +619,33 @@
             btn.disabled = true;
             btnText.textContent = 'Memproses...';
         });
+
+        // Cegah Double Submit & Tampilkan Spinner pada Form Import
+        const formImport = document.getElementById('form-import-nasabah');
+        if (formImport) {
+            formImport.addEventListener('submit', function (e) {
+                const btn = document.getElementById('btn-submit-import');
+                const btnCancel = document.getElementById('btn-cancel-import');
+                const text = document.getElementById('btn-import-text');
+                const spinner = document.getElementById('btn-import-spinner');
+
+                if (btn && btn.dataset.submitting === 'true') {
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (btn) {
+                    btn.dataset.submitting = 'true';
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                }
+                if (btnCancel) btnCancel.classList.add('pointer-events-none', 'opacity-50');
+                if (text) text.classList.add('hidden');
+                if (spinner) {
+                    spinner.classList.remove('hidden');
+                    spinner.classList.add('inline-flex');
+                }
+            });
+        }
     </script>
 </body>
 </html>
