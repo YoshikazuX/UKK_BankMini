@@ -262,7 +262,137 @@
             </div>
         </div>
 
-        <!-- 4. SECTION BAWAH (2 KOLOM): AKTIVITAS & KEPUTUSAN TERBARU VS REKONSILIASI & KEUANGAN -->
+        <!-- 4. PENGAWASAN DATA REKENING & NASABAH SEKOLAH -->
+        <div id="tabel-nasabah" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold text-slate-900">Pengawasan Rekening & Data Nasabah</h2>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {{ number_format($totalNasabah ?? ($daftarNasabah->total() ?? 0), 0, ',', '.') }} Siswa Terdaftar
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Monitoring saldo tabungan, status rekening, dan riwayat mutasi transaksi seluruh nasabah.</p>
+                </div>
+                <div class="text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
+                    Akumulasi Saldo Nasabah: <strong class="text-emerald-700 font-bold tabular-nums">Rp {{ number_format($totalSaldo ?? 0, 0, ',', '.') }}</strong>
+                </div>
+            </div>
+
+            <!-- Form Pencarian & Filter Kelas -->
+            <form action="{{ url('/supervisor/dashboard') }}#tabel-nasabah" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-5">
+                <div class="sm:col-span-6 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari NIS, Nomor Rekening, atau Nama Siswa..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-slate-900 text-xs sm:text-sm" autocomplete="off">
+                </div>
+
+                <div class="sm:col-span-3">
+                    <select name="kelas" onchange="this.form.submit()" class="w-full py-2 px-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-xs sm:text-sm bg-white text-slate-700">
+                        <option value="all">Semua Kelas</option>
+                        @foreach($daftarKelas ?? [] as $kls)
+                            <option value="{{ $kls }}" {{ request('kelas') === $kls ? 'selected' : '' }}>{{ $kls }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="sm:col-span-3 flex items-center gap-2">
+                    <button type="submit" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-xs sm:text-sm text-center">
+                        Cari / Filter
+                    </button>
+                    @if(request('cari') || (request('kelas') && request('kelas') !== 'all'))
+                        <a href="{{ url('/supervisor/dashboard') }}#tabel-nasabah" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-3 rounded-lg transition text-xs sm:text-sm whitespace-nowrap">
+                            Reset
+                        </a>
+                    @endif
+                </div>
+            </form>
+
+            <!-- Tabel Data Nasabah -->
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                        <tr>
+                            <th class="py-2.5 px-4">Rekening / NIS</th>
+                            <th class="py-2.5 px-4">Nama Lengkap</th>
+                            <th class="py-2.5 px-4">Kelas & Jurusan</th>
+                            <th class="py-2.5 px-4 text-center">Status</th>
+                            <th class="py-2.5 px-4 text-right">Saldo Tabungan</th>
+                            <th class="py-2.5 px-4 text-center">Tindakan Pengawasan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        @forelse ($daftarNasabah as $n)
+                        <tr class="hover:bg-slate-50/70 transition">
+                            <td class="py-3 px-4 font-bold text-slate-900 tabular-nums whitespace-nowrap">
+                                <span class="font-mono">{{ $n->no_rekening }}</span>
+                                <span class="text-slate-400 block text-[11px] font-normal font-mono">NIS: {{ $n->nis }}</span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-semibold text-slate-800 block text-xs sm:text-sm">{{ $n->nama_siswa }}</span>
+                                @if($n->kategori && $n->kategori !== 'siswa')
+                                    <span class="text-[10px] text-slate-500 uppercase tracking-wide">{{ ucfirst($n->kategori) }}</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="font-medium text-slate-800">{{ $n->kelas }}</span>
+                                <span class="text-slate-400 block text-[11px]">{{ $n->jurusan }}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                @if($n->status === 'aktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>
+                                @elseif($n->status === 'nonaktif')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Nonaktif</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">{{ ucfirst($n->status) }}</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">
+                                Rp {{ number_format($n->saldo, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap space-x-1.5">
+                                <a href="{{ url('/buku-tabungan/'.$n->id) }}" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-1.5 px-3 rounded-lg transition text-xs shadow-sm">
+                                    <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                    <span>Buku Mutasi</span>
+                                </a>
+                                <a href="{{ url('/buku-tabungan/cetak/'.$n->id) }}" target="_blank" class="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-1.5 px-2.5 rounded-lg transition text-xs shadow-sm" title="Cetak Buku Tabungan">
+                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                    <span>Cetak</span>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="py-10 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-10 h-10 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    <p class="font-medium text-slate-600">Tidak ada data nasabah yang cocok.</p>
+                                    @if(request('cari') || (request('kelas') && request('kelas') !== 'all'))
+                                        <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih Semua Kelas.</p>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination & Info -->
+            @if(method_exists($daftarNasabah, 'hasPages') && $daftarNasabah->hasPages())
+            <div class="px-4 py-3 bg-slate-50 border border-slate-200 border-t-0 rounded-b-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs mt-0">
+                <span class="text-slate-500">
+                    Menampilkan <strong>{{ $daftarNasabah->firstItem() ?? 0 }}</strong> sampai <strong>{{ $daftarNasabah->lastItem() ?? 0 }}</strong> dari <strong>{{ $daftarNasabah->total() }}</strong> nasabah
+                </span>
+                <div>
+                    {{ $daftarNasabah->links() }}
+                </div>
+            </div>
+            @endif
+        </div>
+
+        <!-- 5. SECTION BAWAH (2 KOLOM): AKTIVITAS & KEPUTUSAN TERBARU VS REKONSILIASI & KEUANGAN -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- AKTIVITAS DAN KEPUTUSAN TERBARU (2 KOLOM) -->
             <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">

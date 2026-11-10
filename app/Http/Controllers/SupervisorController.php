@@ -25,7 +25,7 @@ class SupervisorController extends Controller
     /**
      * Dashboard Utama Pengawasan Operasional Supervisor
      */
-    public function index(DashboardWidgetService $widgetService): View
+    public function index(Request $request, DashboardWidgetService $widgetService): View
     {
         $today = Carbon::today()->toDateString();
 
@@ -36,6 +36,46 @@ class SupervisorController extends Controller
 
         $totalNasabah = $nasabahSummary['total'];
         $totalSaldo = Nasabah::sum('saldo');
+
+        // Filter & Paginasi Data Nasabah untuk Pengawasan Supervisor
+        $rawKatakunci = trim((string) $request->cari);
+        $katakunci = $rawKatakunci;
+
+        if (preg_match('/REK:([a-zA-Z0-9\-\_]+)/i', $rawKatakunci, $mRek)) {
+            $katakunci = trim($mRek[1]);
+        } elseif (preg_match('/NIS:([a-zA-Z0-9\-\_]+)/i', $rawKatakunci, $mNis)) {
+            $katakunci = trim($mNis[1]);
+        }
+
+        $nasabahQuery = Nasabah::query();
+
+        if ($katakunci !== '') {
+            $nasabahQuery->where(function ($sub) use ($katakunci) {
+                $sub->where('nis', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('no_rekening', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('nama_siswa', 'LIKE', '%'.$katakunci.'%')
+                    ->orWhere('kelas', 'LIKE', '%'.$katakunci.'%');
+            });
+        }
+
+        if ($request->filled('kelas') && $request->kelas !== 'all') {
+            $nasabahQuery->where('kelas', $request->kelas);
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $nasabahQuery->where('status', $request->status);
+        }
+
+        $daftarKelas = Nasabah::whereNotNull('kelas')
+            ->where('kelas', '!=', '')
+            ->distinct()
+            ->orderBy('kelas', 'asc')
+            ->pluck('kelas');
+
+        $daftarNasabah = $nasabahQuery->orderBy('nama_siswa', 'asc')
+            ->paginate(10)
+            ->withQueryString()
+            ->fragment('tabel-nasabah');
 
         $brankasHariIni = Brankas::whereDate('tanggal', $today)->first();
         $kasTersedia = $brankasHariIni ? $brankasHariIni->total : 0;
@@ -180,7 +220,9 @@ class SupervisorController extends Controller
             'supervisorActivities',
             'supervisorAlerts',
             'pekerjaanMenungguTindakan',
-            'riwayatAktivitasDanKeputusan'
+            'riwayatAktivitasDanKeputusan',
+            'daftarNasabah',
+            'daftarKelas'
         ));
     }
 
