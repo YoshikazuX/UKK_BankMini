@@ -9,58 +9,58 @@
         <div class="flex items-center justify-between h-20">
             
             <!-- BRAND / LOGO INSTITUSI -->
-            <a href="{{ route('landing') }}" class="flex items-center gap-3.5 group focus:outline-none">
+            <a href="{{ route('landing') }}" class="flex items-center gap-3 group focus:outline-none shrink-0 whitespace-nowrap">
                 <img src="{{ asset('images/SMK_Negeri_1_Bantul_logo.png') }}" 
                      alt="Logo SMK Negeri 1 Bantul" 
-                     class="h-10 sm:h-11 w-auto object-contain" />
+                     class="h-10 sm:h-11 w-auto object-contain shrink-0" />
                 <div class="flex flex-col">
                     <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight leading-snug group-hover:text-emerald-700 transition">
                         LKM Mitra Siswa Abadi
                     </span>
                     <span class="text-xs font-medium text-slate-500 tracking-tight">
-                        SMK Negeri 1 Bantul — Bank Mini Sekolah
+                        SMK Negeri 1 Bantul
                     </span>
                 </div>
             </a>
 
             <!-- DESKTOP NAVIGATION LINKS -->
-            <div class="hidden lg:flex items-center gap-1 xl:gap-2">
-                <a href="{{ route('landing') }}#hero" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+            <div class="hidden lg:flex items-center gap-0.5 xl:gap-1.5">
+                <a href="{{ route('landing') }}#hero" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     Beranda
                 </a>
-                <a href="{{ route('landing') }}#layanan" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+                <a href="{{ route('landing') }}#layanan" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     Layanan
                 </a>
-                <a href="{{ route('landing') }}#platform" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+                <a href="{{ route('landing') }}#platform" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     Platform
                 </a>
-                <a href="{{ route('landing') }}#fitur" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+                <a href="{{ route('landing') }}#fitur" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     Fitur Pengguna
                 </a>
-                <a href="{{ route('landing') }}#keamanan" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+                <a href="{{ route('landing') }}#keamanan" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     Keamanan
                 </a>
-                <a href="{{ route('landing') }}#faq" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
+                <a href="{{ route('landing') }}#faq" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition whitespace-nowrap">
                     FAQ
                 </a>
-                <a href="{{ route('docs.index') }}" class="px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50/80 rounded-lg transition">
+                <a href="{{ route('docs.index') }}" class="px-2.5 xl:px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50/80 rounded-lg transition whitespace-nowrap">
                     Dokumentasi
                 </a>
             </div>
 
             <!-- DESKTOP CTA ACTIONS -->
-            <div class="hidden sm:flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2.5 xl:gap-3 shrink-0">
                 <a href="{{ route('download') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:text-slate-950 bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/80 transition shadow-sm">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="inline-flex items-center gap-2 px-3.5 xl:px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:text-slate-950 bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/80 transition shadow-sm whitespace-nowrap shrink-0">
+                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>Unduh APK</span>
                 </a>
                 <a href="{{ route('login') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-sm hover:shadow transition active:scale-[0.99]">
+                   class="inline-flex items-center gap-2 px-3.5 xl:px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-sm hover:shadow transition active:scale-[0.99] whitespace-nowrap shrink-0">
                     <span>Masuk Dashboard</span>
-                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                 </a>
