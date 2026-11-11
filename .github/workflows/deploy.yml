@@ -93,6 +93,9 @@ jobs:
           test -f public/index.php
           test -f bootstrap/app.php
           test -f public/build/manifest.json
+          test -f resources/views/layouts/docs.blade.php
+          test -f resources/views/components/docs/heading.blade.php
+          test -f resources/views/docs/pages/getting-started/introduction.blade.php
           echo "All deployment files verified."
 
       # ==========================================
@@ -122,7 +125,8 @@ jobs:
             **/tests/**
             **/.github/**
             **/phpunit.xml
-            **/docs/**
+            docs/**
+            vendor_release/**/docs/**
             **/.agents/**
             **/.ai/**
             **/*.md
