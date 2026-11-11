@@ -7,7 +7,7 @@
     <tr>
         <td><code>layouts/app.blade.php</code></td>
         <td><code>landing.blade.php</code>, <code>download.blade.php</code></td>
-        <td>Memuat font Plus Jakarta Sans &amp; Figtree, Vite bundle (<code>@vite</code>), Tailwind CDN, serta menyembunyikan navbar internal pada <code>/</code> dan <code>/download</code>.</td>
+        <td>Memuat font Plus Jakarta Sans &amp; Figtree, Vite bundle (<code>@@vite</code>), Tailwind CDN, serta menyembunyikan navbar internal pada <code>/</code> dan <code>/download</code>.</td>
     </tr>
     <tr>
         <td><code>layouts/docs.blade.php</code></td>
@@ -36,9 +36,9 @@
     Proyek menggabungkan dua mekanisme asset styling/scripting yang perlu dipahami pengembang sebelum memodifikasi tampilan:
 </p>
 <ul>
-    <li><strong>Vite Asset Pipeline:</strong> File <code>resources/css/app.css</code> (direktif Tailwind <code>@tailwind base/components/utilities</code> + <code>[x-cloak]</code>) dan <code>resources/js/app.js</code> (inisialisasi <code>Alpine.start()</code>) dikompilasi oleh <strong>Vite 8.0.0</strong> + <strong>Tailwind CSS 3.4.17</strong> ke <code>public/build/manifest.json</code>.</li>
+    <li><strong>Vite Asset Pipeline:</strong> File <code>resources/css/app.css</code> (direktif Tailwind <code>@tailwind base/components/utilities</code> + <code>[x-cloak]</code>) dan <code>resources/js/app.js</code> (inisialisasi <code>Alpine.start()</code>) dikompilasi oleh <strong>Vite 8.2.1</strong> (<code>^8.0.0</code>) + <strong>Tailwind CSS 3.4.19</strong> (<code>^3.4.17</code>) ke <code>public/build/manifest.json</code>.</li>
     <li><strong>Tailwind CDN &amp; Pustaka Browser:</strong> Sebagian besar halaman dashboard internal (<code>admin/dashboard</code>, <code>teller/dashboard</code>, <code>supervisor/dashboard</code>, <code>nasabah/dashboard</code>) serta <code>auth/login.blade.php</code> dan <code>layouts/app.blade.php</code> masih menyertakan <code>https://cdn.tailwindcss.com</code>, sedangkan <code>teller/dashboard.blade.php</code> memuat <code>html5-qrcode@2.3.8</code> untuk kamera pemindai QR di loket kasir.</li>
-    <li><strong>Konfigurasi Konflik Nol pada Documentation Center:</strong> Layout <code>layouts/docs.blade.php</code> murni mengandalkan bundle lokal <code>@vite(['resources/css/app.css', 'resources/js/app.js'])</code> dan utilitas Tailwind v3.4 tanpa menyentuh <code>layouts/app.blade.php</code> maupun view dashboard yang sudah ada.</li>
+    <li><strong>Konfigurasi Konflik Nol pada Documentation Center:</strong> Layout <code>layouts/docs.blade.php</code> murni mengandalkan bundle lokal <code>@@vite(['resources/css/app.css', 'resources/js/app.js'])</code> dan utilitas Tailwind v3.4 tanpa menyentuh <code>layouts/app.blade.php</code> maupun view dashboard yang sudah ada.</li>
 </ul>
 
 <x-docs.heading id="design-system-hanbank" level="2">Design System &amp; Palet Warna HANBANK</x-docs.heading>

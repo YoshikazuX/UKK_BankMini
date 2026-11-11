@@ -74,7 +74,7 @@
 <ul>
     <li><strong>Konsistensi Visual Web &amp; Mobile:</strong> Seluruh antarmuka memakai identitas warna yang seragam: latar terang bersih (<code>#F8FAFC</code>), permukaan putih ber-hairline border (<code>#E2E8F0</code>), warna institusional Navy/Slate (<code>#0F172A</code> / <code>#101B2D</code>), aksen Emerald/Teal (<code>#10B981</code> / <code>#19C9A3</code>), font <code>Plus Jakarta Sans</code>, dan <code>tabular-nums</code> untuk seluruh angka nominal rupiah.</li>
     <li><strong>Kegunaan Operasional:</strong> Dashboard loket teller melindungi privasi nasabah dengan tidak menampilkan seluruh daftar siswa sebelum discan/dicari; halaman slip/buku tabungan memiliki layout cetak (<code>no-print</code>) dengan angka terbilang otomatis; navbar web menyediakan lencana hitungan notifikasi serta drawer responsif mobile.</li>
-    <li><strong>Catatan Teknis Frontend:</strong> Masih adanya pemuatan ganda antara Vite bundle (<code>@vite</code>) pada landing/docs dengan <code>cdn.tailwindcss.com</code> pada sebagian besar view dashboard internal membuat tampilan sangat bergantung pada koneksi internet eksternal apabila pengguna membuka dashboard loket secara luring/LAN murni.</li>
+    <li><strong>Catatan Teknis Frontend:</strong> Masih adanya pemuatan ganda antara Vite bundle (<code>@@vite</code>) pada landing/docs dengan <code>cdn.tailwindcss.com</code> pada sebagian besar view dashboard internal membuat tampilan sangat bergantung pada koneksi internet eksternal apabila pengguna membuka dashboard loket secara luring/LAN murni.</li>
 </ul>
 
 <x-docs.heading id="integration-evaluation" level="2">5. Integration Evaluation</x-docs.heading>
