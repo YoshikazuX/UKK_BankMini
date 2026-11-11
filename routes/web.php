@@ -12,6 +12,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvalisPetugasController;
 use App\Http\Controllers\BukuTabunganController;
 use App\Http\Controllers\DailyReportController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NasabahController;
 use App\Http\Controllers\PageController;
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'landing'])->name('landing');
 
 Route::get('/download', [PageController::class, 'download'])->name('download');
+
+Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
+Route::get('/docs/search', [DocsController::class, 'search'])->name('docs.search');
+Route::get('/docs/{section}/{page}', [DocsController::class, 'show'])->name('docs.show');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);

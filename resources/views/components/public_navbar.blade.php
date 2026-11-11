@@ -43,6 +43,9 @@
                 <a href="{{ route('landing') }}#faq" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition">
                     FAQ
                 </a>
+                <a href="{{ route('docs.index') }}" class="px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50/80 rounded-lg transition">
+                    Dokumentasi
+                </a>
             </div>
 
             <!-- DESKTOP CTA ACTIONS -->
@@ -113,6 +116,9 @@
             </a>
             <a href="{{ route('landing') }}#faq" @click="mobileMenuOpen = false" class="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition">
                 FAQ
+            </a>
+            <a href="{{ route('docs.index') }}" @click="mobileMenuOpen = false" class="col-span-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100/70 transition">
+                Pusat Dokumentasi (Docs)
             </a>
         </div>
 
