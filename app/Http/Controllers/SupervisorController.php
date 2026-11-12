@@ -117,6 +117,7 @@ class SupervisorController extends Controller
             ->get();
 
         // 5 Notifikasi Pekerjaan Terkini
+        /** @var User|null $user */
         $user = Auth::user();
         $notifikasiTerbaru = $user ? $user->notifications()->take(5)->get() : collect();
 
