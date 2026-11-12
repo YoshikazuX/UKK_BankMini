@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\NasabahController;
 use App\Models\Nasabah;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,6 +74,45 @@ class NasabahImportExcelTest extends TestCase
 
         $this->assertNotNull($siswa2);
         $this->assertEquals('Siswa Excel Dua', $siswa2->nama_siswa);
+
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+    }
+
+    public function test_admin_can_import_nasabah_from_native_minimal_xlsx(): void
+    {
+        // Gunakan reflection untuk menguji generateMinimalXlsx
+        $tempPath = tempnam(sys_get_temp_dir(), 'test_min_xlsx_').'.xlsx';
+        $rows = [
+            ['NIS', 'Nama Lengkap', 'Kelas', 'Jurusan', 'Status'],
+            ['19099', 'Siswa Native Satu', 'XI RPL 1', 'Rekayasa Perangkat Lunak', 'aktif'],
+        ];
+
+        $ref = new \ReflectionClass(NasabahController::class);
+        $method = $ref->getMethod('generateMinimalXlsx');
+        $method->setAccessible(true);
+        $method->invoke(null, $rows, $tempPath);
+
+        $uploadedFile = new UploadedFile(
+            $tempPath,
+            'data_siswa_native.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->actingAs($this->admin)->post('/admin/import-nasabah', [
+            'file_csv' => $uploadedFile,
+            'status_default' => 'auto',
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $siswa = Nasabah::where('nis', '19099')->first();
+        $this->assertNotNull($siswa);
+        $this->assertEquals('Siswa Native Satu', $siswa->nama_siswa);
+        $this->assertEquals('aktif', $siswa->status);
 
         if (file_exists($tempPath)) {
             unlink($tempPath);

@@ -20,9 +20,27 @@ class AuthNasabahController extends Controller
             'password' => 'required',
         ]);
 
-        $nasabah = Nasabah::where('username', $request->username)->first();
+        $nasabah = Nasabah::where('username', $request->username)
+            ->orWhere('nis', $request->username)
+            ->orWhere('no_rekening', $request->username)
+            ->first();
 
-        if (! $nasabah || ! Hash::check($request->password, $nasabah->password)) {
+        if (! $nasabah) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Username atau password salah!',
+            ], 401);
+        }
+
+        // Cek jika status akun nasabah masih nonaktif
+        if ($nasabah->status === 'nonaktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minta admin untuk mengaktifkan akun',
+            ], 403);
+        }
+
+        if (! Hash::check($request->password, $nasabah->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Username atau password salah!',

@@ -16,6 +16,7 @@ use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NasabahController extends Controller
@@ -164,7 +165,7 @@ class NasabahController extends Controller
         $kategori = $validated['kategori'] ?? 'siswa';
         $no_rekening = $request->filled('no_rekening') ? $request->no_rekening : self::generateNoRekening($validated['jurusan'], $kategori, $validated['nis']);
         $username = $validated['username'] ?? $validated['nis'];
-        $password = $validated['password'] ?? '123456';
+        $password = $validated['password'] ?? 'password';
 
         $nasabah = Nasabah::create([
             'no_rekening' => $no_rekening,
@@ -237,11 +238,16 @@ class NasabahController extends Controller
             'username' => $nasabah->username,
         ];
 
+        $oldStatus = $nasabah->status;
         $nasabah->nama_siswa = $validated['nama_siswa'];
         $nasabah->kelas = $validated['kelas'];
         $nasabah->jurusan = $validated['jurusan'];
         if (isset($validated['status'])) {
             $nasabah->status = $validated['status'];
+            // Jika akun diaktifkan dari nonaktif, otomatis generate kata sandi default "password" jika tidak diisi
+            if ($validated['status'] === 'aktif' && $oldStatus !== 'aktif' && empty($validated['password'])) {
+                $nasabah->password = 'password';
+            }
         }
         if (isset($validated['kategori'])) {
             $nasabah->kategori = $validated['kategori'];
@@ -428,6 +434,268 @@ class NasabahController extends Controller
      * Algoritma Pembuatan Nomor Rekening Baru Otomatis
      * Mendukung Format JURUSAN-NIS (Contoh: RPL-17763, AKL-18001) serta Berbasis Urutan Standar
      */
+    /**
+     * Konversi kode huruf kolom Excel (A, B, ..., Z, AA, AB) ke index integer 0-based.
+     */
+    private static function colLettersToIndex(string $col): int
+    {
+        $col = strtoupper($col);
+        $len = strlen($col);
+        $index = 0;
+        for ($i = 0; $i < $len; $i++) {
+            $index = $index * 26 + (ord($col[$i]) - 64);
+        }
+
+        return $index - 1;
+    }
+
+    /**
+     * Parser native file Excel .xlsx berbasis ZipArchive dan XMLReader streaming.
+     * Sangat hemat memori (<2MB) dan tidak memerlukan library eksternal (PhpSpreadsheet).
+     *
+     * @return array<int, array<int, string>>
+     */
+    private static function parseXlsxNative(string $filePath): array
+    {
+        $zip = new \ZipArchive;
+        if ($zip->open($filePath) !== true) {
+            throw new \RuntimeException('Gagal membuka file arsip Excel (.xlsx). Pastikan file tidak rusak.');
+        }
+
+        // 1. Ekstraksi Shared Strings jika ada (penyimpanan teks berulang Excel)
+        $sharedStrings = [];
+        $sharedXmlContent = $zip->getFromName('xl/sharedStrings.xml');
+        if ($sharedXmlContent !== false) {
+            $xml = new \XMLReader;
+            $xml->xml($sharedXmlContent);
+            while ($xml->read()) {
+                if ($xml->nodeType === \XMLReader::ELEMENT && $xml->name === 'si') {
+                    $node = new \SimpleXMLElement($xml->readOuterXml());
+                    $text = '';
+                    if (isset($node->t)) {
+                        $text = (string) $node->t;
+                    } else {
+                        $tNodes = $node->xpath('.//*[local-name()="t"]') ?: [];
+                        foreach ($tNodes as $t) {
+                            $text .= (string) $t;
+                        }
+                    }
+                    $sharedStrings[] = $text;
+                }
+            }
+            $xml->close();
+        }
+
+        // 2. Petakan nama sheet dari workbook.xml dan relasi
+        $sheetMap = [];
+        $workbookXml = $zip->getFromName('xl/workbook.xml');
+        $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+
+        $relMap = [];
+        if ($relsXml !== false) {
+            $rels = @simplexml_load_string($relsXml);
+            if ($rels) {
+                foreach ($rels->Relationship as $rel) {
+                    $id = (string) $rel['Id'];
+                    $target = (string) $rel['Target'];
+                    if (str_starts_with($target, '/')) {
+                        $target = ltrim($target, '/');
+                    } elseif (! str_starts_with($target, 'xl/')) {
+                        $target = 'xl/'.$target;
+                    }
+                    $relMap[$id] = $target;
+                }
+            }
+        }
+
+        if ($workbookXml !== false) {
+            $wb = @simplexml_load_string($workbookXml);
+            if ($wb && isset($wb->sheets->sheet)) {
+                foreach ($wb->sheets->sheet as $s) {
+                    $name = (string) $s['name'];
+                    $rId = (string) ($s->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'] ?? '');
+                    $targetFile = $relMap[$rId] ?? '';
+                    if ($targetFile !== '') {
+                        $sheetMap[$targetFile] = $name;
+                    }
+                }
+            }
+        }
+
+        if (empty($sheetMap)) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                if (preg_match('#^xl/worksheets/sheet\d+\.xml$#i', $filename)) {
+                    $sheetMap[$filename] = pathinfo($filename, PATHINFO_FILENAME);
+                }
+            }
+        }
+
+        $allRows = [];
+
+        // 3. Baca tiap worksheet secara streaming
+        foreach ($sheetMap as $sheetPath => $sheetName) {
+            $sheetContent = $zip->getFromName($sheetPath);
+            if ($sheetContent === false) {
+                continue;
+            }
+
+            // Jika nama sheet mencerminkan tingkatan kelas (misal: "X RPL 1", "XI AKL 2"), sisipkan baris penanda kelas
+            if (preg_match('/\b(X|XI|XII|10|11|12)\b/i', $sheetName) && ! preg_match('/^sheet\d+$/i', $sheetName)) {
+                $allRows[] = ['KELAS : '.$sheetName];
+            }
+
+            $xml = new \XMLReader;
+            $xml->xml($sheetContent);
+
+            while ($xml->read()) {
+                if ($xml->nodeType === \XMLReader::ELEMENT && $xml->name === 'row') {
+                    $rowXml = $xml->readOuterXml();
+                    $rowElement = @simplexml_load_string($rowXml);
+                    if (! $rowElement) {
+                        continue;
+                    }
+
+                    $rowCells = [];
+                    $maxCol = -1;
+
+                    foreach ($rowElement->c as $cell) {
+                        $r = (string) ($cell['r'] ?? '');
+                        preg_match('/^([A-Z]+)(\d+)/', strtoupper($r), $matches);
+                        $colLetters = $matches[1] ?? 'A';
+                        $colIndex = self::colLettersToIndex($colLetters);
+
+                        $type = (string) ($cell['t'] ?? '');
+                        $val = '';
+
+                        if ($type === 's') {
+                            $sIndex = (int) ($cell->v ?? 0);
+                            $val = $sharedStrings[$sIndex] ?? '';
+                        } elseif ($type === 'inlineStr') {
+                            $val = isset($cell->is->t) ? (string) $cell->is->t : (string) (($cell->xpath('.//*[local-name()="t"]')[0] ?? ''));
+                        } elseif (isset($cell->v)) {
+                            $val = (string) $cell->v;
+                        }
+
+                        $rowCells[$colIndex] = $val;
+                        if ($colIndex > $maxCol) {
+                            $maxCol = $colIndex;
+                        }
+                    }
+
+                    if ($maxCol >= 0) {
+                        $fullRow = [];
+                        for ($c = 0; $c <= $maxCol; $c++) {
+                            $fullRow[$c] = $rowCells[$c] ?? '';
+                        }
+                        $allRows[] = $fullRow;
+                    }
+                }
+            }
+            $xml->close();
+        }
+
+        $zip->close();
+
+        return $allRows;
+    }
+
+    /**
+     * Generator template file Excel (.xlsx) murni dengan ZipArchive tanpa ketergantungan library eksternal.
+     *
+     * @param  array<int, array<int, string>>  $rows
+     */
+    private static function generateMinimalXlsx(array $rows, string $outputPath): void
+    {
+        $zip = new \ZipArchive;
+        if ($zip->open($outputPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Gagal membuat file template Excel (.xlsx).');
+        }
+
+        $sharedStrings = [];
+        $stringMap = [];
+        foreach ($rows as $r) {
+            foreach ($r as $val) {
+                $s = (string) $val;
+                if (! isset($stringMap[$s])) {
+                    $stringMap[$s] = count($sharedStrings);
+                    $sharedStrings[] = $s;
+                }
+            }
+        }
+
+        // [Content_Types].xml
+        $contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            .'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            .'<Default Extension="xml" ContentType="application/xml"/>'
+            .'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            .'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            .'<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+            .'</Types>';
+        $zip->addFromString('[Content_Types].xml', $contentTypes);
+
+        // _rels/.rels
+        $rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            .'</Relationships>';
+        $zip->addFromString('_rels/.rels', $rels);
+
+        // xl/_rels/workbook.xml.rels
+        $wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            .'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+            .'</Relationships>';
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $wbRels);
+
+        // xl/workbook.xml
+        $wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            .'<sheets>'
+            .'<sheet name="Template Import Nasabah" sheetId="1" r:id="rId1"/>'
+            .'</sheets>'
+            .'</workbook>';
+        $zip->addFromString('xl/workbook.xml', $wb);
+
+        // xl/sharedStrings.xml
+        $count = count($sharedStrings);
+        $ssXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'."\n";
+        $ssXml .= '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="'.$count.'" uniqueCount="'.$count.'">';
+        foreach ($sharedStrings as $str) {
+            $ssXml .= '<si><t>'.htmlspecialchars($str, ENT_XML1, 'UTF-8').'</t></si>';
+        }
+        $ssXml .= '</sst>';
+        $zip->addFromString('xl/sharedStrings.xml', $ssXml);
+
+        // xl/worksheets/sheet1.xml
+        $colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'."\n";
+        $sheetXml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'."\n";
+        $sheetXml .= '  <sheetData>'."\n";
+
+        $rNum = 1;
+        foreach ($rows as $row) {
+            $sheetXml .= '    <row r="'.$rNum.'">'."\n";
+            $cNum = 0;
+            foreach ($row as $val) {
+                $colLetter = $colLetters[$cNum] ?? 'A';
+                $cRef = $colLetter.$rNum;
+                $sIdx = $stringMap[(string) $val];
+                $sheetXml .= '      <c r="'.$cRef.'" t="s"><v>'.$sIdx.'</v></c>'."\n";
+                $cNum++;
+            }
+            $sheetXml .= '    </row>'."\n";
+            $rNum++;
+        }
+        $sheetXml .= '  </sheetData>'."\n";
+        $sheetXml .= '</worksheet>';
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+
+        $zip->close();
+    }
+
     public static function generateNoRekening(string $jurusan, string $kategori = 'siswa', ?string $nis = null): string
     {
         $kode = ($kategori === 'guru_karyawan') ? 'GK' : TerbilangHelper::getKodeJurusan($jurusan);
@@ -525,44 +793,48 @@ class NasabahController extends Controller
         $rows = [];
 
         try {
-            if (in_array($extension, ['xlsx', 'xls'], true)) {
-                // Konfigurasi reader hemat memori: hanya baca data teks murni tanpa load style/font/drawing
-                $reader = IOFactory::createReaderForFile($filePath);
-                if (method_exists($reader, 'setReadDataOnly')) {
-                    $reader->setReadDataOnly(true);
-                }
-                if (method_exists($reader, 'setReadEmptyCells')) {
-                    $reader->setReadEmptyCells(false);
-                }
-
-                $spreadsheet = $reader->load($filePath);
-
-                foreach ($spreadsheet->getAllSheets() as $sheet) {
-                    $highestRow = $sheet->getHighestDataRow();
-                    if ($highestRow < 1) {
-                        continue;
+            if ($extension === 'xlsx') {
+                // Gunakan parser native streaming yang sangat hemat memori (<2MB) dan tanpa ketergantungan library eksternal (PhpSpreadsheet)
+                $rows = self::parseXlsxNative($filePath);
+            } elseif ($extension === 'xls') {
+                // Untuk file format binary lama (.xls), gunakan IOFactory jika library tersedia di server
+                if (class_exists(IOFactory::class)) {
+                    $reader = IOFactory::createReaderForFile($filePath);
+                    if (method_exists($reader, 'setReadDataOnly')) {
+                        $reader->setReadDataOnly(true);
+                    }
+                    if (method_exists($reader, 'setReadEmptyCells')) {
+                        $reader->setReadEmptyCells(false);
                     }
 
-                    $highestCol = $sheet->getHighestDataColumn();
-                    $sheetTitle = trim($sheet->getTitle());
+                    $spreadsheet = $reader->load($filePath);
 
-                    // Jika nama sheet mencerminkan nama kelas (misal: "X RPL 1", "XI AKL 2"), sisipkan baris penanda kelas
-                    if (preg_match('/\b(X|XI|XII|10|11|12)\b/i', $sheetTitle) && ! preg_match('/^sheet\d+$/i', $sheetTitle)) {
-                        $rows[] = ['KELAS : '.$sheetTitle];
+                    foreach ($spreadsheet->getAllSheets() as $sheet) {
+                        $highestRow = $sheet->getHighestDataRow();
+                        if ($highestRow < 1) {
+                            continue;
+                        }
+
+                        $highestCol = $sheet->getHighestDataColumn();
+                        $sheetTitle = trim($sheet->getTitle());
+
+                        if (preg_match('/\b(X|XI|XII|10|11|12)\b/i', $sheetTitle) && ! preg_match('/^sheet\d+$/i', $sheetTitle)) {
+                            $rows[] = ['KELAS : '.$sheetTitle];
+                        }
+
+                        $sheetRows = $sheet->rangeToArray('A1:'.$highestCol.$highestRow, null, true, false, false);
+                        foreach ($sheetRows as $r) {
+                            $rows[] = $r;
+                        }
                     }
 
-                    // Ambil data hanya dalam batas sel aktual yang terisi (A1 sampai highest data cell)
-                    $sheetRows = $sheet->rangeToArray('A1:'.$highestCol.$highestRow, null, true, false, false);
-                    foreach ($sheetRows as $r) {
-                        $rows[] = $r;
+                    $spreadsheet->disconnectWorksheets();
+                    unset($spreadsheet, $reader);
+                    if (function_exists('gc_collect_cycles')) {
+                        gc_collect_cycles();
                     }
-                }
-
-                // Bersihkan memori spreadsheet segera setelah pembacaan selesai
-                $spreadsheet->disconnectWorksheets();
-                unset($spreadsheet, $reader);
-                if (function_exists('gc_collect_cycles')) {
-                    gc_collect_cycles();
+                } else {
+                    return back()->with('error', 'Format .xls (Excel 97-2003 lama) tidak didukung langsung oleh server cPanel tanpa terminal. Mohon simpan atau ekspor file Anda ke format .xlsx (Excel modern) atau .csv lalu unggah kembali.');
                 }
             } else {
                 $handle = fopen($filePath, 'r');
@@ -719,7 +991,7 @@ class NasabahController extends Controller
                         'kelas' => $kelas,
                         'jurusan' => $jurusan,
                         'username' => $nis,
-                        'password' => '123456',
+                        'password' => 'password',
                         'pin_keamanan' => '123456',
                         'saldo' => 0,
                         'status' => $statusNasabah,
@@ -764,7 +1036,7 @@ class NasabahController extends Controller
     }
 
     // FUNGSI DOWNLOAD TEMPLATE EXCEL (.xlsx) ATAU CSV (.csv)
-    public function downloadTemplate(Request $request): StreamedResponse
+    public function downloadTemplate(Request $request): Response
     {
         $columns = ['NIS', 'Nama Lengkap', 'Kelas (Contoh: X RPL 1 / XII RPL 1)', 'Jurusan (Contoh: Rekayasa Perangkat Lunak)', 'Status Opsional (aktif/nonaktif)'];
         $contohData = [
@@ -775,28 +1047,38 @@ class NasabahController extends Controller
 
         // Format Excel (.xlsx)
         if ($request->query('format') === 'xlsx') {
-            $spreadsheet = new Spreadsheet;
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->setTitle('Template Import Nasabah');
+            if (class_exists(Spreadsheet::class) && class_exists(Xlsx::class)) {
+                $spreadsheet = new Spreadsheet;
+                $sheet = $spreadsheet->getActiveSheet();
+                $sheet->setTitle('Template Import Nasabah');
 
-            $sheet->fromArray([$columns], null, 'A1');
-            $sheet->fromArray($contohData, null, 'A2');
+                $sheet->fromArray([$columns], null, 'A1');
+                $sheet->fromArray($contohData, null, 'A2');
 
-            // Auto-size columns
-            foreach (range('A', 'E') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
+                // Auto-size columns
+                foreach (range('A', 'E') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                $response = new StreamedResponse(function () use ($spreadsheet) {
+                    $writer = new Xlsx($spreadsheet);
+                    $writer->save('php://output');
+                });
+
+                $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                $response->headers->set('Content-Disposition', 'attachment; filename="template_import_nasabah.xlsx"');
+                $response->headers->set('Cache-Control', 'max-age=0');
+
+                return $response;
             }
 
-            $response = new StreamedResponse(function () use ($spreadsheet) {
-                $writer = new Xlsx($spreadsheet);
-                $writer->save('php://output');
-            });
+            // Fallback native generator jika pustaka PhpSpreadsheet belum ada di server cPanel
+            $tempFile = tempnam(sys_get_temp_dir(), 'tpl_xlsx_').'.xlsx';
+            self::generateMinimalXlsx(array_merge([$columns], $contohData), $tempFile);
 
-            $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            $response->headers->set('Content-Disposition', 'attachment; filename="template_import_nasabah.xlsx"');
-            $response->headers->set('Cache-Control', 'max-age=0');
-
-            return $response;
+            return response()->download($tempFile, 'template_import_nasabah.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
         }
 
         // Format CSV Standar

@@ -61,40 +61,50 @@ class UniversalAuthController extends Controller
             ->orWhere('no_rekening', $identity)
             ->first();
 
-        if ($nasabah && Hash::check($password, $nasabah->password)) {
-            // Validasi status rekening
-            if (strtolower((string) $nasabah->status) !== 'aktif') {
+        if ($nasabah) {
+            // Validasi status akun nasabah: jika nonaktif, tolak dengan notifikasi khusus
+            if ($nasabah->status === 'nonaktif') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Akun rekening Anda berstatus nonaktif atau terblokir. Silakan hubungi loket Bank Mini.',
+                    'message' => 'Minta admin untuk mengaktifkan akun',
                 ], 403);
             }
 
-            $token = $nasabah->createToken('nasabah-token', ['role:nasabah'])->plainTextToken;
+            if (Hash::check($password, $nasabah->password)) {
+                // Validasi status rekening
+                if (strtolower((string) $nasabah->status) !== 'aktif') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Akun rekening Anda berstatus nonaktif atau terblokir. Silakan hubungi loket Bank Mini.',
+                    ], 403);
+                }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Login Nasabah Berhasil',
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'role' => 'nasabah',
-                'user_type' => 'nasabah',
-                'data' => [
-                    'id_nasabah' => $nasabah->id,
-                    'id' => $nasabah->id,
-                    'username' => $nasabah->username,
-                    'nama_siswa' => $nasabah->nama_siswa,
-                    'nama_lengkap' => $nasabah->nama_siswa,
-                    'no_rekening' => $nasabah->no_rekening,
-                    'nis' => $nasabah->nis,
-                    'kelas' => $nasabah->kelas,
-                    'jurusan' => $nasabah->jurusan,
-                    'saldo' => (int) $nasabah->saldo,
-                    'total_saldo' => (int) $nasabah->saldo,
-                    'status' => $nasabah->status,
-                    'kategori' => $nasabah->kategori ?? 'SISWA',
-                ],
-            ], 200);
+                $token = $nasabah->createToken('nasabah-token', ['role:nasabah'])->plainTextToken;
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login Nasabah Berhasil',
+                    'token' => $token,
+                    'token_type' => 'Bearer',
+                    'role' => 'nasabah',
+                    'user_type' => 'nasabah',
+                    'data' => [
+                        'id_nasabah' => $nasabah->id,
+                        'id' => $nasabah->id,
+                        'username' => $nasabah->username,
+                        'nama_siswa' => $nasabah->nama_siswa,
+                        'nama_lengkap' => $nasabah->nama_siswa,
+                        'no_rekening' => $nasabah->no_rekening,
+                        'nis' => $nasabah->nis,
+                        'kelas' => $nasabah->kelas,
+                        'jurusan' => $nasabah->jurusan,
+                        'saldo' => (int) $nasabah->saldo,
+                        'total_saldo' => (int) $nasabah->saldo,
+                        'status' => $nasabah->status,
+                        'kategori' => $nasabah->kategori ?? 'SISWA',
+                    ],
+                ], 200);
+            }
         }
 
         // 3. Kredensial tidak valid

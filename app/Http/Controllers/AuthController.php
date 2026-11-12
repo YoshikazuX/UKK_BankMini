@@ -57,11 +57,54 @@ class AuthController extends Controller
         $credentials = $loginField;
 
         $remember = $request->boolean('remember');
+        $identifier = $credentials['username'] ?? $credentials['email'] ?? '';
 
+        // 1. Cek akun Nasabah: jika berstatus nonaktif, tolak login
+        $nasabah = Nasabah::where('username', $identifier)
+            ->orWhere('nis', $identifier)
+            ->orWhere('no_rekening', $identifier)
+            ->orWhere('email', $identifier)
+            ->first();
+
+        if ($nasabah && $nasabah->status === 'nonaktif') {
+            return back()
+                ->with('error', 'Minta admin untuk mengaktifkan akun')
+                ->withInput($request->only('username', 'email'));
+        }
+
+        // 2. Cek akun User (petugas/admin) jika berstatus nonaktif
+        $userCheck = User::where('username', $identifier)
+            ->orWhere('email', $identifier)
+            ->first();
+
+        if ($userCheck && ($userCheck->status ?? 'aktif') === 'nonaktif') {
+            return back()
+                ->with('error', 'Minta admin untuk mengaktifkan akun')
+                ->withInput($request->only('username', 'email'));
+        }
+
+        // 3. Autentikasi User (petugas/admin)
         if (Auth::attempt($credentials, $remember)) {
+            $user = Auth::user();
+            if (($user->status ?? 'aktif') === 'nonaktif') {
+                Auth::logout();
+
+                return back()
+                    ->with('error', 'Minta admin untuk mengaktifkan akun')
+                    ->withInput($request->only('username', 'email'));
+            }
+
             $request->session()->regenerate();
 
-            return $this->redirectBasedOnRole(Auth::user());
+            return $this->redirectBasedOnRole($user);
+        }
+
+        // 4. Autentikasi Nasabah (portal nasabah web)
+        if ($nasabah && Hash::check($credentials['password'], $nasabah->password)) {
+            Auth::login($nasabah, $remember);
+            $request->session()->regenerate();
+
+            return redirect()->intended('/nasabah/dashboard');
         }
 
         return back()

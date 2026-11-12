@@ -145,7 +145,13 @@ class BukuTabunganController extends Controller
 
         $nasabah = Nasabah::findOrFail($id);
         $oldStatus = $nasabah->status;
-        $nasabah->update(['status' => $validated['status']]);
+
+        $updateData = ['status' => $validated['status']];
+        if ($validated['status'] === 'aktif' && $oldStatus !== 'aktif') {
+            $updateData['password'] = 'password';
+        }
+
+        $nasabah->update($updateData);
 
         AuditHelper::log(
             jenisAktivitas: 'UBAH_STATUS_REKENING',
@@ -156,7 +162,7 @@ class BukuTabunganController extends Controller
         );
 
         $statusLabel = match ($nasabah->status) {
-            'aktif' => 'diaktifkan',
+            'aktif' => 'diaktifkan (kata sandi di-generate ke default "password")',
             'nonaktif' => 'dinonaktifkan',
             'alumni' => 'diarsipkan sebagai alumni',
             default => $nasabah->status,

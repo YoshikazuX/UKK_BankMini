@@ -138,7 +138,6 @@ Akses portal melalui peramban web di `http://127.0.0.1:8000`.
 | **Administrator** | `admin` | `password` / `admin123` | Konfigurasi sistem, direktori, audit, impor massal. |
 | **Supervisor** | `supervisor` | `password` / `supervisor123` | Otorisasi kas, closing harian, laporan akuntansi. |
 | **Teller Loket** | `teller` | `password` / `teller123` | Layanan setor, tarik, scanner QR, cetak slip kasir. |
-| **Avalis (Piket)** | `avalis` | `password` / `avalis123` | Rekapitulasi tabungan rombel dan monitoring binaan. |
 | **Nasabah (Siswa)** | Sesuai NIS (contoh: `18910`, `17763`) | `123456` *(PIN: `123456`)* | Akses mobile banking, cek saldo, mutasi, kartu QR. |
 
 ---

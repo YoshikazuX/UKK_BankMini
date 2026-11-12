@@ -50,6 +50,19 @@ class Nasabah extends Authenticatable
     ];
 
     /**
+     * Bootstrap the model and its traits.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Nasabah $nasabah) {
+            // Saat akun nasabah diaktifkan dari status nonaktif/lainnya, langsung generate password "password" default
+            if ($nasabah->isDirty('status') && $nasabah->status === 'aktif' && $nasabah->getOriginal('status') !== 'aktif' && ! $nasabah->isDirty('password')) {
+                $nasabah->password = 'password';
+            }
+        });
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

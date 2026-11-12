@@ -618,7 +618,7 @@
                 title: isNonaktif ? 'Nonaktifkan Rekening Nasabah?' : 'Aktifkan Kembali Rekening Nasabah?',
                 message: isNonaktif
                     ? 'Apakah Anda yakin ingin menonaktifkan rekening milik ' + nama + ' (' + noRekening + ')? Nasabah tidak dapat melakukan transaksi tarik, setor, maupun mutasi selama status nonaktif.'
-                    : 'Apakah Anda yakin ingin mengaktifkan kembali rekening milik ' + nama + ' (' + noRekening + ')? Rekening akan dapat digunakan kembali secara penuh.',
+                    : 'Apakah Anda yakin ingin mengaktifkan rekening milik ' + nama + ' (' + noRekening + ')? Rekening akan aktif dan kata sandi login nasabah otomatis di-generate ke default "password".',
                 btnClass: isNonaktif
                     ? 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2'
                     : 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2',
