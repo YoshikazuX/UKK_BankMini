@@ -8,12 +8,14 @@ use App\Helpers\TerbilangHelper;
 use App\Models\Nasabah;
 use App\Models\PinResetRequest;
 use App\Models\Transaksi;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NasabahController extends Controller
@@ -498,40 +500,94 @@ class NasabahController extends Controller
         return $candidate;
     }
 
-    // FUNGSI IMPORT DARI EXCEL (CSV) / DOKUMEN DAFTAR HADIR SISWA
+    // FUNGSI IMPORT DARI EXCEL (.xlsx, .xls) / CSV / DOKUMEN DAFTAR HADIR SISWA
     public function importCsv(Request $request): RedirectResponse
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
+
         $request->validate([
             'file_csv' => 'required|file|max:10240',
             'status_default' => 'nullable|in:auto,nonaktif,aktif',
         ], [
-            'file_csv.required' => 'Pilih file CSV atau TXT yang ingin diimpor.',
+            'file_csv.required' => 'Pilih file Excel (.xlsx, .xls) atau CSV (.csv, .txt) yang ingin diimpor.',
             'file_csv.max' => 'Ukuran file maksimal adalah 10MB.',
         ]);
 
         $file = $request->file('file_csv');
         $extension = strtolower($file->getClientOriginalExtension());
-        if (! in_array($extension, ['csv', 'txt'], true)) {
-            return back()->with('error', 'Format file tidak didukung (.'.$extension.'). Mohon simpan file Excel Anda sebagai format CSV (.csv) atau TXT sebelum diunggah.');
+        if (! in_array($extension, ['xlsx', 'xls', 'csv', 'txt'], true)) {
+            return back()->with('error', 'Format file tidak didukung (.'.$extension.'). Mohon unggah file format Excel (.xlsx, .xls) atau CSV (.csv, .txt).');
         }
 
         $statusDefault = $request->input('status_default', 'auto');
         $filePath = $file->getPathname();
-        
-        $handle = fopen($filePath, 'r');
-        if (! $handle) {
-            return back()->with('error', 'Gagal membuka file dokumen yang diunggah.');
-        }
+        $rows = [];
 
-        // Auto-detect delimiter (; or , or \t)
-        $firstLine = fgets($handle);
-        $delimiter = ',';
-        if (substr_count($firstLine, ';') > substr_count($firstLine, ',')) {
-            $delimiter = ';';
-        } elseif (substr_count($firstLine, "\t") > substr_count($firstLine, ',')) {
-            $delimiter = "\t";
+        try {
+            if (in_array($extension, ['xlsx', 'xls'], true)) {
+                // Konfigurasi reader hemat memori: hanya baca data teks murni tanpa load style/font/drawing
+                $reader = IOFactory::createReaderForFile($filePath);
+                if (method_exists($reader, 'setReadDataOnly')) {
+                    $reader->setReadDataOnly(true);
+                }
+                if (method_exists($reader, 'setReadEmptyCells')) {
+                    $reader->setReadEmptyCells(false);
+                }
+
+                $spreadsheet = $reader->load($filePath);
+
+                foreach ($spreadsheet->getAllSheets() as $sheet) {
+                    $highestRow = $sheet->getHighestDataRow();
+                    if ($highestRow < 1) {
+                        continue;
+                    }
+
+                    $highestCol = $sheet->getHighestDataColumn();
+                    $sheetTitle = trim($sheet->getTitle());
+
+                    // Jika nama sheet mencerminkan nama kelas (misal: "X RPL 1", "XI AKL 2"), sisipkan baris penanda kelas
+                    if (preg_match('/\b(X|XI|XII|10|11|12)\b/i', $sheetTitle) && ! preg_match('/^sheet\d+$/i', $sheetTitle)) {
+                        $rows[] = ['KELAS : '.$sheetTitle];
+                    }
+
+                    // Ambil data hanya dalam batas sel aktual yang terisi (A1 sampai highest data cell)
+                    $sheetRows = $sheet->rangeToArray('A1:'.$highestCol.$highestRow, null, true, false, false);
+                    foreach ($sheetRows as $r) {
+                        $rows[] = $r;
+                    }
+                }
+
+                // Bersihkan memori spreadsheet segera setelah pembacaan selesai
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet, $reader);
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+            } else {
+                $handle = fopen($filePath, 'r');
+                if (! $handle) {
+                    return back()->with('error', 'Gagal membuka file dokumen yang diunggah.');
+                }
+
+                // Auto-detect delimiter (; or , or \t)
+                $firstLine = fgets($handle);
+                $delimiter = ',';
+                if (substr_count($firstLine, ';') > substr_count($firstLine, ',')) {
+                    $delimiter = ';';
+                } elseif (substr_count($firstLine, "\t") > substr_count($firstLine, ',')) {
+                    $delimiter = "\t";
+                }
+                rewind($handle);
+
+                while (($row = fgetcsv($handle, 2000, $delimiter, '"', '\\')) !== false) {
+                    $rows[] = $row;
+                }
+                fclose($handle);
+            }
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal membaca isi file dokumen: '.$e->getMessage());
         }
-        rewind($handle);
 
         $sukses = 0;
         $diperbarui = 0;
@@ -541,12 +597,26 @@ class NasabahController extends Controller
 
         DB::beginTransaction();
         try {
-            while (($row = fgetcsv($handle, 2000, $delimiter, '"', "\\")) !== false) {
-                // Bersihkan setiap kolom dari whitespace
-                $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+            foreach ($rows as $row) {
+                // Bersihkan setiap kolom dari whitespace dan normalisasi angka (float/int ke string)
+                $row = array_map(function ($v) {
+                    if ($v === null || $v === '') {
+                        return '';
+                    }
+                    if (is_float($v) && floor($v) == $v) {
+                        return (string) (int) $v;
+                    }
+
+                    return trim((string) $v);
+                }, (array) $row);
+
+                // Buang kolom kosong di awal baris jika ada (misal tabel dimulai di kolom B)
+                while (! empty($row) && reset($row) === '') {
+                    array_shift($row);
+                }
 
                 // Lewati baris kosong
-                if (empty(array_filter($row, fn($v) => $v !== null && $v !== ''))) {
+                if (empty(array_filter($row, fn ($v) => $v !== null && $v !== ''))) {
                     continue;
                 }
 
@@ -556,6 +626,7 @@ class NasabahController extends Controller
                 if (preg_match('/KELAS\s*:\s*([^,\r\n;]+)/i', $rowJoined, $m)) {
                     $currentKelas = trim($m[1]);
                     $currentJurusan = TerbilangHelper::getNamaJurusan($currentKelas);
+
                     continue;
                 }
 
@@ -577,25 +648,25 @@ class NasabahController extends Controller
                     is_numeric($row[0]) &&
                     is_numeric($row[1]) &&
                     strlen($row[1]) >= 4 &&
-                    !empty($row[2])
+                    ! empty($row[2])
                 ) {
-                    $nis = $row[1];
+                    $nis = (string) $row[1];
                     $nama = rtrim($row[2], " *\t\n\r\0\x0B");
                     $kelas = $currentKelas ?: '-';
                     $jurusan = $currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas);
                 }
-                // 3. Format CSV Standar (Col 0: NIS, Col 1: Nama, Col 2: Kelas, Col 3: Jurusan, Col 4: Status)
+                // 3. Format CSV / Excel Standar (Col 0: NIS, Col 1: Nama, Col 2: Kelas, Col 3: Jurusan, Col 4: Status)
                 elseif (
                     isset($row[0], $row[1]) &&
-                    !empty($row[0]) &&
-                    !empty($row[1])
+                    ! empty($row[0]) &&
+                    ! empty($row[1])
                 ) {
                     // Cek jika ini baris header template ("NIS", "Nama Lengkap", "Urt", dll)
-                    if (preg_match('/^(nis|nomor|no|urt)$/i', $row[0])) {
+                    if (preg_match('/^(nis|nomor|no|urt|no\s*urut|id)$/i', $row[0])) {
                         continue;
                     }
 
-                    $nis = $row[0];
+                    $nis = (string) $row[0];
                     $nama = rtrim($row[1], " *\t\n\r\0\x0B");
                     $kelas = isset($row[2]) && $row[2] !== '' ? $row[2] : ($currentKelas ?: '-');
                     $jurusan = isset($row[3]) && $row[3] !== '' ? $row[3] : ($currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas));
@@ -607,6 +678,7 @@ class NasabahController extends Controller
 
                 if (empty($nis) || empty($nama)) {
                     $gagal++;
+
                     continue;
                 }
 
@@ -619,7 +691,7 @@ class NasabahController extends Controller
                     $statusNasabah = 'aktif';
                 } else {
                     // Otomatis: Kelas 10 (X) = Belum Aktif (nonaktif), Kelas 11 (XI) & 12 (XII) = Aktif
-                    if (preg_match('/\b(?:X|10)\b/i', $kelas) && !preg_match('/\b(?:XI|XII|11|12)\b/i', $kelas)) {
+                    if (preg_match('/\b(?:X|10)\b/i', $kelas) && ! preg_match('/\b(?:XI|XII|11|12)\b/i', $kelas)) {
                         $statusNasabah = 'nonaktif';
                     } else {
                         $statusNasabah = 'aktif';
@@ -656,7 +728,7 @@ class NasabahController extends Controller
                     $sukses++;
                 }
             }
-            fclose($handle);
+
             DB::commit();
 
             AuditHelper::log(
@@ -668,11 +740,11 @@ class NasabahController extends Controller
                     'sukses_baru' => $sukses,
                     'diperbarui' => $diperbarui,
                     'gagal' => $gagal,
-                    'status_default' => $statusDefault
+                    'status_default' => $statusDefault,
                 ]
             );
 
-            $pesan = "Import Selesai! ";
+            $pesan = 'Import Selesai! ';
             if ($sukses > 0) {
                 $pesan .= "{$sukses} siswa baru berhasil didaftarkan dengan Nomor Rekening otomatis. ";
             }
@@ -684,19 +756,50 @@ class NasabahController extends Controller
             }
 
             return back()->with('success', trim($pesan));
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            if (is_resource($handle)) {
-                fclose($handle);
-            }
 
             return back()->with('error', 'Gagal impor data: '.$e->getMessage());
         }
     }
 
-    // FUNGSI DOWNLOAD TEMPLATE EXCEL (CSV)
-    public function downloadTemplate(): StreamedResponse
+    // FUNGSI DOWNLOAD TEMPLATE EXCEL (.xlsx) ATAU CSV (.csv)
+    public function downloadTemplate(Request $request): StreamedResponse
     {
+        $columns = ['NIS', 'Nama Lengkap', 'Kelas (Contoh: X RPL 1 / XII RPL 1)', 'Jurusan (Contoh: Rekayasa Perangkat Lunak)', 'Status Opsional (aktif/nonaktif)'];
+        $contohData = [
+            ['10001', 'Contoh Nama Siswa Satu', 'X RPL 1', 'Rekayasa Perangkat Lunak', 'nonaktif'],
+            ['10002', 'Contoh Nama Siswa Dua', 'XI RPL 1', 'Rekayasa Perangkat Lunak', 'aktif'],
+            ['10003', 'Contoh Nama Siswa Tiga', 'XII RPL 2', 'Rekayasa Perangkat Lunak', 'aktif'],
+        ];
+
+        // Format Excel (.xlsx)
+        if ($request->query('format') === 'xlsx') {
+            $spreadsheet = new Spreadsheet;
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Template Import Nasabah');
+
+            $sheet->fromArray([$columns], null, 'A1');
+            $sheet->fromArray($contohData, null, 'A2');
+
+            // Auto-size columns
+            foreach (range('A', 'E') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $response = new StreamedResponse(function () use ($spreadsheet) {
+                $writer = new Xlsx($spreadsheet);
+                $writer->save('php://output');
+            });
+
+            $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            $response->headers->set('Content-Disposition', 'attachment; filename="template_import_nasabah.xlsx"');
+            $response->headers->set('Cache-Control', 'max-age=0');
+
+            return $response;
+        }
+
+        // Format CSV Standar
         $headers = [
             'Content-type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename=template_import_nasabah.csv',
@@ -705,15 +808,13 @@ class NasabahController extends Controller
             'Expires' => '0',
         ];
 
-        $columns = ['NIS', 'Nama Lengkap', 'Kelas (Contoh: X RPL 1 / XII RPL 1)', 'Jurusan (Contoh: Rekayasa Perangkat Lunak)', 'Status Opsional (aktif/nonaktif)'];
-
-        $callback = function () use ($columns) {
+        $callback = function () use ($columns, $contohData) {
             $file = fopen('php://output', 'w');
             fwrite($file, "\xEF\xBB\xBF");
             fputcsv($file, $columns, ';');
-            fputcsv($file, ['10001', 'Contoh Nama Siswa Satu', 'X RPL 1', 'Rekayasa Perangkat Lunak', 'nonaktif'], ';');
-            fputcsv($file, ['10002', 'Contoh Nama Siswa Dua', 'XI RPL 1', 'Rekayasa Perangkat Lunak', 'aktif'], ';');
-            fputcsv($file, ['10003', 'Contoh Nama Siswa Tiga', 'XII RPL 2', 'Rekayasa Perangkat Lunak', 'aktif'], ';');
+            foreach ($contohData as $baris) {
+                fputcsv($file, $baris, ';');
+            }
             fclose($file);
         };
 

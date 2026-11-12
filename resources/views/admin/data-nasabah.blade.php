@@ -505,9 +505,17 @@
                             <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span><strong>Mendukung Format Daftar Hadir Siswa:</strong> Anda bisa langsung mengunggah dokumen Daftar Hadir / Absensi Siswa resmi sekolah (.xlsx / .xls / .csv) tanpa perlu mengubah format secara manual!</span>
                         </div>
-                        <a href="{{ url('/admin/template-nasabah') }}" class="inline-flex items-center text-xs text-teal-600 font-semibold hover:underline">
-                            &darr; Unduh Template CSV / Excel Resmi Standar
-                        </a>
+                        <div class="flex flex-wrap items-center gap-3 text-xs font-semibold mt-1">
+                            <a href="{{ url('/admin/template-nasabah?format=xlsx') }}" class="inline-flex items-center text-teal-600 hover:text-teal-700 hover:underline gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Unduh Template Excel (.xlsx)
+                            </a>
+                            <span class="text-slate-300">|</span>
+                            <a href="{{ url('/admin/template-nasabah?format=csv') }}" class="inline-flex items-center text-slate-600 hover:text-slate-700 hover:underline gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Unduh Template CSV (.csv)
+                            </a>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="block text-slate-700 text-xs font-semibold mb-1.5">Status Akun Siswa yang Diimpor:</label>
