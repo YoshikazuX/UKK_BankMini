@@ -224,7 +224,6 @@
                         <select name="kategori" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700 text-xs bg-white">
                             <option value="all" {{ (!request('kategori') || request('kategori') === 'all') ? 'selected' : '' }}>Semua Kategori</option>
                             <option value="siswa" {{ request('kategori') === 'siswa' ? 'selected' : '' }}>Siswa</option>
-                            <option value="guru" {{ in_array(request('kategori'), ['guru', 'guru_karyawan']) ? 'selected' : '' }}>Guru & Karyawan</option>
                             <option value="alumni" {{ request('kategori') === 'alumni' ? 'selected' : '' }}>Alumni</option>
                         </select>
                     </div>
