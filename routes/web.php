@@ -97,6 +97,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // FITUR: KONFIGURASI SISTEM GLOBAL (SALDO MENGENDAP, SCANNER & FORMAT REKENING)
     Route::get('/admin/konfigurasi', [AdminController::class, 'konfigurasi'])->name('admin.konfigurasi');
     Route::post('/admin/konfigurasi', [AdminController::class, 'updateKonfigurasi'])->name('admin.konfigurasi.update');
+
+    // FITUR: AKSI MASSAL NASABAH KHUSUS ADMIN
+    Route::post('/admin/nasabah/nonaktifkan-semua', [NasabahController::class, 'deactivateAll'])->name('admin.nasabah.deactivate-all');
+    Route::post('/admin/nasabah/hapus-semua', [NasabahController::class, 'destroyAll'])->name('admin.nasabah.destroy-all');
 });
 
 // RUTE AUDIT JURNAL AKUNTANSI & LAPORAN (ADMIN, SUPERVISOR, ACCOUNTING)

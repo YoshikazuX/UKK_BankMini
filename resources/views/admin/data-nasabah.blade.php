@@ -50,6 +50,21 @@
         </div>
         @endif
 
+        @if($errors->any())
+        <div class="bg-rose-50 border border-rose-200 text-rose-900 px-4 py-3 mb-6 rounded-xl shadow-sm">
+            <ul class="list-disc list-inside text-xs font-semibold space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        @php
+            $currentUserRoles = array_map('trim', explode(',', strtolower(Auth::user()->role ?? '')));
+            $isAdminRole = in_array('admin', $currentUserRoles, true);
+        @endphp
+
         <!-- HEADER HALAMAN -->
         <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <div>
@@ -57,11 +72,27 @@
                 <p class="text-slate-600 text-xs sm:text-sm mt-1">Kelola data identitas penabung, status rekening operasional, serta pemantauan saldo riil.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <button onclick="bukaModalImport()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 px-3.5 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5">
+                @if($isAdminRole)
+                    <button type="button"
+                            onclick="konfirmasiNonaktifkanSemuaNasabah({{ $totalAktif }})"
+                            @disabled($totalAktif === 0)
+                            class="bg-amber-50 border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3.5 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5 whitespace-nowrap">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                        <span>Nonaktifkan Semua Nasabah</span>
+                    </button>
+                    <button type="button"
+                            onclick="konfirmasiHapusSemuaNasabah({{ $totalSemua }}, {{ $totalAktif }}, {{ $totalNonaktif }}, {{ $totalAlumni }}, {{ $totalSaldoSemua ?? 0 }})"
+                            @disabled($totalSemua === 0)
+                            class="bg-rose-50 border border-rose-300 text-rose-700 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3.5 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5 whitespace-nowrap">
+                        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Hapus Semua Nasabah</span>
+                    </button>
+                @endif
+                <button onclick="bukaModalImport()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 px-3.5 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5 whitespace-nowrap">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     Import Excel / CSV
                 </button>
-                <a href="{{ url('/admin/tambah-nasabah') }}" class="bg-slate-900 hover:bg-slate-800 text-white py-2 px-4 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5">
+                <a href="{{ url('/admin/tambah-nasabah') }}" class="bg-slate-900 hover:bg-slate-800 text-white py-2 px-4 rounded-lg text-xs font-semibold shadow-sm transition inline-flex items-center gap-1.5 whitespace-nowrap">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Tambah Nasabah
                 </a>
@@ -434,21 +465,23 @@
                     <p class="text-xs text-slate-600 mt-2" id="modal-message"></p>
 
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 mt-4 space-y-1">
-                        <div>Nasabah: <strong id="modal-nama">-</strong></div>
-                        <div>No. Rekening: <strong id="modal-rek">-</strong></div>
+                        <div><span id="modal-label-1">Nasabah</span>: <strong id="modal-nama">-</strong></div>
+                        <div><span id="modal-label-2">No. Rekening</span>: <strong id="modal-rek">-</strong></div>
                         <div id="modal-extra-info"></div>
                     </div>
                 </div>
 
-                <form id="form-konfirmasi" method="POST" action="" class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
+                <form id="form-konfirmasi" method="POST" action="">
                     @csrf
-                    <div id="modal-form-inputs"></div>
-                    <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
-                        Batal
-                    </button>
-                    <button type="submit" id="btn-submit-konfirmasi" class="px-4 py-2 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
-                        <span id="btn-konfirmasi-text">Konfirmasi</span>
-                    </button>
+                    <div id="modal-form-inputs" class="px-6 pb-4 space-y-3 empty:hidden"></div>
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-2">
+                        <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-xs transition shadow-sm">
+                            Batal
+                        </button>
+                        <button type="submit" id="btn-submit-konfirmasi" class="px-4 py-2 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2">
+                            <span id="btn-konfirmasi-text">Konfirmasi</span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -531,12 +564,14 @@
         }
 
         // =====================================================================
-        // KONFIRMASI TINDAKAN PENTING (FEATURE 7)
+        // KONFIRMASI TINDAKAN PENTING (FEATURE 7 & AKSI MASSAL ADMIN)
         // =====================================================================
-        function konfirmasiUbahStatus(id, nama, noRekening, statusTujuan) {
+        function bukaModalKonfirmasi(opts) {
             const modal = document.getElementById('modal-konfirmasi');
             const title = document.getElementById('modal-title');
             const message = document.getElementById('modal-message');
+            const label1El = document.getElementById('modal-label-1');
+            const label2El = document.getElementById('modal-label-2');
             const namaEl = document.getElementById('modal-nama');
             const rekEl = document.getElementById('modal-rek');
             const extraEl = document.getElementById('modal-extra-info');
@@ -546,66 +581,142 @@
             const btnText = document.getElementById('btn-konfirmasi-text');
             const iconContainer = document.getElementById('modal-icon-container');
 
-            form.action = '{{ url("/admin/nasabah/ubah-status") }}/' + id;
-            inputsContainer.innerHTML = '<input type="hidden" name="status" value="' + statusTujuan + '">';
-            namaEl.textContent = nama;
-            rekEl.textContent = noRekening;
-            extraEl.innerHTML = '';
+            form.action = opts.action;
+            inputsContainer.innerHTML = opts.inputsHtml || '';
+            label1El.textContent = opts.label1 || 'Nasabah';
+            label2El.textContent = opts.label2 || 'No. Rekening';
+            namaEl.textContent = opts.val1 || '-';
+            rekEl.textContent = opts.val2 || '-';
+            extraEl.innerHTML = opts.extraHtml || '';
 
-            if (statusTujuan === 'nonaktif') {
-                title.textContent = 'Nonaktifkan Rekening Nasabah?';
-                message.textContent = 'Apakah Anda yakin ingin menonaktifkan rekening milik ' + nama + ' (' + noRekening + ')? Nasabah tidak dapat melakukan transaksi tarik, setor, maupun mutasi selama status nonaktif.';
-                btn.className = 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2';
-                btnText.textContent = 'Ya, Nonaktifkan Rekening';
-                iconContainer.className = 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4';
-            } else {
-                title.textContent = 'Aktifkan Kembali Rekening Nasabah?';
-                message.textContent = 'Apakah Anda yakin ingin mengaktifkan kembali rekening milik ' + nama + ' (' + noRekening + ')? Rekening akan dapat digunakan kembali secara penuh.';
-                btn.className = 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2';
-                btnText.textContent = 'Ya, Aktifkan Rekening';
-                iconContainer.className = 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4';
-            }
+            title.textContent = opts.title;
+            message.textContent = opts.message;
+            btn.className = opts.btnClass;
+            btn.disabled = Boolean(opts.submitDisabled);
+            btnText.textContent = opts.btnText;
+            iconContainer.className = opts.iconClass;
 
             modal.classList.remove('hidden');
+        }
+
+        function konfirmasiUbahStatus(id, nama, noRekening, statusTujuan) {
+            const isNonaktif = statusTujuan === 'nonaktif';
+
+            bukaModalKonfirmasi({
+                action: '{{ url("/admin/nasabah/ubah-status") }}/' + id,
+                inputsHtml: '<input type="hidden" name="status" value="' + (isNonaktif ? 'nonaktif' : 'aktif') + '">',
+                val1: nama,
+                val2: noRekening,
+                title: isNonaktif ? 'Nonaktifkan Rekening Nasabah?' : 'Aktifkan Kembali Rekening Nasabah?',
+                message: isNonaktif
+                    ? 'Apakah Anda yakin ingin menonaktifkan rekening milik ' + nama + ' (' + noRekening + ')? Nasabah tidak dapat melakukan transaksi tarik, setor, maupun mutasi selama status nonaktif.'
+                    : 'Apakah Anda yakin ingin mengaktifkan kembali rekening milik ' + nama + ' (' + noRekening + ')? Rekening akan dapat digunakan kembali secara penuh.',
+                btnClass: isNonaktif
+                    ? 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2'
+                    : 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2',
+                btnText: isNonaktif ? 'Ya, Nonaktifkan Rekening' : 'Ya, Aktifkan Rekening',
+                iconClass: isNonaktif
+                    ? 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4'
+                    : 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4'
+            });
         }
 
         function konfirmasiHapusNasabah(id, nama, noRekening, saldo) {
-            const modal = document.getElementById('modal-konfirmasi');
-            const title = document.getElementById('modal-title');
-            const message = document.getElementById('modal-message');
-            const namaEl = document.getElementById('modal-nama');
-            const rekEl = document.getElementById('modal-rek');
-            const extraEl = document.getElementById('modal-extra-info');
-            const form = document.getElementById('form-konfirmasi');
-            const inputsContainer = document.getElementById('modal-form-inputs');
-            const btn = document.getElementById('btn-submit-konfirmasi');
-            const btnText = document.getElementById('btn-konfirmasi-text');
-            const iconContainer = document.getElementById('modal-icon-container');
+            const extraHtml = saldo > 0
+                ? '<span class="text-rose-600 font-bold">PERINGATAN: Rekening ini masih memiliki saldo sebesar Rp ' + Number(saldo).toLocaleString('id-ID') + '! Sangat disarankan menonaktifkan rekening daripada menghapus.</span>'
+                : '<span class="text-slate-500">Saldo Rekening: Rp 0</span>';
 
-            form.action = '{{ url("/admin/hapus-nasabah") }}/' + id;
-            inputsContainer.innerHTML = `
-                <div class="mb-3 text-left">
-                    <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Penghapusan / Arsip <span class="text-slate-400 font-normal">(Dicatat di Jejak Audit)</span></label>
-                    <input type="text" name="alasan" placeholder="Contoh: Siswa sudah lulus / mutasi sekolah" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
-                </div>
-            `;
-            namaEl.textContent = nama;
-            rekEl.textContent = noRekening;
+            bukaModalKonfirmasi({
+                action: '{{ url("/admin/hapus-nasabah") }}/' + id,
+                inputsHtml: `
+                    <div class="text-left">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Penghapusan / Arsip <span class="text-slate-400 font-normal">(Dicatat di Jejak Audit)</span></label>
+                        <input type="text" name="alasan" placeholder="Contoh: Siswa sudah lulus / mutasi sekolah" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
+                    </div>
+                `,
+                val1: nama,
+                val2: noRekening,
+                extraHtml: extraHtml,
+                title: 'Hapus / Arsipkan Data Nasabah Nonaktif?',
+                message: 'Data nasabah nonaktif ini akan diarsipkan (Soft Delete), namun seluruh riwayat mutasi transaksi di buku tabungan dan kas TETAP AMAN tersimpan utuh di sistem.',
+                btnClass: 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2',
+                btnText: 'Ya, Hapus & Simpan Riwayat',
+                iconClass: 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4'
+            });
+        }
 
-            if (saldo > 0) {
-                extraEl.innerHTML = '<span class="text-rose-600 font-bold">PERINGATAN: Rekening ini masih memiliki saldo sebesar Rp ' + Number(saldo).toLocaleString('id-ID') + '! Sangat disarankan menonaktifkan rekening daripada menghapus.</span>';
-            } else {
-                extraEl.innerHTML = '<span class="text-slate-500">Saldo Rekening: Rp 0</span>';
+        @if($isAdminRole)
+        function konfirmasiNonaktifkanSemuaNasabah(totalAktif) {
+            bukaModalKonfirmasi({
+                action: '{{ route("admin.nasabah.deactivate-all") }}',
+                inputsHtml: `
+                    <div class="text-left">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Penonaktifan Massal <span class="text-slate-400 font-normal">(Opsional, dicatat di Jejak Audit)</span></label>
+                        <input type="text" name="alasan" placeholder="Contoh: Evaluasi tahun ajaran / persiapan arsip massal" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none">
+                    </div>
+                `,
+                label1: 'Cakupan Data',
+                val1: 'Seluruh Rekening Berstatus Aktif',
+                label2: 'Jumlah Terdampak',
+                val2: Number(totalAktif).toLocaleString('id-ID') + ' Nasabah Aktif',
+                extraHtml: '<span class="text-amber-700 font-semibold">Rekening yang dinonaktifkan tetap tersimpan beserta saldonya dan tidak dapat bertransaksi sampai diaktifkan kembali.</span>',
+                title: 'Nonaktifkan Semua Nasabah Aktif?',
+                message: 'Seluruh nasabah berstatus aktif akan diubah menjadi Nonaktif. Langkah ini juga diperlukan sebelum Anda dapat menghapus/mengarsipkan seluruh data nasabah.',
+                btnClass: 'px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2',
+                btnText: 'Ya, Nonaktifkan Semua',
+                iconClass: 'w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-4',
+                submitDisabled: totalAktif <= 0
+            });
+        }
+
+        function konfirmasiHapusSemuaNasabah(totalSemua, totalAktif, totalNonaktif, totalAlumni, totalSaldo) {
+            const hasAktif = Number(totalAktif) > 0;
+            const rincian = Number(totalNonaktif).toLocaleString('id-ID') + ' Nonaktif · ' + Number(totalAlumni).toLocaleString('id-ID') + ' Alumni';
+
+            let extraHtml = '<div class="text-slate-600">Rincian: ' + rincian + '</div>';
+            if (hasAktif) {
+                extraHtml += '<div class="mt-2 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold">Masih terdapat ' + Number(totalAktif).toLocaleString('id-ID') + ' nasabah berstatus Aktif. Klik tombol "Nonaktifkan Semua Nasabah" terlebih dahulu sebelum menghapus seluruh data nasabah.</div>';
+            } else if (Number(totalSaldo) > 0) {
+                extraHtml += '<div class="mt-2 p-2 rounded bg-amber-50 border border-amber-200 text-amber-800 font-semibold">PERINGATAN: Total saldo tabungan seluruh nasabah saat ini sebesar Rp ' + Number(totalSaldo).toLocaleString('id-ID') + '.</div>';
             }
 
-            title.textContent = 'Hapus / Arsipkan Data Nasabah Nonaktif?';
-            message.textContent = 'Data nasabah nonaktif ini akan diarsipkan (Soft Delete), namun seluruh riwayat mutasi transaksi di buku tabungan dan kas TETAP AMAN tersimpan utuh di sistem.';
-            btn.className = 'px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2';
-            btnText.textContent = 'Ya, Hapus & Simpan Riwayat';
-            iconContainer.className = 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4';
+            const inputsHtml = hasAktif
+                ? ''
+                : `
+                    <div class="text-left">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1">Alasan Penghapusan Massal <span class="text-slate-400 font-normal">(Dicatat di Jejak Audit)</span></label>
+                        <input type="text" name="alasan" placeholder="Contoh: Pembersihan data nasabah sebelum import baru" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
+                    </div>
+                    <div class="text-left">
+                        <label class="block text-slate-700 text-xs font-semibold mb-1">Ketik <span class="font-mono text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">HAPUS SEMUA</span> untuk konfirmasi:</label>
+                        <input type="text" id="input-konfirmasi-hapus-semua" name="konfirmasi" required autocomplete="off" placeholder="Ketik HAPUS SEMUA" oninput="toggleTombolHapusSemua(this.value)" class="w-full px-3 py-2 border border-rose-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none">
+                    </div>
+                `;
 
-            modal.classList.remove('hidden');
+            bukaModalKonfirmasi({
+                action: '{{ route("admin.nasabah.destroy-all") }}',
+                inputsHtml: inputsHtml,
+                label1: 'Cakupan Data',
+                val1: 'Seluruh Nasabah Nonaktif / Alumni',
+                label2: 'Total Nasabah',
+                val2: Number(totalSemua).toLocaleString('id-ID') + ' Nasabah (' + Number(totalAktif).toLocaleString('id-ID') + ' Aktif)',
+                extraHtml: extraHtml,
+                title: 'Hapus / Arsipkan Semua Nasabah?',
+                message: 'Seluruh data nasabah berstatus nonaktif/alumni akan diarsipkan (Soft Delete) agar riwayat mutasi transaksi tetap aman. Anda dapat memulihkannya lewat filter Arsip Alumni Dihapus.',
+                btnClass: 'px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg text-xs transition shadow-sm flex items-center gap-2',
+                btnText: 'Ya, Hapus Semua Nasabah',
+                iconClass: 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4',
+                submitDisabled: true
+            });
         }
+
+        function toggleTombolHapusSemua(nilai) {
+            const btn = document.getElementById('btn-submit-konfirmasi');
+            if (btn) {
+                btn.disabled = nilai.trim() !== 'HAPUS SEMUA';
+            }
+        }
+        @endif
 
         function tutupModalKonfirmasi() {
             document.getElementById('modal-konfirmasi').classList.add('hidden');
