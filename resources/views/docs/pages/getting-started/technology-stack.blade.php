@@ -73,7 +73,7 @@
 
 <x-docs.heading id="mobile-stack" level="2">Mobile Development (Flutter)</x-docs.heading>
 <p>
-    Versi berikut diverifikasi dari <code>flutter --version</code> dan <code>d:\Project UKK\ukk_bankmini\pubspec.yaml</code> (versi aplikasi <code>2.4.0+1</code>):
+    Versi berikut diverifikasi dari <code>flutter --version</code> dan <code>d:\UKK Bank Mini\ukk_bankmini_mobile\pubspec.yaml</code> (versi aplikasi <code>2.5.0+2</code>):
 </p>
 <x-docs.table :headers="['Pustaka / Tool', 'Versi Aktual', 'Peran di ukk_bankmini']">
     <tr>

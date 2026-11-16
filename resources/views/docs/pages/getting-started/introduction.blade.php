@@ -3,7 +3,7 @@
     <strong>HANBANK (Bank Mini Sekolah — LKM Mitra Siswa Abadi)</strong> adalah sistem informasi perbankan mini sekolah terintegrasi yang dikembangkan untuk mendukung pengelolaan tabungan siswa, operasional loket kasir (teller), pengawasan keuangan (supervisor/accounting), serta layanan mobile banking siswa pada lingkungan <strong>SMK Negeri 1 Bantul</strong>.
 </p>
 <p>
-    Aplikasi ini terdiri atas dua repositori yang saling terhubung dalam satu ekosistem: backend dan aplikasi web operasional berbasis <strong>Laravel 13.24.0</strong> (<code>belajar_laravel_handa</code>) serta aplikasi Android klien multi-peran berbasis <strong>Flutter 3.41.9</strong> (<code>ukk_bankmini</code> v2.4.0).
+    Aplikasi ini terdiri atas dua repositori yang saling terhubung dalam satu ekosistem: backend dan aplikasi web operasional berbasis <strong>Laravel 13.24.0</strong> (<code>belajar_laravel_handa</code>) serta aplikasi Android klien multi-peran berbasis <strong>Flutter 3.41.9</strong> (<code>ukk_bankmini</code> v2.5.0).
 </p>
 
 <x-docs.callout type="info" title="Sumber Kebenaran Dokumentasi">

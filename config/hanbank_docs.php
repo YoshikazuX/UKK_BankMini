@@ -4,7 +4,7 @@ return [
     'meta' => [
         'brand' => 'HANBANK',
         'institution' => 'LKM Mitra Siswa Abadi — SMK Negeri 1 Bantul',
-        'version' => 'Web Core v2.7 · Mobile v2.4.0',
+        'version' => 'Web Core v2.7 · Mobile v2.5.0',
         'laravel_version' => 'Laravel 13.24.0 (PHP ^8.3 / 8.5.9 CLI)',
     ],
 
@@ -170,7 +170,7 @@ return [
                 ],
                 'web-mobile-integration' => [
                     'title' => 'Web and Mobile Integration',
-                    'summary' => 'Cara aplikasi Flutter ukk_bankmini v2.4.0 berkomunikasi dengan backend Laravel melalui ApiClient, AuthInterceptor, dan QR payload.',
+                    'summary' => 'Cara aplikasi Flutter ukk_bankmini v2.5.0 berkomunikasi dengan backend Laravel melalui ApiClient, AuthInterceptor, dan QR payload.',
                     'view' => 'docs.pages.technical-documentation.web-mobile-integration',
                     'badge' => 'Flutter Integration',
                     'keywords' => ['flutter', 'dio', 'api_client', 'auth_interceptor', 'session_storage', 'api_constants', 'qr'],

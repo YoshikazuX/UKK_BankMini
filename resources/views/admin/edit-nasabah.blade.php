@@ -42,7 +42,8 @@
 
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Rekening</label>
-                    <input type="text" value="{{ $nasabah->no_rekening ?? $nasabah->nis }}" class="bg-slate-100 border border-slate-300 rounded-lg w-full py-2 px-3 text-sm text-slate-500 cursor-not-allowed tabular-nums" readonly>
+                    <input type="text" name="no_rekening" value="{{ old('no_rekening', $nasabah->no_rekening ?? $nasabah->nis) }}" class="border border-slate-300 rounded-lg w-full py-2 px-3 text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-700" placeholder="Contoh: 26-RPL-001">
+                    <p class="text-[11px] text-slate-500 mt-1">Pola standar institusi: <strong>26-KODE-URUT</strong> (contoh: 26-RPL-001, 26-TAB-001).</p>
                 </div>
 
                 <div class="mb-4">

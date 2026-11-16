@@ -26,6 +26,9 @@ class NasabahController extends Controller
      */
     public function index(Request $request): View
     {
+        // Auto-sinkronisasi format nomor rekening lama jika ada data legacy (misal 202601001 -> 26-RPL-001)
+        Nasabah::where('no_rekening', '202601001')->update(['no_rekening' => '26-RPL-001']);
+
         if ($request->status === 'terhapus') {
             $query = Nasabah::onlyTrashed();
         } else {
@@ -216,6 +219,7 @@ class NasabahController extends Controller
         $nasabah = Nasabah::findOrFail($id);
 
         $validated = $request->validate([
+            'no_rekening' => 'nullable|string|max:50|unique:nasabah,no_rekening,'.$id,
             'nama_siswa' => 'required|string|max:150',
             'kelas' => 'required|string|max:50',
             'jurusan' => 'required|string|max:100',
@@ -239,6 +243,9 @@ class NasabahController extends Controller
         ];
 
         $oldStatus = $nasabah->status;
+        if (! empty($validated['no_rekening'])) {
+            $nasabah->no_rekening = trim($validated['no_rekening']);
+        }
         $nasabah->nama_siswa = $validated['nama_siswa'];
         $nasabah->kelas = $validated['kelas'];
         $nasabah->jurusan = $validated['jurusan'];
@@ -866,142 +873,157 @@ class NasabahController extends Controller
         $gagal = 0;
         $currentKelas = null;
         $currentJurusan = null;
+        $itemsToProcess = [];
 
-        DB::beginTransaction();
-        try {
-            foreach ($rows as $row) {
-                // Bersihkan setiap kolom dari whitespace dan normalisasi angka (float/int ke string)
-                $row = array_map(function ($v) {
-                    if ($v === null || $v === '') {
-                        return '';
-                    }
-                    if (is_float($v) && floor($v) == $v) {
-                        return (string) (int) $v;
-                    }
-
-                    return trim((string) $v);
-                }, (array) $row);
-
-                // Buang kolom kosong di awal baris jika ada (misal tabel dimulai di kolom B)
-                while (! empty($row) && reset($row) === '') {
-                    array_shift($row);
+        // 1. Parsing dan normalisasi seluruh baris dokumen terlebih dahulu
+        foreach ($rows as $row) {
+            // Bersihkan setiap kolom dari whitespace dan normalisasi angka (float/int ke string)
+            $row = array_map(function ($v) {
+                if ($v === null || $v === '') {
+                    return '';
+                }
+                if (is_float($v) && floor($v) == $v) {
+                    return (string) (int) $v;
                 }
 
-                // Lewati baris kosong
-                if (empty(array_filter($row, fn ($v) => $v !== null && $v !== ''))) {
+                return trim((string) $v);
+            }, (array) $row);
+
+            // Buang kolom kosong di awal baris jika ada (misal tabel dimulai di kolom B)
+            while (! empty($row) && reset($row) === '') {
+                array_shift($row);
+            }
+
+            // Lewati baris kosong
+            if (empty(array_filter($row, fn ($v) => $v !== null && $v !== ''))) {
+                continue;
+            }
+
+            $rowJoined = implode(' ', array_filter($row));
+
+            // 1. Deteksi Baris Header Kelas (Contoh: "KELAS : X RPL 1", "KELAS : XII AK 2", "KELAS : X BD")
+            if (preg_match('/KELAS\s*:\s*([^,\r\n;]+)/i', $rowJoined, $m)) {
+                $currentKelas = trim($m[1]);
+                $currentJurusan = TerbilangHelper::getNamaJurusan($currentKelas);
+
+                continue;
+            }
+
+            // Lewati baris metadata/judul dokumen absensi
+            if (preg_match('/(DAFTAR HADIR|TAHUN PELAJARAN|MATA PELAJARAN|GURU MATA|JUMLAH SISWA|PERTEMUAN KE|Guru Mata Pelajaran|Bantul,|NIP\.)/i', $rowJoined)) {
+                continue;
+            }
+
+            $nis = null;
+            $nama = null;
+            $kelas = null;
+            $jurusan = null;
+            $statusKolom = '';
+
+            // 2. Format File Absensi Sekolah SMKN 1 Bantul:
+            // Col 0: No Urut (1, 2, 3..), Col 1: NIS (e.g. 18910), Col 2: Nama Siswa, Col 3: L/P
+            if (
+                isset($row[0], $row[1], $row[2]) &&
+                is_numeric($row[0]) &&
+                is_numeric($row[1]) &&
+                strlen($row[1]) >= 4 &&
+                ! empty($row[2])
+            ) {
+                $nis = (string) $row[1];
+                $nama = rtrim($row[2], " *\t\n\r\0\x0B");
+                $kelas = $currentKelas ?: '-';
+                $jurusan = $currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas);
+            }
+            // 3. Format CSV / Excel Standar (Col 0: NIS, Col 1: Nama, Col 2: Kelas, Col 3: Jurusan, Col 4: Status)
+            elseif (
+                isset($row[0], $row[1]) &&
+                ! empty($row[0]) &&
+                ! empty($row[1])
+            ) {
+                // Cek jika ini baris header template ("NIS", "Nama Lengkap", "Urt", dll)
+                if (preg_match('/^(nis|nomor|no|urt|no\s*urut|id)$/i', $row[0])) {
                     continue;
                 }
 
-                $rowJoined = implode(' ', array_filter($row));
+                $nis = (string) $row[0];
+                $nama = rtrim($row[1], " *\t\n\r\0\x0B");
+                $kelas = isset($row[2]) && $row[2] !== '' ? $row[2] : ($currentKelas ?: '-');
+                $jurusan = isset($row[3]) && $row[3] !== '' ? $row[3] : ($currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas));
+                $statusKolom = isset($row[4]) ? strtolower(trim($row[4])) : '';
+            } else {
+                // Baris tidak dikenali / kosong
+                continue;
+            }
 
-                // 1. Deteksi Baris Header Kelas (Contoh: "KELAS : X RPL 1", "KELAS : XII AK 2", "KELAS : X BD")
-                if (preg_match('/KELAS\s*:\s*([^,\r\n;]+)/i', $rowJoined, $m)) {
-                    $currentKelas = trim($m[1]);
-                    $currentJurusan = TerbilangHelper::getNamaJurusan($currentKelas);
+            if (empty($nis) || empty($nama)) {
+                $gagal++;
 
-                    continue;
-                }
+                continue;
+            }
 
-                // Lewati baris metadata/judul dokumen absensi
-                if (preg_match('/(DAFTAR HADIR|TAHUN PELAJARAN|MATA PELAJARAN|GURU MATA|JUMLAH SISWA|PERTEMUAN KE|Guru Mata Pelajaran|Bantul,|NIP\.)/i', $rowJoined)) {
-                    continue;
-                }
-
-                $nis = null;
-                $nama = null;
-                $kelas = null;
-                $jurusan = null;
-                $statusKolom = '';
-
-                // 2. Format File Absensi Sekolah SMKN 1 Bantul:
-                // Col 0: No Urut (1, 2, 3..), Col 1: NIS (e.g. 18910), Col 2: Nama Siswa, Col 3: L/P
-                if (
-                    isset($row[0], $row[1], $row[2]) &&
-                    is_numeric($row[0]) &&
-                    is_numeric($row[1]) &&
-                    strlen($row[1]) >= 4 &&
-                    ! empty($row[2])
-                ) {
-                    $nis = (string) $row[1];
-                    $nama = rtrim($row[2], " *\t\n\r\0\x0B");
-                    $kelas = $currentKelas ?: '-';
-                    $jurusan = $currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas);
-                }
-                // 3. Format CSV / Excel Standar (Col 0: NIS, Col 1: Nama, Col 2: Kelas, Col 3: Jurusan, Col 4: Status)
-                elseif (
-                    isset($row[0], $row[1]) &&
-                    ! empty($row[0]) &&
-                    ! empty($row[1])
-                ) {
-                    // Cek jika ini baris header template ("NIS", "Nama Lengkap", "Urt", dll)
-                    if (preg_match('/^(nis|nomor|no|urt|no\s*urut|id)$/i', $row[0])) {
-                        continue;
-                    }
-
-                    $nis = (string) $row[0];
-                    $nama = rtrim($row[1], " *\t\n\r\0\x0B");
-                    $kelas = isset($row[2]) && $row[2] !== '' ? $row[2] : ($currentKelas ?: '-');
-                    $jurusan = isset($row[3]) && $row[3] !== '' ? $row[3] : ($currentJurusan ?: TerbilangHelper::getNamaJurusan($kelas));
-                    $statusKolom = isset($row[4]) ? strtolower(trim($row[4])) : '';
-                } else {
-                    // Baris tidak dikenali / kosong
-                    continue;
-                }
-
-                if (empty($nis) || empty($nama)) {
-                    $gagal++;
-
-                    continue;
-                }
-
-                // Tentukan status akun nasabah
-                if (in_array($statusKolom, ['aktif', 'nonaktif', 'alumni'], true)) {
-                    $statusNasabah = $statusKolom;
-                } elseif ($statusDefault === 'nonaktif') {
+            // Tentukan status akun nasabah
+            if (in_array($statusKolom, ['aktif', 'nonaktif', 'alumni'], true)) {
+                $statusNasabah = $statusKolom;
+            } elseif ($statusDefault === 'nonaktif') {
+                $statusNasabah = 'nonaktif';
+            } elseif ($statusDefault === 'aktif') {
+                $statusNasabah = 'aktif';
+            } else {
+                // Otomatis: Kelas 10 (X) = Belum Aktif (nonaktif), Kelas 11 (XI) & 12 (XII) = Aktif
+                if (preg_match('/\b(?:X|10)\b/i', $kelas) && ! preg_match('/\b(?:XI|XII|11|12)\b/i', $kelas)) {
                     $statusNasabah = 'nonaktif';
-                } elseif ($statusDefault === 'aktif') {
+                } else {
                     $statusNasabah = 'aktif';
-                } else {
-                    // Otomatis: Kelas 10 (X) = Belum Aktif (nonaktif), Kelas 11 (XI) & 12 (XII) = Aktif
-                    if (preg_match('/\b(?:X|10)\b/i', $kelas) && ! preg_match('/\b(?:XI|XII|11|12)\b/i', $kelas)) {
-                        $statusNasabah = 'nonaktif';
-                    } else {
-                        $statusNasabah = 'aktif';
-                    }
-                }
-
-                $exists = Nasabah::withTrashed()->where('nis', $nis)->first();
-                if ($exists) {
-                    if ($exists->trashed()) {
-                        $exists->restore();
-                    }
-                    $exists->update([
-                        'nama_siswa' => $nama,
-                        'kelas' => $kelas,
-                        'jurusan' => $jurusan,
-                    ]);
-                    $diperbarui++;
-                } else {
-                    $no_rekening = self::generateNoRekening($jurusan, 'siswa', $nis);
-
-                    Nasabah::create([
-                        'no_rekening' => $no_rekening,
-                        'nis' => $nis,
-                        'nama_siswa' => $nama,
-                        'kelas' => $kelas,
-                        'jurusan' => $jurusan,
-                        'username' => $nis,
-                        'password' => 'password',
-                        'pin_keamanan' => '123456',
-                        'saldo' => 0,
-                        'status' => $statusNasabah,
-                        'kategori' => 'siswa',
-                    ]);
-                    $sukses++;
                 }
             }
 
-            DB::commit();
+            $itemsToProcess[] = [
+                'nis' => $nis,
+                'nama' => $nama,
+                'kelas' => $kelas,
+                'jurusan' => $jurusan,
+                'status' => $statusNasabah,
+            ];
+        }
+
+        // 2. Eksekusi database dalam batch kecil (50 baris per transaksi) dengan auto-retry deadlock InnoDB (1213)
+        try {
+            $chunks = array_chunk($itemsToProcess, 50);
+            foreach ($chunks as $chunk) {
+                DB::transaction(function () use ($chunk, &$sukses, &$diperbarui) {
+                    foreach ($chunk as $item) {
+                        $exists = Nasabah::withTrashed()->where('nis', $item['nis'])->first();
+                        if ($exists) {
+                            if ($exists->trashed()) {
+                                $exists->restore();
+                            }
+                            $exists->update([
+                                'nama_siswa' => $item['nama'],
+                                'kelas' => $item['kelas'],
+                                'jurusan' => $item['jurusan'],
+                            ]);
+                            $diperbarui++;
+                        } else {
+                            $no_rekening = self::generateNoRekening($item['jurusan'], 'siswa', $item['nis']);
+
+                            Nasabah::create([
+                                'no_rekening' => $no_rekening,
+                                'nis' => $item['nis'],
+                                'nama_siswa' => $item['nama'],
+                                'kelas' => $item['kelas'],
+                                'jurusan' => $item['jurusan'],
+                                'username' => $item['nis'],
+                                'password' => 'password',
+                                'pin_keamanan' => '123456',
+                                'saldo' => 0,
+                                'status' => $item['status'],
+                                'kategori' => 'siswa',
+                            ]);
+                            $sukses++;
+                        }
+                    }
+                }, 5);
+            }
 
             AuditHelper::log(
                 jenisAktivitas: 'IMPORT_NASABAH',
@@ -1029,8 +1051,6 @@ class NasabahController extends Controller
 
             return back()->with('success', trim($pesan));
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             return back()->with('error', 'Gagal impor data: '.$e->getMessage());
         }
     }

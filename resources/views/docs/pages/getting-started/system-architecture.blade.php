@@ -33,7 +33,7 @@
         {{-- Client 2: Flutter Mobile App --}}
         <rect x="20" y="240" width="230" height="175" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
         <rect x="20" y="240" width="230" height="34" rx="12" fill="#0F766E" />
-        <text x="35" y="261" fill="#FFFFFF" font-size="12" font-weight="700" font-family="Plus Jakarta Sans, sans-serif">Mobile App (Flutter v2.4.0)</text>
+        <text x="35" y="261" fill="#FFFFFF" font-size="12" font-weight="700" font-family="Plus Jakarta Sans, sans-serif">Mobile App (Flutter v2.5.0)</text>
         <text x="35" y="295" fill="#334155" font-size="11" font-weight="600">• Mobile Banking Siswa (QR, Goals)</text>
         <text x="35" y="317" fill="#334155" font-size="11">• Mobile POS Teller &amp; Kas</text>
         <text x="35" y="339" fill="#334155" font-size="11">• Approval Supervisor &amp; Admin Health</text>

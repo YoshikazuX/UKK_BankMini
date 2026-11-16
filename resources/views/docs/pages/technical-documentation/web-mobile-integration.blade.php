@@ -1,6 +1,6 @@
 <x-docs.heading id="arsitektur-klien-flutter" level="2">Arsitektur Klien Flutter (ukk_bankmini)</x-docs.heading>
 <p>
-    Repositori aplikasi mobile <code>d:\Project UKK\ukk_bankmini</code> (versi paket <code>2.4.0+1</code>) menerapkan pola arsitektur berlapis yang terpisah bersih antara lapisan jaringan, penyimpanan sesi, model domain, service API, dan layar antarmuka per peran:
+    Repositori aplikasi mobile <code>d:\UKK Bank Mini\ukk_bankmini_mobile</code> (versi paket <code>2.5.0+2</code>) menerapkan pola arsitektur berlapis yang terpisah bersih antara lapisan jaringan, penyimpanan sesi, model domain, service API, dan layar antarmuka per peran:
 </p>
 <ul>
     <li><strong><code>lib/core/constants/api_constants.dart</code>:</strong> Mendefinisikan seluruh konstanta endpoint REST API dan deteksi <code>defaultBaseUrl</code> otomatis (<code>https://hanbank.my.id/api</code> untuk rilis, <code>http://10.0.2.2:8000/api</code> untuk emulator Android debug, dan <code>http://127.0.0.1:8000/api</code> untuk desktop/web debug, atau override via <code>--dart-define=BASE_URL</code>).</li>

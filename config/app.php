@@ -128,6 +128,6 @@ return [
     | Mobile App Download URL (GitHub Releases / External CDN)
     |--------------------------------------------------------------------------
     */
-    'apk_download_url' => env('APK_DOWNLOAD_URL', 'https://github.com/YoshikazuX/UKK_BankMini/releases/latest/download/BankMini-v2.4.0-universal.apk'),
+    'apk_download_url' => env('APK_DOWNLOAD_URL', 'https://github.com/YoshikazuX/UKK_BankMini/releases/tag/v2.5.0'),
 
 ];

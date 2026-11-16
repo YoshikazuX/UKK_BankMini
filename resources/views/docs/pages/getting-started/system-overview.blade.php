@@ -44,7 +44,7 @@
 <x-docs.heading id="kanal-akses" level="2">Kanal Akses Web dan Mobile</x-docs.heading>
 <ul>
     <li><strong>Aplikasi Web Operasional (Laravel Blade):</strong> Ditujukan terutama bagi operasional di komputer loket sekolah (Admin, Teller, Supervisor), lengkap dengan pemindai kamera QR <code>html5-qrcode</code>, tampilan cetak HTML terformat untuk slip setoran/penarikan, buku tabungan, jurnal, dan laporan harian, serta portal informasi publik (<code>/</code>, <code>/download</code>, <code>/docs</code>).</li>
-    <li><strong>Aplikasi Android Flutter (<code>ukk_bankmini</code> v2.4.0):</strong> Menggunakan satu gerbang login universal (<code>POST /api/auth/login</code>) yang mendeteksi apakah kredensial milik nasabah atau petugas, kemudian merutekan pengguna ke shell antarmuka masing-masing (<code>MainNavigation</code> untuk Nasabah, <code>TellerMainScreen</code> untuk Teller POS, <code>SupervisorMainScreen</code> untuk Supervisor, dan <code>AdminMainScreen</code> untuk ringkasan kesehatan server &amp; presensi).</li>
+    <li><strong>Aplikasi Android Flutter (<code>ukk_bankmini</code> v2.5.0):</strong> Menggunakan satu gerbang login universal (<code>POST /api/auth/login</code>) yang mendeteksi apakah kredensial milik nasabah atau petugas, kemudian merutekan pengguna ke shell antarmuka masing-masing (<code>MainNavigation</code> untuk Nasabah, <code>TellerMainScreen</code> untuk Teller POS, <code>SupervisorMainScreen</code> untuk Supervisor, dan <code>AdminMainScreen</code> untuk ringkasan kesehatan server &amp; presensi).</li>
 </ul>
 
 <x-docs.heading id="fitur-utama-platform" level="2">Fitur Utama Platform</x-docs.heading>

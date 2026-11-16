@@ -84,6 +84,7 @@ Route::prefix('nasabah')->name('api.nasabah.')->group(function () {
     Route::post('/goals', [SavingGoalApiController::class, 'store'])->name('goals.store');
     Route::get('/goals/{id}', [SavingGoalApiController::class, 'show'])->name('goals.show');
     Route::match(['put', 'post'], '/goals/{id}', [SavingGoalApiController::class, 'update'])->name('goals.update');
+    Route::post('/goals/{id}/alokasi', [SavingGoalApiController::class, 'alokasiDana'])->name('goals.alokasi');
     Route::delete('/goals/{id}', [SavingGoalApiController::class, 'destroy'])->name('goals.destroy');
 });
 

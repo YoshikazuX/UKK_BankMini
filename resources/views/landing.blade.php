@@ -50,6 +50,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                             <span>Unduh Aplikasi</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">v2.5.0</span>
                         </a>
 
                         <a href="#fitur" 
@@ -387,7 +388,7 @@
                     {{-- Right Editorial Content --}}
                     <div class="lg:col-span-6">
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold mb-4">
-                            <span>Aplikasi Mobile Nasabah (Flutter)</span>
+                            <span>Aplikasi Mobile Nasabah (Flutter v2.5.0)</span>
                         </div>
                         <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                             HanBank Mobile
@@ -425,11 +426,12 @@
 
                         </div>
 
-                        <div class="mt-8">
+                        <div class="mt-8 flex flex-wrap items-center gap-3">
                             <a href="{{ route('download') }}" 
                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-900 bg-emerald-400 hover:bg-emerald-300 transition shadow">
                                 <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 <span>Unduh APK HanBank Mobile</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-950/20 text-slate-950">v2.5.0</span>
                             </a>
                         </div>
                     </div>
@@ -506,7 +508,7 @@
                             <p class="text-sm text-slate-600 mt-1">Memberikan transparansi saldo tabungan dan membiasakan literasi finansial terencana bagi pelajar.</p>
                         </div>
                         <a href="{{ route('download') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 transition shadow-sm shrink-0">
-                            Unduh Aplikasi Siswa
+                            <span>Unduh Aplikasi Siswa (v2.5.0)</span>
                         </a>
                     </div>
 
@@ -923,7 +925,7 @@
                         </svg>
                     </button>
                     <div x-show="selectedFaq === 5" x-collapse x-cloak class="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                        Aplikasi mobile Android dapat diunduh melalui tombol Unduh Aplikasi di navigasi atau langsung mengunjungi halaman <a href="{{ route('download') }}" class="text-emerald-700 font-semibold underline">Unduh APK Mobile</a>.
+                        Aplikasi mobile Android dapat diunduh melalui tombol Unduh Aplikasi di navigasi atau langsung mengunjungi halaman <a href="{{ route('download') }}" class="text-emerald-700 font-semibold underline">Unduh APK Mobile (v2.5.0)</a>.
                     </div>
                 </div>
 
@@ -988,7 +990,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span>Unduh Aplikasi Mobile</span>
+                    <span>Unduh Aplikasi Mobile (v2.5.0)</span>
                 </a>
 
                 <a href="{{ route('login') }}" 
@@ -1022,8 +1024,8 @@
                     <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
                         Platform perbankan mini sekolah terintegrasi untuk pengelolaan tabungan siswa, kas operasional teller, dan pelaporan keuangan sekolah terpercaya.
                     </p>
-                    <div class="mt-4 text-[11px] text-slate-600 font-mono">
-                        Core Banking System v2.7 — Production Environment
+                    <div class="mt-4 text-[11px] text-slate-500 font-mono">
+                        Core Banking System v2.7 · Mobile App v2.5.0
                     </div>
                 </div>
 
@@ -1047,7 +1049,7 @@
                         <li><a href="{{ route('docs.index') }}" class="hover:text-white transition">Documentation Center</a></li>
                         <li><a href="{{ route('download') }}" class="text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            <span>Unduh Aplikasi Mobile (APK)</span>
+                            <span>Unduh Aplikasi Mobile (APK v2.5.0)</span>
                         </a></li>
                         <li><a href="{{ route('login') }}" class="text-white hover:text-emerald-400 font-semibold transition flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>

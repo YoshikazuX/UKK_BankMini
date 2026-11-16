@@ -9,11 +9,14 @@
     @include('components.public_navbar')
 
     @php
-        $apkUrl = config('app.apk_download_url', env('APK_DOWNLOAD_URL'));
+        $defaultReleaseUrl = 'https://github.com/YoshikazuX/UKK_BankMini/releases/tag/v2.5.0';
+        $downloadUrl = config('app.apk_download_url', env('APK_DOWNLOAD_URL', $defaultReleaseUrl)) ?: $defaultReleaseUrl;
         $localApkPath = public_path('downloads/hanbank-mobile.apk');
-        $downloadUrl = $apkUrl ?: (file_exists($localApkPath) ? asset('downloads/hanbank-mobile.apk') : null);
-        $hasApk = !empty($downloadUrl);
-        $isExternal = $downloadUrl && (str_starts_with($downloadUrl, 'http://') || str_starts_with($downloadUrl, 'https://'));
+        $hasLocalApk = file_exists($localApkPath);
+        $localApkSize = $hasLocalApk ? round(filesize($localApkPath) / (1024 * 1024), 1) : 70.0;
+        $hasApk = true;
+        $isExternal = str_starts_with($downloadUrl, 'http://') || str_starts_with($downloadUrl, 'https://');
+        $appVersion = 'v2.5.0';
     @endphp
 
     {{-- 2. HERO SECTION — DOWNLOAD HANBANK MOBILE --}}
@@ -54,8 +57,8 @@
                                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Aplikasi Resmi</span>
                                 <h3 class="text-base font-bold text-slate-900">HanBank Mobile Siswa</h3>
                             </div>
-                            <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $hasApk ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
-                                {{ $hasApk ? 'v2.4.0 — Siap Diunduh' : 'v2.4.0 — Segera Rilis' }}
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {{ $appVersion }} - Rilis Resmi Terverifikasi
                             </span>
                         </div>
 
@@ -66,42 +69,49 @@
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Versi</span>
-                                <span class="font-bold text-slate-800">v2.4.0</span>
+                                <span class="font-bold text-slate-800">{{ $appVersion }}</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Ukuran</span>
-                                <span class="font-bold text-slate-800">~73 MB</span>
+                                <span class="font-bold text-slate-800">{{ $localApkSize ? '~' . $localApkSize . ' MB' : '~70 MB' }}</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block font-medium">Kompatibilitas</span>
                                 <span class="font-bold text-slate-800">Android 7.0+</span>
                             </div>
                         </div>
+
+                        {{-- Catatan Pembaruan Rilis v2.5.0 --}}
+                        <div class="mt-3.5 pt-3 border-t border-slate-100 text-[11px] text-slate-600 space-y-1.5">
+                            <span class="font-bold text-slate-700 block">Pembaruan Versi {{ $appVersion }}:</span>
+                            <div class="flex items-center gap-1.5 text-emerald-700">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span>Penyelarasan nomor rekening resmi standar sekolah (26-RPL-...)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-emerald-700">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span>Fitur alokasi dana dan set nominal saldo ke Target Menabung</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-emerald-700">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span>Peningkatan stabilitas komunikasi API dan keamanan loket</span>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Download & Return Action Buttons --}}
                     <div class="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                        @if($hasApk)
-                            <a href="{{ $downloadUrl }}" 
-                               {{ $isExternal ? 'target="_blank" rel="noopener noreferrer"' : 'download' }}
-                               class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-lg shadow-emerald-500/20 transition active:scale-[0.99] text-sm sm:text-base">
-                                <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                <span>Unduh APK Android</span>
-                            </a>
-                        @else
-                            <button type="button" 
-                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-white bg-slate-900 shadow-md transition text-sm sm:text-base cursor-default">
-                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                <span>Unduh APK Android</span>
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-emerald-300 border border-slate-700">
-                                    v2.4.0
-                                </span>
-                            </button>
-                        @endif
+                        <a href="{{ $downloadUrl }}" 
+                           target="_blank" rel="noopener noreferrer"
+                           class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-lg shadow-emerald-500/20 transition active:scale-[0.99] text-sm sm:text-base">
+                            <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Unduh APK di GitHub Releases</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-950/20 text-slate-950">
+                                {{ $appVersion }}
+                            </span>
+                        </a>
 
                         <a href="{{ route('landing') }}" 
                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition text-sm sm:text-base">
@@ -112,8 +122,17 @@
                         </a>
                     </div>
 
+                    @if($hasLocalApk)
+                        <div class="mt-3 text-center lg:text-left">
+                            <a href="{{ asset('downloads/hanbank-mobile.apk') }}" download="BankMini-v2.5.0-universal.apk" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 underline transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span>Atau unduh langsung berkas APK dari server lokal (~{{ $localApkSize }} MB)</span>
+                            </a>
+                        </div>
+                    @endif
+
                     <p class="mt-4 text-xs text-slate-500">
-                        {{ $hasApk ? 'Paket APK resmi diverifikasi dan bebas dari malware.' : 'Paket APK resmi HanBank Mobile diverifikasi dan siap digunakan di laboratorium sekolah.' }}
+                        Paket APK resmi diverifikasi dan di-host aman melalui GitHub Releases (bebas dari malware &amp; terverifikasi).
                     </p>
 
                 </div>
@@ -407,8 +426,8 @@
                     <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
                         Platform perbankan mini sekolah terintegrasi untuk pengelolaan tabungan siswa, kas operasional teller, dan pelaporan keuangan sekolah terpercaya.
                     </p>
-                    <div class="mt-4 text-[11px] text-slate-600 font-mono">
-                        Core Banking System v2.7 — Production Environment
+                    <div class="mt-4 text-[11px] text-slate-500 font-mono">
+                        Core Banking System v2.7 · Mobile App v2.5.0
                     </div>
                 </div>
 
@@ -431,7 +450,7 @@
                         <li><a href="{{ route('landing') }}#faq" class="hover:text-white transition">Pertanyaan Umum (FAQ)</a></li>
                         <li><a href="{{ route('download') }}" class="text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            <span>Unduh Aplikasi Mobile (APK)</span>
+                            <span>Unduh Aplikasi Mobile (APK v2.5.0)</span>
                         </a></li>
                         <li><a href="{{ route('login') }}" class="text-white hover:text-emerald-400 font-semibold transition flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>

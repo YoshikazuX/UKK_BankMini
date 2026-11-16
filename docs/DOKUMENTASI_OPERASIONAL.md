@@ -53,7 +53,7 @@
 
    # Format Nomor Rekening Default (JURUSAN-NIS / TAHUN/JURUSAN/URUT)
    # Mobile App APK URL
-   APK_DOWNLOAD_URL=https://github.com/YoshikazuX/UKK_BankMini/releases/latest/download/BankMini-v2.4.0-universal.apk
+   APK_DOWNLOAD_URL=https://github.com/YoshikazuX/UKK_BankMini/releases/tag/v2.5.0
    ```
 
 3. **Migrasi Basis Data & Seeder Data Awal:**

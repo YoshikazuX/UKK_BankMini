@@ -11,7 +11,7 @@
 
 <x-docs.heading id="project-summary" level="2">1. Project Summary</x-docs.heading>
 <p>
-    Proyek <strong>HANBANK (LKM Mitra Siswa Abadi — SMK Negeri 1 Bantul)</strong> berhasil mengintegrasikan proses inti operasional Bank Mini Sekolah ke dalam platform web <strong>Laravel 13.24.0</strong> dan aplikasi klien Android <strong>Flutter 3.41.9 (v2.4.0+1)</strong>. Ekosistem ini menghubungkan fungsi pelayanan loket Teller (setoran, penarikan, scan QR, pengajuan kas, tutup kas), tata kelola Administrator (master nasabah, import CSV/XLSX, alumni soft-delete, pegawai, reset PIN/password, audit trail, konfigurasi global), pengawasan Supervisor (approval droping kas/daily report ber-locking, rekonsiliasi, laporan akuntansi), serta layanan perbankan digital siswa (QR Card, mutasi, saving goals, dynamic badges, emergency freeze).
+    Proyek <strong>HANBANK (LKM Mitra Siswa Abadi — SMK Negeri 1 Bantul)</strong> berhasil mengintegrasikan proses inti operasional Bank Mini Sekolah ke dalam platform web <strong>Laravel 13.24.0</strong> dan aplikasi klien Android <strong>Flutter 3.41.9 (v2.5.0+2)</strong>. Ekosistem ini menghubungkan fungsi pelayanan loket Teller (setoran, penarikan, scan QR, pengajuan kas, tutup kas), tata kelola Administrator (master nasabah, import CSV/XLSX, alumni soft-delete, pegawai, reset PIN/password, audit trail, konfigurasi global), pengawasan Supervisor (approval droping kas/daily report ber-locking, rekonsiliasi, laporan akuntansi), serta layanan perbankan digital siswa (QR Card, mutasi, saving goals, dynamic badges, emergency freeze).
 </p>
 
 <x-docs.heading id="implementation-achievement" level="2">2. Implementation Achievement</x-docs.heading>

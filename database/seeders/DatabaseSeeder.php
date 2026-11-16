@@ -97,7 +97,7 @@ class DatabaseSeeder extends Seeder
 
         $nasabahs = [
             [
-                'no_rekening' => '202601001',
+                'no_rekening' => '26-RPL-001',
                 'nis' => '17763',
                 'nama_siswa' => 'Dewi Handayani Nur Halimah',
                 'kelas' => 'XI RPL 1',
